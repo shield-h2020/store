@@ -1,0 +1,315 @@
+responses: &API_RESPONSES
+  200: &HTTP_200_OK
+    description: Request succeeded.
+  201: &HTTP_201_CREATED
+    description: Resource created.
+  202: &HTTP_202_ACCEPTED
+    description: >-
+      Request processing. You can retry your request, and when it's complete,
+      you'll get a 200 instead.
+  400: &HTTP_400_BAD_REQUEST
+    description: Bad request. API specific parameters are incorrect or missing.
+  401: &HTTP_401_UNAUTHORIZED
+    description: Unauthorised. You're not authorised to access this resource.
+  404: &HTTP_404_NOT_FOUND
+    description: Not found. The requested resource doesn't exist.
+  500: &HTTP_500_INTERNAL_SERVER_ERROR
+    description: Server errors. Our bad!
+  501: &HTTP_501_NOT_IMPLEMENTED
+    description: Not implemented yet.
+  504: &HTTP_504_GATEWAY_TIMEOUT
+    description: Timeout. A request to a third-party has taken too long to be served.
+
+swagger: '2.0'
+info:
+  description: 'This API onboards vNSFs and NSs in a secure and trusted way. The onboarding process will ensure the provenance is from a trusted source and that the contents integrity can be assured. Once this is achieved the security information is stored for safekeeping and provided upon request so other components can check that the vNSF/NS has not been tampered with since it was onboarded.<p> Another relevant feature provided by the Store is the verification done on the vNSF and NS associated descriptors to ensure the instantiation process by an Orchestrator is performed without hassle.</p>'
+  version: 0.1.0
+  title: vNSF Store API
+  termsOfService: ''
+  contact:
+    email: shield-eu@ubiwhere.com
+  license:
+    name: License - TBD
+    url: 'http://TBD'
+host: TBD
+basePath: /v0.1.0
+tags:
+  - name: vnsfs
+    description: vNSF operations
+    externalDocs:
+      description: Find out more
+      url: 'http://TBD'
+  - name: store
+    description: Access to Petstore orders
+  - name: user
+    description: Operations about user
+    externalDocs:
+      description: Find out more about our store
+      url: 'http://TBD'
+schemes:
+  - http
+  - https
+paths:
+  /vnsfs:
+    post:
+      tags:
+        - vnsfs
+      summary: Triggers the vNSF onboarding process
+      description: >-
+        <p>Due to the nature of the process, as it comprises time-consuming operations such as validations and considerable-sized downloads, the submission request is promptly acknowledged and the process continues in the background. Later on, the caller will be notified whether the operation succeeded or failed.</p>
+        <br />
+        <p>
+        To ensure a vNSF can be onboarded, the descriptors provided in the package need to be validated. These descriptors are checked for:</p>
+        <ul>
+          <li>Syntax errors to prevent incorrect vNSF descriptors from being processed.</li>
+          <li>vNSF topology integrity to avoid potential loops or errors such as references to undefined network interfaces.</li>
+        </ul>
+        <p>
+        Every onboarded vNSF descriptor will be checked for syntax, correctness and completeness issues. With no issues found the next step is to check the defined network topology and ensure inconsistencies such as no unconnected interfaces are present and all links are properly defined. Upon successful validation, the vNSF may proceed with the onboarding process. Any error results in a notification to the Developer stating what is not compliant with the SHIELD requirements.</p>
+      operationId: onboardVnsf
+      consumes:
+        - multipart/form-data
+      produces:
+        - application/json
+      parameters:
+        - in: formData
+          type: file
+          name: package
+          description: The vNSF package file to onboard
+          required: true
+      responses: *API_RESPONSES
+    get:
+      tags:
+        - vnsfs
+      summary: Lists all the vNSFs
+      description: >-
+        Provides a list of all the onboarded vNSFs along with a brief
+        description for each one.
+      operationId: getVnsfs
+      produces:
+        - application/json
+      responses:
+        200:
+          description: ""
+          schema:
+            $ref: "#/definitions/Vnsfs"
+        <<: *API_RESPONSES
+  '/vnsfs/{vnsf_id}':
+    get:
+      tags:
+        - vnsfs
+      summary: Provides the details on a vNSF
+      description: Provides all the information on the onboarded vNSF.
+      operationId: getVnsfById
+      produces:
+        - application/json
+      parameters:
+        - name: vnsf_id
+          in: path
+          required: true
+          type: string
+      responses:
+        200:
+          description: Request succeeded.
+          schema:
+            $ref: "#/definitions/VnsfDetails"
+        <<: *API_RESPONSES
+    delete:
+      tags:
+        - vnsfs
+      summary: Decommissions a vNSF
+      description: >-
+        Takes a vNSF out of service which prevents it from ever being
+        instantiated again. For a running NS or vNSF a graceful decommission is
+        provided through the schedule of the operation to a later date.
+      operationId: decommissionVnsf
+      produces:
+        - application/json
+      parameters:
+        - name: vnsf_id
+          in: path
+          required: true
+          type: string
+      responses:
+        <<: *API_RESPONSES
+definitions:
+  Vnsfs:
+    type: "object"
+    required:
+      - "_items"
+    properties:
+      _items:
+        type: "array"
+        items:
+          $ref: "#/definitions/VnsfDetails"
+  Vnsfs_full:
+    type: "object"
+    required:
+      - "_items"
+      - "_links"
+      - "_meta"
+    properties:
+      _items:
+        type: "array"
+        items:
+          type: "object"
+          properties:
+            _id:
+              type: "string"
+            package:
+              type: "string"
+            state:
+              type: "string"
+            manifest_file:
+              type: "string"
+            manifest:
+              required:
+                - "manifest:vnsf"
+              properties:
+                manifest:vnsf:
+                  required:
+                    - "descriptor"
+                    - "type"
+                    - "security_info"
+                  properties:
+                    descriptor:
+                      type: "string"
+                    type:
+                      type: "string"
+                    security_info:
+                      required:
+                        - "vdu"
+                      properties:
+                        vdu:
+                          type: "array"
+                          items:
+                            required:
+                              - "id"
+                              - "attestation"
+                              - "hash"
+                            properties:
+                              id:
+                                type: "string"
+                              attestation:
+                                required:
+                                  - "somekey"
+                                properties:
+                                  somekey:
+                                    type: "string"
+                                type: "object"
+                              hash:
+                                type: "string"
+            _created:
+              type: "string"
+            _links:
+              required:
+                - "self"
+              properties:
+                self:
+                  required:
+                    - "href"
+                    - "title"
+                  properties:
+                    href:
+                      type: "string"
+                    title:
+                      type: "string"
+                  type: "object"
+              type: "object"
+            _updated:
+              type: "string"
+            descriptor:
+              type: "string"
+            _etag:
+              type: "string"
+      _links:
+        required:
+          - "self"
+          - "parent"
+        properties:
+          self:
+            required:
+              - "href"
+              - "title"
+            properties:
+              href:
+                type: "string"
+              title:
+                type: "string"
+            type: "object"
+          parent:
+            required:
+              - "href"
+              - "title"
+            properties:
+              href:
+                type: "string"
+              title:
+                type: "string"
+            type: "object"
+        type: "object"
+      _meta:
+        required:
+          - "max_results"
+          - "page"
+          - "total"
+        properties:
+          max_results:
+            type: "number"
+          page:
+            type: "number"
+          total:
+            type: "number"
+        type: "object"
+  VnsfDetails:
+    type: "object"
+    required:
+      - "_id"
+      - "state"
+      - "manifest"
+    properties:
+      _id:
+        type: "string"
+      state:
+        type: "string"
+      manifest:
+        required:
+          - "manifest:vnsf"
+        properties:
+          manifest:vnsf:
+            required:
+              - "descriptor"
+              - "type"
+              - "security_info"
+            properties:
+              descriptor:
+                type: "string"
+              type:
+                type: "string"
+              security_info:
+                required:
+                  - "vdu"
+                properties:
+                  vdu:
+                    type: "array"
+                    items:
+                      required:
+                        - "id"
+                        - "attestation"
+                        - "hash"
+                      properties:
+                        id:
+                          type: "string"
+                        hash:
+                          type: "string"
+                        attestation:
+                          type: "object"
+                          required:
+                            - "somekey"
+                          properties:
+                            somekey:
+                              type: "string"
+
+externalDocs:
+  description: Find out more about vNSF Store
+  url: 'http://TBD'
