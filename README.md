@@ -1,4 +1,4 @@
-# vNSF Store
+# vNSF & NS Store
 
 SHIELD aims to set up a single, centralised digital store for virtual Network Security Functions (vNSFs) and Network Services (NSs). This approach allows Service Providers to offer new security features for protecting the network or extend already existing functionalities without the need of modifying core elements of the framework. The store acts as a repository for vNSFs and NSs that have been previously published.
 
@@ -25,3 +25,13 @@ The [environment](http://docs.python-guide.org/en/latest/dev/virtualenvs/) requi
 ## Docker
 
 To have a [pain-free installation](https://www.docker.com/) the `Dockerfile` is provided. It ensures all dependencies are met and sets up the proper [Python virtual environment](#python-virtual-environment).
+
+* Build it with:
+
+    ```
+    $ cd docker
+    $ docker build --force-rm -t shield-store .
+    ```
+* Run it with:
+
+    `$ docker run -it -p 5000:5000 -v /path/to/local:/path/to/container shield-store CMD`
