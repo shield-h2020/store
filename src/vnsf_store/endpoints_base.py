@@ -1,0 +1,2 @@
+
+ENDPOINT_VNSFS = 'vnsfs'

@@ -1,0 +1,9 @@
+manifest:vnsf:
+    descriptor: xpto_vnfd/xpto_vnfd.yaml
+    type: OSM
+    security:
+        vdu:
+            id: xpto_vnfd-VM
+            hash: 7fb693dfd95a14dd6ef6df837c872027
+            attestation:
+                somekey: <TBD - provided by TM>
