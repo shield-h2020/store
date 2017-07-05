@@ -19,12 +19,12 @@ The onboarding process also verifies the vNSF and NS associated descriptors to e
 
 ## Python virtual environment
 
-The [environment](http://docs.python-guide.org/en/latest/dev/virtualenvs/) requirements are defined in the `requirements.txt` file.
+The [environment](http://docs.python-guide.org/en/latest/dev/virtualenvs/) requirements are defined in the [requirements.txt](docker/store-requirements.txt) file.
 
 
 ## Docker
 
-To have a [pain-free installation](https://www.docker.com/) the `Dockerfile` is provided. It ensures all dependencies are met and sets up the proper [Python virtual environment](#python-virtual-environment).
+To have a [pain-free installation](https://www.docker.com/) the [Dockerfile](docker/Dockerfile.dev) is provided. It ensures all dependencies are met and sets up the proper [Python virtual environment](#python-virtual-environment).
 
 * Build it with:
 
@@ -35,3 +35,8 @@ To have a [pain-free installation](https://www.docker.com/) the `Dockerfile` is 
 * Run it with:
 
     `$ docker run -it -p 5000:5000 -v /path/to/local:/path/to/container shield-store CMD`
+
+
+# API Documentation
+
+The documentation follows the [OpenAPI Specification](https://swagger.io/specification/) (fka Swagger RESTful API Documentation Specification) Version 2.0 and is defined in the [swagger.yaml](../swagger.yaml) file. To have it in a user-friendly way simple paste its contents into the [Swagger Editor](https://editor.swagger.io/).
