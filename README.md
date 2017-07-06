@@ -40,3 +40,10 @@ To have a [pain-free installation](https://www.docker.com/) the [Dockerfile](doc
 # API Documentation
 
 The documentation follows the [OpenAPI Specification](https://swagger.io/specification/) (fka Swagger RESTful API Documentation Specification) Version 2.0 and is defined in the [swagger.yaml](swagger.yaml) file. To have it in a user-friendly way simple paste its contents into the [Swagger Editor](https://editor.swagger.io/).
+
+
+# Packaging
+
+## vNSF Packaging
+
+Details can be found in [vNSF Packaging](docs/vnsf/onboard.md).

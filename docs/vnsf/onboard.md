@@ -18,7 +18,7 @@ scripts | (O) base configuration scripts once the vNSF is up and running | OSM
 icons | (O) used on the OSM Composer | OSM
 charms | (O) [juju charm](https://jujucharms.com/) configuration for the VNF | OSM
 cloud_init | (O) instantiation configurations | OSM
-checksums.txt | (M) image file(s) hashes | OSM
+checksums.txt | (M) image file(s) hash(es) | OSM
 README | (O) vNSF related information | OSM
 
 
@@ -28,39 +28,12 @@ README | (O) vNSF related information | OSM
 
 ```yaml
 manifest:vnsf:
+    descriptor: xpto_vnfd/xpto_vnfd.yaml
+    type: OSM
     security:
         vdu:
         -   id: xpto_vnfd-VM
             hash: 7fb693dfd95a14dd6ef6df837c872027
             attestation:
                 key: <TBD - provided by TM>
-```
-
-
-<u>Schema</u>
-
-The manifest syntax follows the [PyKwalify validation rules](http://pykwalify.readthedocs.io/en/master/validation-rules.html). It's definition is as follows.
-
-```yaml
-manifest:vnsf:
-  desc: 'Defines the vNSF package manifest data model for SHIELD'
-  security:
-    required: true
-    vdu:
-      attestation:
-        desc: 'Trust Monitor related attestation details'
-        key:
-          required: true
-          type: str
-        required: true
-      hash:
-        desc: 'Hash for the VM image file identified by the ''id'' field above'
-        required: true
-        type: str
-      id:
-        desc: 'Security information for the VDU defined in the vNSFD. Each VDU defined
-          in the vNSFD must have an entry in the manifest'
-        required: true
-        type: str
-      required: true
 ```
