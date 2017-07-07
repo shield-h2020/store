@@ -1,0 +1,7 @@
+
+FROM mongo:3.4.5
+
+# Define default command.
+CMD ["mongod"]
+
+# mongo --eval "var STORE_COLLECTION='xpto', STORE_USER='user', STORE_PASS='user'" mongodb-init.js
