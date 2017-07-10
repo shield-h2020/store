@@ -22,9 +22,11 @@ responses: &API_RESPONSES
 
 swagger: '2.0'
 info:
-  description: 'This API onboards vNSFs and NSs in a secure and trusted way. The onboarding process will ensure the provenance is from a trusted source and that the contents integrity can be assured. Once this is achieved the security information is stored for safekeeping and provided upon request so other components can check that the vNSF/NS has not been tampered with since it was onboarded.<p> Another relevant feature provided by the Store is the verification done on the vNSF and NS associated descriptors to ensure the instantiation process by an Orchestrator is performed without hassle.</p>'
+  description: 'This API onboards vNSFs and NSs in a secure and trusted way. The onboarding process will ensure the provenance is from a trusted source and that the contents integrity can be assured. Once this is achieved the security information is stored for safekeeping and provided upon request so other components can check that the vNSF/NS has not been tampered with since it was onboarded.<p> Another relevant feature provided by the Store is the verification done on the vNSF and NS associated descriptors to ensure the instantiation process by an Orchestrator is performed without hassle.</p>
+  <p>Please note that consumers are not allowed to edit (PATCH or PUT) or delete (DELETE) a resource unless they provide an up-to-date ETag for the resource they are attempting to edit. This value, taken from the details (GET) request, is mandatory and should be provided in the <samp>If-Match</samp> header.</p>
+    API version numbering as per http://semver.org/'
   version: 0.1.0
-  title: vNSF Store API
+  title: vNSF & NS Store API
   termsOfService: ''
   contact:
     email: shield-eu@ubiwhere.com
@@ -38,13 +40,6 @@ tags:
     description: vNSF operations
     externalDocs:
       description: Find out more
-      url: 'http://TBD'
-  - name: store
-    description: Access to Petstore orders
-  - name: user
-    description: Operations about user
-    externalDocs:
-      description: Find out more about our store
       url: 'http://TBD'
 schemes:
   - http
@@ -311,5 +306,5 @@ definitions:
                               type: "string"
 
 externalDocs:
-  description: Find out more about vNSF Store
+  description: Find out more about the Store
   url: 'http://TBD'
