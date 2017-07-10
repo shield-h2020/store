@@ -13,7 +13,7 @@ The onboarding process also verifies the vNSF and NS associated descriptors to e
 ## Prerequisites
 
 * [Python 3](https://www.python.org/)
-* [Eve REST API framework](http://eve.readthedocs.io/en/stable/) which provides (amongst other goodies) [Flask](http://flask.pocoo.org/) for RESTful support, [Cerberus](http://python-cerberus.org/) for JSON validation and [MongoDB](https://www.mongodb.com/) for the actual vNSF data store.
+* [Eve REST API framework](http://eve.readthedocs.io/en/stable/) which provides (amongst other goodies) [Flask](http://flask.pocoo.org/) for RESTful support, [Cerberus](http://python-cerberus.org/) for JSON validation and [MongoDB](https://www.mongodb.com/) for the actual vNSF & NS data store.
 * [PyYAML](http://pyyaml.org/) to handle vNSF and NS descriptors
 
 
@@ -26,20 +26,20 @@ The [environment](http://docs.python-guide.org/en/latest/dev/virtualenvs/) requi
 
 TL;DR
 
-* Run it with:
+* Run it with:  
 ```
-$ cd docker
-$ docker build --force-rm -t shield-store .
+$ cd docker  
+$ docker build --force-rm -t shield-store .  
 ```
 
     * First-time setup:
 
     ```
-    $ docker exec -it docker_data-store_1 bash
+    $ docker exec -it docker_data-store_1 bash  
     ```
-    Now inside the container:
+    Now inside the container:  
     ```
-    root@<container_id>:/usr/share/dev/store/docker# ./setup-datastore.sh --please
+    root@<container_id>:/usr/share/dev/store/docker# ./setup-datastore.sh --please  
     ```
 
 
