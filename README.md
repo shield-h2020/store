@@ -37,11 +37,7 @@ $ docker build --force-rm -t shield-store .
 
 ```
 $ docker exec -it docker_data-store_1 bash  
-```
 
-Now inside the container:  
-
-```
 # ./setup-datastore.sh --please  
 ```
 
