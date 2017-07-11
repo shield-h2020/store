@@ -24,21 +24,38 @@ The [environment](http://docs.python-guide.org/en/latest/dev/virtualenvs/) requi
 
 ## Docker
 
+### Prerequisites
+
+* [Docker](https://docs.docker.com/engine/installation/) (17.06.0+)
+* [docker-compose](https://docs.docker.com/compose/install/) (3.0+)
+
+
+### Setup
+
 TL;DR
 
 * Run it with:
 
 ```
 $ cd docker
-$ docker build --force-rm -t shield-store .
+$ ./run.sh --dev_folder </path/to/repo/folder>
 ```
 
-* First-time setup:
+Once everything is up and running the last lines on the screen should be something like:
+```shell
+dev_1         |  * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
+dev_1         |  * Restarting with stat
+dev_1         |  * Debugger is active!
+dev_1         |  * Debugger pin code: <XXX-XXX-XXX>
+```
+
+
+* First-time setup (from another terminal window):
 
 ```
-$ docker exec -it docker_data-store_1 bash  
+$ docker exec -it docker_data-store_1 bash
 
-# ./setup-datastore.sh --please  
+# ./setup-datastore.sh --please
 ```
 
 
@@ -55,7 +72,16 @@ The first time the Store environment is set up one must create the data store to
 
 # Deployment
 
-The default settings deploy the Store API in the localhost and running on port 5000. To ensure the environment is up and running place a `GET` request to http://localhost:5000. The response should be a `200 OK` with the available endpoints presented in JSON format:
+The default settings deploy the Store API in the localhost and running on port 5000. To ensure the environment is up and running place a `GET` request to http://localhost:5000. The response should be a `200 OK` with the available endpoints presented in either XML:
+
+```xml
+<resource>
+    <link rel="child" href="vnsfs/attestation" title="vnsfs/attestation"/>
+    <link rel="child" href="vnsfs" title="vnsfs"/>
+</resource>
+```
+
+or JSON format if the `Accept: application/json` HTTP header is set:
 
 ```json
 {
