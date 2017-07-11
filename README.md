@@ -49,13 +49,34 @@ Going a step further on easing up the installation process [environment variable
 
 The downside of all this auto-magically environment instantiation is that the actual docker files get a bit harder to read and a [setup orchestrator script](docker/run.sh) needs to be put in place to fill in the proper data in the docker files according to the variables defined in the [.env](docker/.env) file. The outcome of all of this tweaking is that the docker files are created as templates ([docker-compose.yml.tmpl](docker/docker-compose.yml.tmpl), [Dockerfile.datastore.tmpl](docker/Dockerfile.datastore.tmpl), [Dockerfile.dev.tmpl](docker/Dockerfile.dev.tmpl)) and the orchestrator script ([run.sh](docker/run.sh)) produces the proper docker files, builds them up and runs the containers so the Store is up and running.
 
-### First time run
+### First time setup
 
 The first time the Store environment is set up one must create the data store to hold the vNSF & NS data for the Store. This is done by the [setup-datastore.sh](docker/setup-datastore.sh) script and the steps required are mentioned above.
 
+# Deployment
+
+The default settings deploy the Store API in the localhost and running on port 5000. To ensure the environment is up and running place a `GET` request to http://localhost:5000. The response should be a `200 OK` with the available endpoints presented in JSON format:
+
+```json
+{
+    "_links": {
+        "child": [{
+                "href": "vnsfs",
+                "title": "vnsfs"
+            },
+            {
+                "href": "vnsfs/attestation",
+                "title": "vnsfs/attestation"
+            }
+        ],
+    }
+}
+```
+
+
 # API Documentation
 
-The documentation follows the [OpenAPI Specification](https://swagger.io/specification/) (fka Swagger RESTful API Documentation Specification) Version 2.0 and is defined in the [swagger.yaml](swagger.yaml) file. To have it in a user-friendly way simple paste its contents into the [Swagger Editor](https://editor.swagger.io/).
+The documentation follows the [OpenAPI Specification](https://swagger.io/specification/) (fka Swagger RESTful API Documentation Specification) Version 2.0 and is defined in the [swagger.yaml](swagger.yaml) file. To have it in a user-friendly way simple paste its contents into the [Swagger Editor](https://editor.swagger.io/) and navigate the documentation Swagger style.
 
 
 # Packaging
