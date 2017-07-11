@@ -26,25 +26,28 @@ The [environment](http://docs.python-guide.org/en/latest/dev/virtualenvs/) requi
 
 TL;DR
 
-* Run it with:  
+* Run it with:
+
 ```
-$ cd docker  
-$ docker build --force-rm -t shield-store .  
+$ cd docker
+$ docker build --force-rm -t shield-store .
 ```
 
-    * First-time setup:
+* First-time setup:
 
-    ```
-    $ docker exec -it docker_data-store_1 bash  
-    ```
-    Now inside the container:  
-    ```
-    root@<container_id>:/usr/share/dev/store/docker# ./setup-datastore.sh --please  
-    ```
+```
+$ docker exec -it docker_data-store_1 bash  
+```
+
+Now inside the container:  
+
+```
+# ./setup-datastore.sh --please  
+```
 
 
 
-To have a [pain-free installation](https://www.docker.com/) a docker environment is provided. This uses a [docker-compose](https://docs.docker.com/compose/overview/) file to provide the orchestration for the containers to setup.
+To have a pain-free installation a [docker environment](https://www.docker.com/) is provided. This uses a [docker-compose](https://docs.docker.com/compose/overview/) file to provide the orchestration for the containers to setup.
 
 Going a step further on easing up the installation process [environment variables](https://docs.docker.com/compose/environment-variables/#setting-environment-variables-with-docker-compose-run) are defined in the [.env](docker/.env) file. Any specific tailoring for the Store environment instantiation should be done here.
 
@@ -63,4 +66,9 @@ The documentation follows the [OpenAPI Specification](https://swagger.io/specifi
 
 ## vNSF Packaging
 
-Please head to [vNSF Packaging](docs/vnsf/packaging.md).
+Please head to [vNSF Packaging](docs/vnsf/packaging.md) to understand how to package a vNSF for submission to the Store.
+
+
+# Further reading
+
+Please refer to the [Store documentation](docs/index.md) for additional insight on how the Store operates.

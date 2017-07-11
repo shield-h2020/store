@@ -265,6 +265,17 @@ definitions:
     properties:
       _id:
         type: "string"
+      registry:
+        required:
+          - "vendor"
+          - "capabilities"
+        properties:
+          vendor:
+            type: "string"
+          capabilities:
+            type: "array"
+            items:
+              type: "string"
       state:
         type: "string"
       manifest:
@@ -307,4 +318,4 @@ definitions:
 
 externalDocs:
   description: Find out more about the Store
-  url: 'http://TBD'
+  url: 'https://github.com/shield-h2020/store'
