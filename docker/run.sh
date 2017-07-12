@@ -45,7 +45,7 @@ USAGE_MSG
 
 _PARAM_INVALID_VALUE="__##_INVALID_VALUE_##__"
 
-p_dev_folder=$_PARAM_INVALID_VALUE
+#p_dev_folder=$_PARAM_INVALID_VALUE
 
 
 
@@ -154,9 +154,9 @@ HandleOptions() {
     # Check mandatory parameters.
     #
 
-    if [ "$p_dev_folder" = "$_PARAM_INVALID_VALUE" ]; then
-      ErrorParameterNotSet "dev_folder"
-    fi
+    # if [ "$p_dev_folder" = "$_PARAM_INVALID_VALUE" ]; then
+    #   ErrorParameterNotSet "dev_folder"
+    # fi
 
     return $OPTIND
 }
@@ -181,6 +181,7 @@ HandleOptions() {
 #
 HandleOptions "$@"
 
+p_dev_folder=${PWD}/../
 
 # Based on: Let's Deploy! (Part 1)
 # http://lukeswart.net/2016/03/lets-deploy-part-1/

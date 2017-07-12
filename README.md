@@ -38,11 +38,11 @@ TL;DR
 
 ```
 $ cd docker
-$ ./run.sh --dev_folder </path/to/repo/folder>
+$ ./run.sh
 ```
 
 Once everything is up and running the last lines on the screen should be something like:
-```shell
+```bash
 dev_1         |  * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
 dev_1         |  * Restarting with stat
 dev_1         |  * Debugger is active!
