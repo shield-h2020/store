@@ -1,0 +1,12 @@
+
+#
+# MongoDB data store
+#
+
+FROM mongo:3.4.5
+
+LABEL project="${CNTR_PROJECT}"
+
+WORKDIR ${CNTR_FOLDER_DEV}/docker
+
+CMD ["mongod", "--port", "${DATASTORE_PORT}"]

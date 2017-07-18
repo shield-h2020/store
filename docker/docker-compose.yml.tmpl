@@ -1,0 +1,26 @@
+version:             '3'
+
+services:
+
+    # Data Store.
+    ${CNTR_DATASTORE}:
+        image: mongo
+        env_file:        .env
+        build:
+            context:       .
+            dockerfile:    ${DOCKER_FILE_DATASTORE}
+        volumes:
+            - ${SHARED_FOLDER_DEV}:${CNTR_FOLDER_DEV}
+
+
+    # Development environment.
+    ${CNTR_DEV}:
+        env_file:        .env
+        build:
+          context:       .
+          dockerfile:    ${DOCKER_FILE_DEV}
+        ports:
+            - "${API_PORT}:${API_PORT}"
+        volumes:
+            - ${SHARED_FOLDER_DEV}:${CNTR_FOLDER_DEV}
+        command:         python3 src/store.py

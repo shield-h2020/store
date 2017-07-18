@@ -1,32 +1,14 @@
 # -*- coding: utf-8 -*-
 
-"""
-    eve-demo settings
-    ~~~~~~~~~~~~~~~~~
-
-    Settings file for our little demo.
-
-    PLEASE NOTE: We don't need to create the two collections in MongoDB.
-    Actually, we don't even need to create the database: GET requests on an
-    empty/non-existant DB will be served correctly ('200' OK with an empty
-    collection); DELETE/PATCH will receive appropriate responses ('404' Not
-    Found), and POST requests will create database and collections when needed.
-    Keep in mind however that such an auto-managed database will most likely
-    perform poorly since it lacks any sort of optimized index.
-
-    :copyright: (c) 2016 by Nicola Iarocci.
-    :license: BSD, see LICENSE for more details.
-"""
-
 import os
 
 # We want to seamlessy run our API both locally and on Heroku. If running on
 # Heroku, sensible DB connection settings are stored in environment variables.
-MONGO_HOST = os.environ.get('MONGO_HOST', 'localhost')
-MONGO_PORT = os.environ.get('MONGO_PORT', 27017)
-MONGO_USERNAME = os.environ.get('MONGO_USERNAME', 'user')
-MONGO_PASSWORD = os.environ.get('MONGO_PASSWORD', 'user')
-MONGO_DBNAME = os.environ.get('MONGO_DBNAME', 'evedemo')
+MONGO_HOST = os.environ.get('DATASTORE_HOST', 'data-store')
+MONGO_PORT = os.environ.get('DATASTORE_PORT', 27017)
+MONGO_USERNAME = os.environ.get('DATASTORE_USERNAME', 'user')
+MONGO_PASSWORD = os.environ.get('DATASTORE_PASSWORD', 'user')
+MONGO_DBNAME = os.environ.get('DATASTORE_DBNAME', 'shield-store')
 
 # Enable reads (GET), inserts (POST) and DELETE for resources/collections
 # (if you omit this line, the API will default to ['GET'] and provide
@@ -42,63 +24,60 @@ ITEM_METHODS = ['GET', 'PATCH', 'DELETE']
 CACHE_CONTROL = 'max-age=20'
 CACHE_EXPIRES = 20
 
-#######################
-#######################
-#
-# Eve schema generation
-# https://github.com/drud/evegenie
-#
-#######################
-#######################
+# Schema definition, based on Cerberus grammar. Check the Cerberus project
+# (https://github.com/pyeve/cerberus) for details.
 
+vnsf_model = {
+    # vNSF "pedigree".
+    'registry': {
+        'type': 'dict',
+        'required': True,
+        'schema': {
+            'vendor': {'type': 'string', 'empty': False, 'required': True},
+            'capabilities': {'type': 'list', 'empty': False, 'required': True},
+        }
+    },
+    'state': {
+        'type': 'string',
+        'empty': False,
+        'allowed': ["submitted", "sandboxed", "onboarded", "decommissioned"],
+        'required': True
+    },
 
-vnsfs = {
-    # 'title' tag used in item links.
-    'item_title': 'vnsfs',
+    # Manifest details.
+    'manifest': {
+        'type': 'dict',
+        'required': True,
+        'schema': {
+            'manifest:vnsf': {
+                'type': 'dict',
+                'required': True,
+                'schema': {
+                    'descriptor': {'type': 'string', 'empty': False, 'required': True},
+                    'type': {'type': 'string', 'empty': False, 'allowed': ["OSM"], 'required': True},
 
-    # Schema definition, based on Cerberus grammar. Check the Cerberus project
-    # (https://github.com/pyeve/cerberus) for details.
-    'schema': {
-        'state': {
-            'type': 'string',
-            'empty': False,
-            'allowed': ["submitted", "sandboxed", "onboarded", "decommissioned"],
-            'required': True
-        },
-        'manifest': {
-            'type': 'dict',
-            'required': True,
-            'schema': {
-                'manifest:vnsf': {
-                    'type': 'dict',
-                    'required': True,
-                    'schema': {
-                        'descriptor': {'type': 'string', 'empty': False, 'required': True},
-                        'type': {'type': 'string', 'empty': False, 'allowed': ["OSM"], 'required': True},
-
-                        #
-                        # Due to a swagger editor bug the suitable name for this property can not be used.
-                        # #1375 - cannot use a property named "security" (
-                        # https://github.com/swagger-api/swagger-editor/issues/1375)
-                        #
-                        'security_info': {
-                            'type': 'dict',
-                            'required': True,
-                            'schema': {
-                                'vdu': {
-                                    'type': 'list',
-                                    'required': True,
+                    #
+                    # Due to a swagger editor bug the suitable name for this property can not be used.
+                    # #1375 - cannot use a property named "security" (
+                    # https://github.com/swagger-api/swagger-editor/issues/1375)
+                    #
+                    'security_info': {
+                        'type': 'dict',
+                        'required': True,
+                        'schema': {
+                            'vdu': {
+                                'type': 'list',
+                                'required': True,
+                                'schema': {
+                                    'type': 'dict',
                                     'schema': {
-                                        'type': 'dict',
-                                        'schema': {
-                                            'id': {'type': 'string', 'empty': False, 'required': True},
-                                            'hash': {'type': 'string', 'empty': False, 'required': True},
-                                            'attestation': {
-                                                'type': 'dict',
-                                                'required': True,
-                                                'schema': {
-                                                    'somekey': {'type': 'string', 'empty': False, 'required': True}
-                                                }
+                                        'id': {'type': 'string', 'empty': False, 'required': True},
+                                        'hash': {'type': 'string', 'empty': False, 'required': True},
+                                        'attestation': {
+                                            'type': 'dict',
+                                            'required': True,
+                                            'schema': {
+                                                'somekey': {'type': 'string', 'empty': False, 'required': True}
                                             }
                                         }
                                     }
@@ -108,21 +87,32 @@ vnsfs = {
                     }
                 }
             }
-        },
-        'descriptor': {'type': 'string', 'required': True},
-        'manifest_file': {'type': 'media'},
-        # Needed (for onboarding vNSFs) as the parameter name for the package file. After the POST it's no longer used.
-        'package': {'type': 'media'},
-        # 'datasource': {
-        #     'projection': {'package': 0}
-        # }
+        }
     },
+
+    # Actual vNSF Descriptor.
+    'descriptor': {'type': 'string', 'required': True},
+
+    # Actual manifest binary.
+    'manifest_file': {'type': 'media'},
+
+    # Needed (for onboarding vNSFs) as the parameter name for the package file. After the POST it's no longer used.
+    'package': {'type': 'media'}
+}
+
+vnsfs = {
+    # 'title' tag used in item links.
+    'item_title': 'vnsfs',
+    'schema': vnsf_model,
     'resource_methods': ['POST', 'GET', 'DELETE'],
+    # 'datasource': {
+    #     'projection': {'package': 0}
+    # }
 }
 
 vnsf_attestation = {
     'url': 'vnsfs/attestation',
-    'schema': vnsfs['schema'],
+    'schema': vnsf_model,
     'datasource': {
         'source': 'vnsfs'
     },
