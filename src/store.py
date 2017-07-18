@@ -5,6 +5,7 @@ import json
 import base64
 import os
 import shutil
+import store_errors as err
 import tarfile
 import tempfile
 import yaml
@@ -42,8 +43,7 @@ def onboard(request):
         file.save(package_absolute_path)
 
         if not tarfile.is_tarfile(package_absolute_path):
-            file.remove()
-            abort(403)
+            abort(403, err.PKG_NOT_TARGZ)
 
         extracted_package_path = tempfile.mkdtemp()
 
@@ -51,7 +51,10 @@ def onboard(request):
         package.extractall(extracted_package_path)
         package.close()
 
-        stream = open(os.path.join(extracted_package_path, 'manifest.yaml'), 'r')
+        manifest_path = os.path.join(extracted_package_path, 'manifest.yaml')
+        if not os.path.isfile(manifest_path):
+            abort(403, err.PKG_NOT_SHIELD)
+        stream = open(manifest_path, 'r')
         manifest = dict(yaml.load(stream))
         stream.close()
 
@@ -79,7 +82,8 @@ def onboard(request):
         request.form = ImmutableMultiDict(package_data)
     finally:
         os.remove(package_absolute_path)
-        shutil.rmtree(extracted_package_path)
+        if os.path.isdir(extracted_package_path):
+            shutil.rmtree(extracted_package_path)
 
 
 def send_minimal_vnsf_data(response):
