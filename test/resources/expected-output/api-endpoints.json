@@ -1,0 +1,14 @@
+{
+  "_links": {
+    "child": [
+      {
+        "href": "vnsfs",
+        "title": "vnsfs"
+      },
+      {
+        "href": "vnsfs/attestation",
+        "title": "vnsfs/attestation"
+      }
+    ]
+  }
+}

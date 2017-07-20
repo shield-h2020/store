@@ -1,4 +1,4 @@
-#/bin/bash
+#/bin/sh
 
 
 # ******************************************************************************
@@ -181,7 +181,6 @@ HandleOptions() {
 #
 HandleOptions "$@"
 
-p_dev_folder=${PWD}/../
 
 # Based on: Let's Deploy! (Part 1)
 # http://lukeswart.net/2016/03/lets-deploy-part-1/
@@ -191,24 +190,34 @@ p_dev_folder=${PWD}/../
 # Export variables so they can be used here. Stop script at first error.
 set -ae
 
-SHARED_FOLDER_DEV=$p_dev_folder
+SHARED_FOLDER_DEV=${PWD}/../
 
-source .env
+. .env
+
+# Do nested variables interpolation as the shell doesn't seem do it.
+ENV_FILE=.env.subst
+ENV_TMP_FILE=`mktemp /tmp/XXXXXXX`
+echo "cat <<VARS_BLOCK" > ${ENV_TMP_FILE}
+cat .env >> ${ENV_TMP_FILE}
+echo -e "\nVARS_BLOCK" >> ${ENV_TMP_FILE}
+. ${ENV_TMP_FILE} > ${ENV_FILE}
+
 
 # Tools.
-DOCKER=$(which docker)
-DOCKER_COMPOSE=$(which docker-compose)
-
+DOCKER=$(command -v docker || { echo "Error: No docker found." >&2; exit 1; })
+DOCKER_COMPOSE=$(command -v docker-compose || { echo "Error: No docker-compose found." >&2; exit 1; })
 
 # Remove the template extension from files.
 DOCKER_COMPOSE_FILE="${DOCKER_COMPOSE_FILE_TEMPLATE%.*}"
 DOCKER_FILE_DEV="${DOCKER_FILE_TEMPLATE_DEV%.*}"
 DOCKER_FILE_DATASTORE="${DOCKER_FILE_TEMPLATE_DATASTORE%.*}"
+DOCKER_FILE_QA="${DOCKER_FILE_TEMPLATE_QA%.*}"
 
 # Replace variables
 envsubst < $DOCKER_COMPOSE_FILE_TEMPLATE > $DOCKER_COMPOSE_FILE
 envsubst < $DOCKER_FILE_TEMPLATE_DEV > $DOCKER_FILE_DEV
 envsubst < $DOCKER_FILE_TEMPLATE_DATASTORE > $DOCKER_FILE_DATASTORE
+envsubst < $DOCKER_FILE_TEMPLATE_QA > $DOCKER_FILE_QA
 
 
 # Set containers prefix.

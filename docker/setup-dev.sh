@@ -1,6 +1,6 @@
 #!/bin/bash
 
-pip3.4 install -r ${CNTR_FOLDER_DEV}/docker/store-requirements.txt
+pip3.4 install -r ${CNTR_FOLDER_DEV}/docker/requirements-store.txt
 
 
 #

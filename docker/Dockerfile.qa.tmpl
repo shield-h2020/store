@@ -1,0 +1,25 @@
+
+#
+# vNSF Store Quality Assurance environment
+#
+
+FROM docker_${CNTR_DEV}
+
+LABEL project="${CNTR_PROJECT}"
+
+# Dependencies
+RUN yum update -y && \
+    curl --silent --location https://rpm.nodesource.com/setup_8.x | bash - && \
+    yum update -y && \
+    yum install -y nodejs && \
+    npm i -g argv cucumber-html-reporter canned && \
+    yum clean all
+
+ENV NODE_PATH /usr/lib/node_modules
+
+WORKDIR ${CNTR_FOLDER_DEV}/test
+
+# Mock Probe Server.
+CMD ["canned", "$CNTR_FOLDER_VNSFO", "-p", "$CNTR_MOCK_VNSFO_PORT"]
+
+ENTRYPOINT ["${CNTR_FOLDER_DEV}/docker/setup-qa.sh"]
