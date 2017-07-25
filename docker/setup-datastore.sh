@@ -231,7 +231,7 @@ set -ae
 
 
 # Do nested variables interpolation as the shell doesn't seem do it.
-ENV_FILE=.env.subst
+ENV_FILE=$(mktemp /tmp/XXXXXXX)
 ENV_TMP_FILE=$(mktemp /tmp/XXXXXXX)
 echo "#!/bin/sh" > ${ENV_TMP_FILE}
 echo ". ${ENV_FILE_FULL}" >> ${ENV_TMP_FILE}

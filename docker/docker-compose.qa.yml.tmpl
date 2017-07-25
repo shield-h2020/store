@@ -8,8 +8,5 @@ services:
         build:
           context:       .
           dockerfile:    ${DOCKER_FILE_QA}
-        # ports:
-        #     - "${API_PORT}:${API_PORT}"
         volumes:
             - ${SHARED_FOLDER_DEV}:${CNTR_FOLDER_DEV}
-        # command:         python3 src/store.py
