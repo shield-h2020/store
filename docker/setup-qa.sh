@@ -1,8 +1,7 @@
 #!/bin/bash
 
-# source ${CNTR_FOLDER_DEV}/docker/.env
-
 pip3.4 install -r ${CNTR_FOLDER_DEV}/docker/requirements-qa.txt
+
 
 
 #

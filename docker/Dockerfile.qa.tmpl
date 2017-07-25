@@ -3,23 +3,26 @@
 # vNSF Store Quality Assurance environment
 #
 
-FROM docker_${CNTR_DEV}
+FROM centos:7
 
 LABEL project="${CNTR_PROJECT}"
 
 # Dependencies
 RUN yum update -y && \
+    yum install -y epel-release && yum makecache fast && \
+    yum install -y python34 python34-pip && \
+    pip3 install --upgrade pip && \
     curl --silent --location https://rpm.nodesource.com/setup_8.x | bash - && \
     yum update -y && \
     yum install -y nodejs && \
-    npm i -g argv cucumber-html-reporter canned && \
+    npm i -g argv@0.0.2 cucumber-html-reporter@2.0.3 canned@0.3.10 && \
     yum clean all
 
 ENV NODE_PATH /usr/lib/node_modules
 
-WORKDIR ${CNTR_FOLDER_DEV}/test
+WORKDIR ${FOLDER_TESTS_BASEPATH}
 
 # Mock Probe Server.
-CMD ["canned", "$CNTR_FOLDER_VNSFO", "-p", "$CNTR_MOCK_VNSFO_PORT"]
+CMD ["canned", "${CNTR_FOLDER_VNSFO}", "-p", "${CNTR_MOCK_VNSFO_PORT}"]
 
 ENTRYPOINT ["${CNTR_FOLDER_DEV}/docker/setup-qa.sh"]
