@@ -16,7 +16,7 @@ The onboarding process also verifies the vNSF and NS associated descriptors to e
 
 ## Python virtual environment
 
-The [environment](http://docs.python-guide.org/en/latest/dev/virtualenvs/) requirements are defined in the [requirements.txt](docker/store-requirements.txt) file.
+The [environment](http://docs.python-guide.org/en/latest/dev/virtualenvs/) requirements are defined in the [requirements-store.txt](docker/requirements-store.txt) file.
 
 ## Docker
 
@@ -45,17 +45,22 @@ sudo usermod -G docker $(whoami)
 
 ### Setup
 
+Automation details can be found in the [DevOps](#devops) section.
+
 TL;DR
 
 * Run it with:
 
 ```bash
 cd docker
-./run.sh
+./run.sh --production
 ```
 
 Once everything is up and running the last lines on the screen should be something like:
-```python
+```bash
+Creating docker_data-store_1
+Creating docker_dev_1 ... done
+
 dev_1         |  * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
 dev_1         |  * Restarting with stat
 dev_1         |  * Debugger is active!
@@ -65,8 +70,7 @@ dev_1         |  * Debugger pin code: <XXX-XXX-XXX>
 * First-time setup (from another terminal window):
 
 ```bash
-docker exec -it docker_data-store_1 bash
-./setup-datastore.sh --please
+docker exec -it docker_data-store_1 bash -c "/usr/share/dev/store/docker/setup-datastore.sh --production"
 ```
 
 After the first-time setup is finished, you should see that Mongo has been successfully installed.
@@ -82,13 +86,13 @@ bea2622e00d3        mongo               "docker-entrypoint..."   14 minutes ago 
 
 Troubleshooting is possible after accessing the container through its name (last column from above): `docker exec -it $docker_container_name bash`
 
-### Containers
+### Teardown
 
-To have a pain-free installation a [docker environment](https://www.docker.com/) is provided. This uses a [docker-compose](https://docs.docker.com/compose/overview/) file to provide the orchestration for the containers to setup.
+To stop the docker environment and teardown everything simply (_in the docker folder_):
 
-Going a step further on easing up the installation process [environment variables](https://docs.docker.com/compose/environment-variables/#setting-environment-variables-with-docker-compose-run) are defined in the [.env](docker/.env) file. Any specific tailoring for the Store environment instantiation should be done here.
-
-The downside of all this auto-magically environment instantiation is that the actual docker files get a bit harder to read and a [setup orchestrator script](docker/run.sh) needs to be put in place to fill in the proper data in the docker files according to the variables defined in the [.env](docker/.env) file. The outcome of all of this tweaking is that the docker files are created as templates ([docker-compose.yml.tmpl](docker/docker-compose.yml.tmpl), [Dockerfile.datastore.tmpl](docker/Dockerfile.datastore.tmpl), [Dockerfile.dev.tmpl](docker/Dockerfile.dev.tmpl)) and the orchestrator script ([run.sh](docker/run.sh)) produces the proper docker files, builds them up and runs the containers so the Store is up and running.
+```bash
+./run.sh --shutdown
+```
 
 ### First-time setup
 
@@ -133,6 +137,14 @@ The documentation follows the [OpenAPI Specification](https://swagger.io/specifi
 
 Please head to [vNSF Packaging](docs/vnsf/packaging.md) to understand how to package a vNSF for submission to the Store.
 
+# Testing
+
+Please read the [Quality Assurance](docs/qa.md) section to grasp how the Store features are validated.
+
+# DevOps
+
+For deployment setup, environments definition and build automation details please  refer to [DevOps](docs/devops.md).
+
 # Further reading
 
-Please refer to the [Store documentation](docs/index.md) for additional insight on how the Store operates.
+Please refer to the [Store documentation](docs/index.md) for additional insight on how the Store operates and what lies behind the scenes.
