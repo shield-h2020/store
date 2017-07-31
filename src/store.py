@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import json
-
 import base64
+import json
 import os
+import settings as cfg
 import shutil
 import store_errors as err
 import tarfile
@@ -11,28 +11,20 @@ import tempfile
 import yaml
 from eve import Eve
 from flask import abort
+from vnsfo import VnsfOrchestratorApi
 from werkzeug.datastructures import FileStorage, ImmutableMultiDict
 from werkzeug.utils import secure_filename
 
-port = int(os.environ.get('API_PORT', 5000))
-
-# use '0.0.0.0' to ensure your REST API is reachable from all your
-# network (and not only your computer).
-host = '0.0.0.0'
-
 
 def onboard(request):
-    # print(request.form)
-    # print('files: {}'.format(request.files))
-
     # TODO Define proper response codes according to errors.
     if 'package' not in request.files:
-        abort(401)
+        abort(err.HTTP_412_PRECONDITION_FAILED, err.PKG_MISSING_FILE)
 
     file = request.files['package']
 
     if file and file.filename == '':
-        abort(402)
+        abort(err.HTTP_412_PRECONDITION_FAILED, err.PKG_MISSING_FILE)
 
     filename = secure_filename(file.filename)
     package_absolute_path = os.path.join(tempfile.gettempdir(), filename)
@@ -43,7 +35,7 @@ def onboard(request):
         file.save(package_absolute_path)
 
         if not tarfile.is_tarfile(package_absolute_path):
-            abort(403, err.PKG_NOT_TARGZ)
+            abort(err.HTTP_412_PRECONDITION_FAILED, err.PKG_NOT_TARGZ)
 
         extracted_package_path = tempfile.mkdtemp()
 
@@ -53,7 +45,7 @@ def onboard(request):
 
         manifest_path = os.path.join(extracted_package_path, 'manifest.yaml')
         if not os.path.isfile(manifest_path):
-            abort(403, err.PKG_NOT_SHIELD)
+            abort(err.HTTP_406_NOT_ACCEPTABLE, err.PKG_NOT_SHIELD)
         stream = open(manifest_path, 'r')
         manifest = dict(yaml.load(stream))
         stream.close()
@@ -66,7 +58,7 @@ def onboard(request):
         descriptor = stream.read()
         stream.close()
 
-        stream = open(os.path.join(extracted_package_path, 'manifest.yaml'), 'rb')
+        stream = open(manifest_path, 'rb')
         fs = FileStorage(stream)
         files = request.files.copy()
         files['manifest_file'] = fs
@@ -80,6 +72,12 @@ def onboard(request):
         package_data['manifest'] = manifest
         package_data['descriptor'] = descriptor
         request.form = ImmutableMultiDict(package_data)
+
+        # Onboard the vNSF with the Orchestrator.
+        vnsfo = VnsfOrchestratorApi(cfg.VNSFO_HOST, cfg.VNSFO_PORT, cfg.VNSFO_API)
+        if not vnsfo.onboard_vnsf(cfg.TENANT_ID, package_absolute_path):
+            abort(err.HTTP_502_BAD_GATEWAY, err.VNSF_NOT_ADDED_TO_CATALOG)
+
     finally:
         os.remove(package_absolute_path)
         if os.path.isdir(extracted_package_path):
@@ -120,4 +118,6 @@ app.on_fetched_item_vnsfs += send_minimal_vnsf_data
 app.on_post_GET_attestation += send_attestation
 
 if __name__ == '__main__':
-    app.run(host=host, port=port, debug=True)
+    # use '0.0.0.0' to ensure your REST API is reachable from all your
+    # network (and not only your computer).
+    app.run(host='0.0.0.0', port=cfg.API_PORT, debug=True)

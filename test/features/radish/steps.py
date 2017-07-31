@@ -5,7 +5,24 @@ import os
 import re
 import requests
 from dictdiffer import diff
-from radish import when, then, world
+from radish import before, given, when, then, world
+from shutil import rmtree, copyfile
+
+http_headers_to_send = dict()
+
+
+@before.each_scenario
+def setup_scenario(step):
+    # Avoid poisoning mocked responses for the vNSFO.
+    if os.path.exists(world.env['mock-vnsfo-folder']):
+        rmtree(world.env['mock-vnsfo-folder'])
+
+    # Mock vNSFO context.
+    step.context.mock_vnsfo = dict()
+
+    # API context.
+    step.context.api = dict()
+    step.context.api['response'] = dict()
 
 
 def ordered(obj):
@@ -33,6 +50,19 @@ def ordered_json(obj):
     return dict(ordered(obj))
 
 
+def set_http_headers(step, headers):
+    """
+    Saves the HTTP request headers so they can be used in the next request.
+
+    :param step: the test step context data.
+    :param headers: the HTTP headers to use in the next request.
+    """
+
+    global http_headers_to_send
+
+    http_headers_to_send = dict(headers)
+
+
 def set_http_response(step, r):
     """
     Saves the HTTP response from a given request in the test step context for later retrieval where applicable.
@@ -41,9 +71,11 @@ def set_http_response(step, r):
     :param r: the Response object from the HTTP request.
     :return: The response (to the HTTP request done) status code and JSON data as test step context data.
     """
+
     step.context.api = dict()
     step.context.api['response'] = dict()
     step.context.api['response']['status'] = r.status_code
+    step.context.api['response']['text'] = r.text
 
     try:
         step.context.api['response']['json'] = r.json()
@@ -51,9 +83,13 @@ def set_http_response(step, r):
         # No JSON no problem, should be by design.
         pass
 
+    # Clears any existing HTTP request headers to prevent "poisoning" the next request.
+    global http_headers_to_send
+    http_headers_to_send = dict()
+
 
 def http_get(step, url):
-    r = requests.get(url)
+    r = requests.get(url, headers=http_headers_to_send)
     set_http_response(step, r)
 
 
@@ -102,13 +138,33 @@ def matches_file_json(step, file):
         ignore = expected_info['ignore']
 
     expected_data = ordered_json(expected_data)
-    actual_data = ordered_json(step.context.api['response']['json'])
+    actual_data = dict()
+    if 'json' in step.context.api['response']:
+        actual_data = ordered_json(step.context.api['response']['json'])
+
     result = list(diff(actual_data, expected_data, ignore=ignore))
     assert result == [], result
 
 
 @when(re.compile(u'I onboard a vNSF (.*)'))
 def vnsf_onboard(step, package):
+    # Set proper vNSFO response.
+    dest_file = os.path.join(world.env['mock-vnsfo-folder'], 'any', 'any.post.json')
+    dest_path = os.path.dirname(dest_file)
+    if not os.path.exists(dest_path):
+        os.makedirs(dest_path, exist_ok=True)
+    copyfile(os.path.join(world.env['mock-vnsfo-data'], step.context.mock_vnsfo['response_file']), dest_file)
+
+    print('xxx')
+    print('xxx')
+    print(
+            'from: {}\nto: {}'.format(
+                    os.path.join(world.env['mock-vnsfo-data'], step.context.mock_vnsfo['response_file']),
+                    dest_file))
+    print('xxx')
+    print('xxx')
+
+    # Onboard vNSF with the Orchestrator.
     files = {'package': open(os.path.join(world.env['input_data'], package), 'rb')}
     http_post_file(step, world.endpoints['vnsfs'], files)
 
@@ -116,7 +172,7 @@ def vnsf_onboard(step, package):
 @when(re.compile(u'I decommission a (.*)'))
 def vnsf_decommission(step, vnsf):
     vnsf_onboard(step, vnsf)
-    url = '{0}/{1}'.format(world.endpoints['vnsfs'], step.context.api['response']['json']['_id'])
+    url = '{}/{}'.format(world.endpoints['vnsfs'], step.context.api['response']['json']['_id'])
     headers = {'If-Match': step.context.api['response']['json']['_etag']}
     http_delete(step, url, headers=headers)
 
@@ -141,5 +197,18 @@ def expected_status_code(step, code):
     :param step: the test step context data
     :param code: the expected HTTP status code
     """
-    assert step.context.api['response']['status'] == code, 'got status code ' + str(
-            step.context.api['response']['status'])
+    assert step.context.api['response']['status'] == code, 'status code: {}\n and message: {}'.format(str(
+            step.context.api['response']['status']), step.context.api['response']['text'])
+
+
+@given(re.compile(u'I mock the vNSFO response with (.*)'))
+def set_vnsfo_mock_response(step, file):
+    """
+    Defines the headers to send to the mock vNSF Orchestrator.
+
+    :param step: the test step context data
+    :param file: the file where the mock data lives. It is assumed that the file base path is the mock-vNSFO-data
+    folder defined in the testing environment settings.
+    """
+
+    step.context.mock_vnsfo['response_file'] = file

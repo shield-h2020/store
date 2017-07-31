@@ -1,17 +1,15 @@
 import os
 from radish import world
 
-env = {
-    'host': 'http://{0}:{1}'.format(os.environ['CNTR_DEV'],
-                                    os.environ['API_PORT']),
-    'input_data': os.environ['FOLDER_INPUT_DATA'],
-    'expected_output': os.environ['FOLDER_EXPECTED_OUTPUT']
+world.env = {
+    'host': 'http://{}:{}'.format(os.environ['CNTR_DEV'],
+                                  os.environ['API_PORT']),
+    'input_data': os.environ['FOLDER_TESTS_INPUT_DATA'],
+    'expected_output': os.environ['FOLDER_TESTS_EXPECTED_OUTPUT'],
+    'mock-vnsfo-data': os.environ['FOLDER_TESTS_MOCK_VNSFO_DATA'],
+    'mock-vnsfo-folder': os.path.join(os.environ['CNTR_FOLDER_VNSFO'], os.environ['VNSFO_API'])
 }
 
-world.env = env
-
-endpoints = {
-    'vnsfs': '{0}/{1}'.format(world.env['host'], 'vnsfs')
+world.endpoints = {
+    'vnsfs': '{}/{}'.format(world.env['host'], 'vnsfs')
 }
-
-world.endpoints = endpoints

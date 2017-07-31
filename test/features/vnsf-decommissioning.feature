@@ -10,8 +10,8 @@ Feature: vNSF Decommissioning
   @smoke
   Scenario Outline: Successful decommissioning
     When I decommission a <vNSF>
-    Then I expect the response code <value>
+    Then I expect the response code <status>
 
     Examples:
-      | vNSF                  | value |
-      | vnsf/xpto_vnfd.tar.gz | 204   |
+      | vNSF                  | status |
+      | vnsf/xpto_vnfd.tar.gz | 204    |
