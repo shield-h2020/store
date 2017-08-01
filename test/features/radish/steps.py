@@ -83,7 +83,7 @@ def set_http_response(step, r):
         # No JSON no problem, should be by design.
         pass
 
-    # Clears any existing HTTP request headers to prevent "poisoning" the next request.
+    # Clears any existing HTTP request headers to prevent poisoning the next request.
     global http_headers_to_send
     http_headers_to_send = dict()
 
@@ -155,18 +155,10 @@ def vnsf_onboard(step, package):
         os.makedirs(dest_path, exist_ok=True)
     copyfile(os.path.join(world.env['mock-vnsfo-data'], step.context.mock_vnsfo['response_file']), dest_file)
 
-    print('xxx')
-    print('xxx')
-    print(
-            'from: {}\nto: {}'.format(
-                    os.path.join(world.env['mock-vnsfo-data'], step.context.mock_vnsfo['response_file']),
-                    dest_file))
-    print('xxx')
-    print('xxx')
-
     # Onboard vNSF with the Orchestrator.
-    files = {'package': open(os.path.join(world.env['input_data'], package), 'rb')}
-    http_post_file(step, world.endpoints['vnsfs'], files)
+    with open(os.path.join(world.env['input_data'], package), 'rb') as f:
+        files = {'package': f}
+        http_post_file(step, world.endpoints['vnsfs'], files)
 
 
 @when(re.compile(u'I decommission a (.*)'))

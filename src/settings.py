@@ -10,11 +10,11 @@ MONGO_USERNAME = os.environ.get('DATASTORE_USERNAME', 'user')
 MONGO_PASSWORD = os.environ.get('DATASTORE_PASSWORD', 'user')
 MONGO_DBNAME = os.environ.get('DATASTORE_DBNAME', 'shield-store')
 
-VNSFO_HOST = os.environ.get('VNSFO_HOST', '_missing_vnsfo_address')
+VNSFO_HOST = os.environ.get('VNSFO_HOST', '__missing_vnsfo_address__')
 VNSFO_PORT = os.environ.get('VNSFO_PORT', '')
-VNSFO_API = os.environ.get('VNSFO_API', '_missing_vnsfo_api_basepath')
+VNSFO_API = os.environ.get('VNSFO_API', '__missing_vnsfo_api_basepath__')
 
-TENANT_ID = os.environ.get('TENANT_ID', '_no_tenant_set')
+TENANT_ID = os.environ.get('TENANT_ID', '__no_tenant_set__')
 
 #
 # Enable reads (GET), inserts (POST) and DELETE for resources/collections
