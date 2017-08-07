@@ -5,20 +5,14 @@ import json
 import logging
 
 import base64
-import os
-import shutil
-import tarfile
-import tempfile
-import yaml
 from eve import Eve
 from flask import abort
-from werkzeug.datastructures import ImmutableMultiDict, FileStorage
-from werkzeug.utils import secure_filename
 
 import log
 import settings as cfg
 import store_errors as err
-from vnsfo import VnsfOrchestratorApi, VnsfOrchestratorOnboardingException
+from vnsf import Vnsf, VnsfMissingPackage, VnsfWrongPackageCompression, VnsfPackageCompliance, \
+    VnsfMissingDescriptor, VnsfOrchestratorIssue
 
 
 def onboard_vnsf(request):
@@ -31,84 +25,18 @@ def onboard_vnsf(request):
     :param request: the HTTP request data.
     """
 
-    if 'package' not in request.files:
-        logger.error('Missing <package> field in POST')
-        abort(err.HTTP_412_PRECONDITION_FAILED, err.PKG_MISSING_FILE)
-
-    file = request.files['package']
-
-    if file and file.filename == '':
-        logger.info('No package file provided in POST')
-        abort(err.HTTP_412_PRECONDITION_FAILED, err.PKG_MISSING_FILE)
-
-    filename = secure_filename(file.filename)
-    package_absolute_path = os.path.join(tempfile.gettempdir(), filename)
-
-    logger.info("Onboard vNSF from package '{}' stored at '{}'".format(file.filename, package_absolute_path))
-
-    extracted_package_path = ''
-
     try:
-        file.save(package_absolute_path)
+        vnsf = Vnsf()
+        vnsf.onboard_vnsf(request)
 
-        if not tarfile.is_tarfile(package_absolute_path):
-            logger.error(err.PKG_NOT_TARGZ)
-            abort(err.HTTP_412_PRECONDITION_FAILED, err.PKG_NOT_TARGZ)
+    except (VnsfMissingPackage, VnsfWrongPackageCompression, VnsfPackageCompliance) as e:
+        abort(err.HTTP_412_PRECONDITION_FAILED, e)
 
-        extracted_package_path = tempfile.mkdtemp()
+    except VnsfMissingDescriptor as e:
+        abort(err.HTTP_406_NOT_ACCEPTABLE, e)
 
-        package = tarfile.open(package_absolute_path)
-        package.extractall(extracted_package_path)
-        package.close()
-
-        # Get SHIELD manifest data.
-        manifest_path = os.path.join(extracted_package_path, 'manifest.yaml')
-        if not os.path.isfile(manifest_path):
-            logger.error("Missing 'manifest.yaml' from package")
-            abort(err.HTTP_406_NOT_ACCEPTABLE, err.PKG_NOT_SHIELD)
-        with open(manifest_path, 'r') as stream:
-            manifest = dict(yaml.load(stream))
-            logger.debug(manifest)
-
-        # Get the vNSF Descriptor data.
-        # TODO Ensure the file name is secure. secure_filename() removes the / characters which isn't nice
-        vnfd_file = manifest['manifest:vnsf']['descriptor']
-        vnfd_path = os.path.join(extracted_package_path, vnfd_file)
-        if not os.path.isfile(vnfd_path):
-            logger.error("Missing vNSFD. Expected at '{}'".format(vnfd_file))
-            abort(err.HTTP_406_NOT_ACCEPTABLE, err.PKG_MISSING_VNSFD)
-        with open(vnfd_path, 'r') as stream:
-            vnfd = stream.read()
-
-        # Ensure the SHIELD manifest is stored as a binary file.
-        # NOTE: the file is closed by Eve once stored.
-        stream = open(manifest_path, 'rb')
-        fs = FileStorage(stream)
-        files = request.files.copy()
-        files['manifest_file'] = fs
-        request.files = ImmutableMultiDict(files)
-
-        # Convert the vNSF package into the document data.
-        # NOTE: there's no need to deep copy as the data won't be modified until it gets stored in the database.
-        package_data = request.form.copy()
-        package_data['registry'] = {'vendor': "vNSF maker A", 'capabilities': ["some stuff"]}
-        package_data['state'] = 'sandboxed'
-        package_data['manifest'] = manifest
-        package_data['descriptor'] = vnfd
-        request.form = ImmutableMultiDict(package_data)
-
-        # Onboard the vNSF with the Orchestrator.
-        try:
-            vnsfo = VnsfOrchestratorApi(cfg.VNSFO_PROTOCOL, cfg.VNSFO_HOST, cfg.VNSFO_PORT, cfg.VNSFO_API)
-            vnsfo.onboard_vnsf(cfg.VNSFO_TENANT_ID, package_absolute_path)
-        except VnsfOrchestratorOnboardingException:
-            logger.error('vNSF not onboarded with the Orchestrator')
-            abort(err.HTTP_502_BAD_GATEWAY, err.VNSF_NOT_ADDED_TO_CATALOG)
-
-    finally:
-        os.remove(package_absolute_path)
-        if os.path.isdir(extracted_package_path):
-            shutil.rmtree(extracted_package_path)
+    except VnsfOrchestratorIssue as e:
+        abort(err.HTTP_502_BAD_GATEWAY, e)
 
 
 def send_minimal_vnsf_data(response):
