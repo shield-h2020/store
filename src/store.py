@@ -27,7 +27,7 @@ def onboard_vnsf(request):
 
     try:
         vnsf = Vnsf()
-        vnsf.onboard_vnsf(request)
+        vnsf.onboard_vnsf__new(request)
 
     except (VnsfMissingPackage, VnsfWrongPackageCompression, VnsfPackageCompliance) as e:
         abort(err.HTTP_412_PRECONDITION_FAILED, e)
