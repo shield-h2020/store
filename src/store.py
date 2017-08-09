@@ -1,89 +1,42 @@
 # -*- coding: utf-8 -*-
 
+
 import json
+import logging
 
 import base64
-import os
-import shutil
-import store_errors as err
-import tarfile
-import tempfile
-import yaml
 from eve import Eve
 from flask import abort
-from werkzeug.datastructures import FileStorage, ImmutableMultiDict
-from werkzeug.utils import secure_filename
 
-port = int(os.environ.get('API_PORT', 5000))
-
-# use '0.0.0.0' to ensure your REST API is reachable from all your
-# network (and not only your computer).
-host = '0.0.0.0'
+import log
+import settings as cfg
+import store_errors as err
+from vnsf import Vnsf, VnsfMissingPackage, VnsfWrongPackageFormat, VnsfPackageCompliance
+from vnsfo import VnsfoMissingVnsfDescriptor, VnsfOrchestratorOnboardingException
 
 
-def onboard(request):
-    # print(request.form)
-    # print('files: {}'.format(request.files))
+def onboard_vnsf(request):
+    """
+    Registers a vNSF into the Store and onboards it with the Orchestrator.
 
-    # TODO Define proper response codes according to errors.
-    if 'package' not in request.files:
-        abort(401)
+    The SHIELD manifest is checked for integrity and compliance. Metadata is stored for the catalogue and the actual
+    manifest file is stored as binary so it can be provided for attestation purposes (thus ensuring tamper-proofing).
 
-    file = request.files['package']
-
-    if file and file.filename == '':
-        abort(402)
-
-    filename = secure_filename(file.filename)
-    package_absolute_path = os.path.join(tempfile.gettempdir(), filename)
-
-    extracted_package_path = ''
+    :param request: the HTTP request data.
+    """
 
     try:
-        file.save(package_absolute_path)
+        vnsf = Vnsf()
+        vnsf.onboard_vnsf(request)
 
-        if not tarfile.is_tarfile(package_absolute_path):
-            abort(403, err.PKG_NOT_TARGZ)
+    except (VnsfMissingPackage, VnsfWrongPackageFormat, VnsfPackageCompliance) as e:
+        abort(err.HTTP_412_PRECONDITION_FAILED, e)
 
-        extracted_package_path = tempfile.mkdtemp()
+    except VnsfoMissingVnsfDescriptor as e:
+        abort(err.HTTP_406_NOT_ACCEPTABLE, e)
 
-        package = tarfile.open(package_absolute_path)
-        package.extractall(extracted_package_path)
-        package.close()
-
-        manifest_path = os.path.join(extracted_package_path, 'manifest.yaml')
-        if not os.path.isfile(manifest_path):
-            abort(403, err.PKG_NOT_SHIELD)
-        stream = open(manifest_path, 'r')
-        manifest = dict(yaml.load(stream))
-        stream.close()
-
-        print(manifest)
-
-        # TODO Ensure the file name is secure. secure_filename() removes the / characters which isn't nice
-        desciptor_file = manifest['manifest:vnsf']['descriptor']
-        stream = open(os.path.join(extracted_package_path, desciptor_file), 'r')
-        descriptor = stream.read()
-        stream.close()
-
-        stream = open(os.path.join(extracted_package_path, 'manifest.yaml'), 'rb')
-        fs = FileStorage(stream)
-        files = request.files.copy()
-        files['manifest_file'] = fs
-        request.files = ImmutableMultiDict(files)
-
-        # Convert the vNSF package into the document data.
-        # NOTE: there's no need to deep copy as the data won't be modified until it gets stored in the database.
-        package_data = request.form.copy()
-        package_data['registry'] = {'vendor': "vNSF maker A", 'capabilities': ["some stuff"]}
-        package_data['state'] = 'sandboxed'
-        package_data['manifest'] = manifest
-        package_data['descriptor'] = descriptor
-        request.form = ImmutableMultiDict(package_data)
-    finally:
-        os.remove(package_absolute_path)
-        if os.path.isdir(extracted_package_path):
-            shutil.rmtree(extracted_package_path)
+    except VnsfOrchestratorOnboardingException as e:
+        abort(err.HTTP_502_BAD_GATEWAY, e)
 
 
 def send_minimal_vnsf_data(response):
@@ -107,6 +60,8 @@ def send_attestation(request, response):
     :return: The attestation data.
     """
 
+    logger.info('Send attestation data only')
+
     payload_json = json.loads(response.get_data(as_text=True))
     response.set_data(base64.b64decode(payload_json['manifest_file']))
 
@@ -115,9 +70,14 @@ def send_attestation(request, response):
 
 
 app = Eve()
-app.on_pre_POST_vnsfs += onboard
+app.on_pre_POST_vnsfs += onboard_vnsf
 app.on_fetched_item_vnsfs += send_minimal_vnsf_data
 app.on_post_GET_attestation += send_attestation
 
 if __name__ == '__main__':
-    app.run(host=host, port=port, debug=True)
+    log.setup_logging()
+    logger = logging.getLogger(__name__)
+
+    # use '0.0.0.0' to ensure your REST API is reachable from all your
+    # network (and not only your computer).
+    app.run(host='0.0.0.0', port=cfg.API_PORT, debug=True)

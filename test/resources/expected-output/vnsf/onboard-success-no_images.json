@@ -1,0 +1,12 @@
+{
+  "ignore": [
+    "_etag",
+    "_updated",
+    "_id",
+    "_created",
+    "_links"
+  ],
+  "expected": {
+    "_status": "OK"
+  }
+}

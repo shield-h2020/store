@@ -1,0 +1,134 @@
+[
+    {
+        "description": "Ensures the Store is up and running.",
+        "elements": [
+            {
+                "description": "",
+                "id": "1",
+                "keyword": "Scenario",
+                "line": 7,
+                "name": "Endpoints ready",
+                "steps": [
+                    {
+                        "keyword": "When",
+                        "line": 8,
+                        "name": "When I list the endpoints",
+                        "result": {
+                            "duration": 5960000.0,
+                            "status": "passed"
+                        }
+                    },
+                    {
+                        "keyword": "Then",
+                        "line": 9,
+                        "name": "Then I expect the JSON response to be as in api-endpoints.json",
+                        "result": {
+                            "duration": 478000.0,
+                            "status": "passed"
+                        }
+                    }
+                ],
+                "tags": [],
+                "type": "scenario"
+            }
+        ],
+        "id": "1",
+        "keyword": "Feature",
+        "line": 3,
+        "name": "Health Checks",
+        "tags": [
+            {
+                "line": 1,
+                "name": "@smoke"
+            },
+            {
+                "line": 2,
+                "name": "@health-check"
+            }
+        ],
+        "type": "feature",
+        "uri": "./health-checks.feature"
+    },
+    {
+        "description": "Validates the entire vNSF onboarding process.",
+        "elements": [
+            {
+                "description": "",
+                "id": "2",
+                "keyword": "Scenario Outline",
+                "line": 6,
+                "name": "Successful onboarding - row 0",
+                "steps": [
+                    {
+                        "keyword": "When",
+                        "line": 12,
+                        "name": "When I onboard a vNSF vnsf/xpto_vnfd.tar.gz",
+                        "result": {
+                            "duration": 278031000.0,
+                            "status": "passed"
+                        }
+                    },
+                    {
+                        "keyword": "Then",
+                        "line": 12,
+                        "name": "Then I expect the JSON response to be as in vnsf/onboard-success-no_images.json",
+                        "result": {
+                            "duration": 399000.0,
+                            "status": "passed"
+                        }
+                    }
+                ],
+                "tags": [],
+                "type": "scenario"
+            }
+        ],
+        "id": "2",
+        "keyword": "Feature",
+        "line": 1,
+        "name": "vNSF Onboarding",
+        "tags": [],
+        "type": "feature",
+        "uri": "./vnsf-onboarding.feature"
+    },
+    {
+        "description": "\"\"\"\nNOTE: for the time being the decommissioning test is package-based, i.e., the package is first onboarded and right\nafterwards decommissioned. This is obviously not the desired behaviour but saves for now the overwork of populating\nthe data store beforehand. Also ensuring the record is no longer in the data store is a must.\n\"\"\"\nValidates the entire vNSF decommissioning process.",
+        "elements": [
+            {
+                "description": "",
+                "id": "2",
+                "keyword": "Scenario Outline",
+                "line": 11,
+                "name": "Successful decommissioning - row 0",
+                "steps": [
+                    {
+                        "keyword": "When",
+                        "line": 17,
+                        "name": "When I decommission a vnsf/xpto_vnfd.tar.gz",
+                        "result": {
+                            "duration": 37776000.0,
+                            "status": "passed"
+                        }
+                    },
+                    {
+                        "keyword": "Then",
+                        "line": 17,
+                        "name": "Then I expect the response code 204",
+                        "result": {
+                            "duration": 168000.0,
+                            "status": "passed"
+                        }
+                    }
+                ],
+                "tags": [],
+                "type": "scenario"
+            }
+        ],
+        "id": "3",
+        "keyword": "Feature",
+        "line": 1,
+        "name": "vNSF Decommissioning",
+        "tags": [],
+        "type": "feature",
+        "uri": "./vnsf-decommissioning.feature"
+    }
+]

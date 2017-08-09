@@ -16,4 +16,4 @@ RUN yum update -y && \
 
 WORKDIR ${CNTR_FOLDER_DEV}
 
-ENTRYPOINT ["${CNTR_FOLDER_DEV}/docker/setup.sh"]
+ENTRYPOINT ["${CNTR_FOLDER_DEV}/docker/setup-dev.sh"]

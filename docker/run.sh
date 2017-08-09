@@ -1,4 +1,4 @@
-#/bin/bash
+#/bin/sh
 
 
 # ******************************************************************************
@@ -18,14 +18,32 @@ Sets up the docker environment for the vNSF & NS Store to run and starts up all 
 
 
 OPTIONS
-   -h                   Prints this usage message.
+   --production         (Optional) Instantiate the running environment for the Store. This starts up all the containers in the background (like a daemon) and returns to the command line. To stop everything use the 'shutdown' option.
 
-  --dev_folder          (Required) /path/to/the/store/development/folder
+   --staging            (Optional) Does not run the containers in background so the output from the containers is visible. To stop it press ^C.
+
+   --qa                 (Optional) Whether the tests are to be run.
+
+   --shutdown           (Optional) Stops all the Store-related running containers.
+
+   -h, --help           Prints this usage message.
 
 EXAMPLES
-  $0 --dev_folder /path/to/the/store/development/folder
+  $0 --production
 
-    Used by the setup script as the source path for some files it uses during the docker build and containers instantiation. It also makes available the development folder inside the Store containers so a developer can make any changes or improvements to the Store (through docker exec).
+    Runs the production environment. All containers run in the background and the shutdown option must be provided later on when wanting to terminate all the Store-related containers.
+
+  $0 --shutdown
+
+    Terminates all the Store running environment and cleans up.
+
+  $0 --staging
+
+    Runs the staging environment where the containers output is visible so the user can see what is going on.
+
+  $0 --qa
+
+    Runs the QA environment and produces a report with the test execution status. The report is at the 'test/reports' folder.
 
 USAGE_MSG
 }
@@ -45,7 +63,10 @@ USAGE_MSG
 
 _PARAM_INVALID_VALUE="__##_INVALID_VALUE_##__"
 
-#p_dev_folder=$_PARAM_INVALID_VALUE
+p_production=$_PARAM_INVALID_VALUE
+p_staging=$_PARAM_INVALID_VALUE
+p_shutdown=$_PARAM_INVALID_VALUE
+p_qa=$_PARAM_INVALID_VALUE
 
 
 
@@ -103,7 +124,7 @@ ErrorInvalidParameter() {
 # ******************************************************************************
 HandleOptions() {
 
-    parseParamsCmd=`getopt -n$0 -o h:: -a --long dev_folder: -- "$@"`
+    parseParamsCmd=`getopt -n$0 -o h:: -a --long production,staging,shutdown,qa -- "$@"`
 
     if [ $? != 0 ] ; then Usage; echo; echo; exit 1 ; fi
 
@@ -111,14 +132,35 @@ HandleOptions() {
 
     [ $# -eq 0 ] && Usage
 
+    actionSet=0
+
     while [ $# -gt 0 ]
     do
 
         case "$1" in
 
-            --dev_folder)
-                p_dev_folder=$2
+            --production)
+                p_production=true
                 shift
+                actionSet=1
+                ;;
+
+            --shutdown)
+                p_shutdown=true
+                shift
+                actionSet=1
+                ;;
+
+            --staging)
+                p_staging=true
+                shift
+                actionSet=1
+                ;;
+
+            --qa)
+                p_qa=true
+                shift
+                actionSet=1
                 ;;
 
             # Help
@@ -154,16 +196,61 @@ HandleOptions() {
     # Check mandatory parameters.
     #
 
-    # if [ "$p_dev_folder" = "$_PARAM_INVALID_VALUE" ]; then
-    #   ErrorParameterNotSet "dev_folder"
-    # fi
+    if [ $actionSet -eq 0 ] ; then
+        echo -e "Missing option(s)\n"
+        Usage
+        echo -e "\n\n"
+        exit 1
+    fi
 
     return $OPTIND
 }
 
 
 
+# ******************************************************************************
+# ******************************************************************************
+# *
+# *                F U N C T I O N S
+# *
+# ******************************************************************************
+# ******************************************************************************
 
+
+
+#******************************************************************************
+# Description: Cleans up after execution.
+#
+# Parameters:  None.
+#
+# Returns:     None.
+# ******************************************************************************
+Cleanup()
+{
+    rm -f ${ENV_FILE_FULL}
+    rm -f ${ENV_TMP_FILE}
+    rm -f ${DOCKER_COMPOSE_FILE}
+    rm -f ${DOCKER_FILE_DEV}
+    rm -f ${DOCKER_FILE_DATASTORE}
+    rm -f ${DOCKER_COMPOSE_FILE_QA}
+    rm -f ${DOCKER_FILE_QA}
+}
+
+
+
+#******************************************************************************
+# Description: Stops and removes all the Store containers.
+#
+# Parameters: None.
+# Returns:    Nothing.
+# ******************************************************************************
+Shutdown() {
+
+    # Stop and remove containers.
+    containers=($($DOCKER ps -aq --filter label=project\=${CNTR_PROJECT}))
+    $DOCKER stop "${containers[@]}"
+    $DOCKER rm "${containers[@]}"
+}
 
 
 
@@ -181,23 +268,65 @@ HandleOptions() {
 #
 HandleOptions "$@"
 
-p_dev_folder=${PWD}/../
+
+###
+###
+### R A T I O N A L E:
+###
+### To switch between environments play with the .env* files to set the proper configurations.
+###
+###
+
+
 
 # Based on: Let's Deploy! (Part 1)
 # http://lukeswart.net/2016/03/lets-deploy-part-1/
+
+# The environment variables start off with the one from the production environment and get replaced from there.
+ENV_FILE_FULL=$(mktemp /tmp/XXXXXXX)
+cat .env > ${ENV_FILE_FULL}
+
+if [ $p_staging = true ]; then
+    # Load changes for Staging.
+    cat .env.staging >> ${ENV_FILE_FULL}
+fi
+
+if [ $p_qa = true ]; then
+    # Load changes for QA.
+    cat .env.qa >> ${ENV_FILE_FULL}
+fi
+
+. ${ENV_FILE_FULL}
 
 
 
 # Export variables so they can be used here. Stop script at first error.
 set -ae
 
-SHARED_FOLDER_DEV=$p_dev_folder
+SHARED_FOLDER_DEV=${PWD}/../
 
-source .env
+# Do nested variables interpolation as the shell doesn't seem do it.
+ENV_FILE=$(mktemp /tmp/XXXXXXX)
+ENV_TMP_FILE=$(mktemp /tmp/XXXXXXX)
+echo "#!/bin/sh" > ${ENV_TMP_FILE}
+echo ". ${ENV_FILE_FULL}" >> ${ENV_TMP_FILE}
+echo "cat <<_VARS_BLOCK_" >> ${ENV_TMP_FILE}
+cat ${ENV_FILE_FULL} >> ${ENV_TMP_FILE}
+echo "_VARS_BLOCK_" >> ${ENV_TMP_FILE}
+echo >> ${ENV_TMP_FILE}
+. ${ENV_TMP_FILE} > ${ENV_FILE}
+
+
 
 # Tools.
-DOCKER=$(which docker)
-DOCKER_COMPOSE=$(which docker-compose)
+DOCKER=$(command -v docker || { echo "Error: No docker found." >&2; Cleanup; exit 1; })
+DOCKER_COMPOSE=$(command -v docker-compose || { echo "Error: No docker-compose found." >&2; Cleanup; exit 1; })
+
+
+if [ $p_shutdown = true ]; then
+    Shutdown
+    exit 0
+fi
 
 
 # Remove the template extension from files.
@@ -211,14 +340,40 @@ envsubst < $DOCKER_FILE_TEMPLATE_DEV > $DOCKER_FILE_DEV
 envsubst < $DOCKER_FILE_TEMPLATE_DATASTORE > $DOCKER_FILE_DATASTORE
 
 
+COMPOSE_FILES="-f $DOCKER_COMPOSE_FILE"
+
+if [ $p_qa = true ]; then
+    # Setup QA environment.
+    DOCKER_COMPOSE_FILE_QA="${DOCKER_COMPOSE_FILE_QA_TEMPLATE%.*}"
+    DOCKER_FILE_QA="${DOCKER_FILE_TEMPLATE_QA%.*}"
+    envsubst < $DOCKER_COMPOSE_FILE_QA_TEMPLATE > $DOCKER_COMPOSE_FILE_QA
+    envsubst < $DOCKER_FILE_TEMPLATE_QA > $DOCKER_FILE_QA
+    COMPOSE_FILES="-f $DOCKER_COMPOSE_FILE -f $DOCKER_COMPOSE_FILE_QA"
+fi
+
 # Set containers prefix.
 COMPOSE_PROJECT_NAME=$PROJECT
 
 # Create services.
-$DOCKER_COMPOSE build --force-rm
+$DOCKER_COMPOSE ${COMPOSE_FILES} build --force-rm
+
+if ! [ $p_staging = true ]; then
+    COMPOSE_FLAGS=-d
+fi
 
 # Loadup containers.
-$DOCKER_COMPOSE up
+$DOCKER_COMPOSE ${COMPOSE_FILES} up ${COMPOSE_FLAGS}
 
-echo
-echo
+if [ $p_qa = true ]; then
+    # Have the QA container setup the data store and run the tests.
+    echo "Waiting for the containers to be ready" && sleep 10
+    ${DOCKER} container exec docker_${DATASTORE_HOST}_1 bash -c "${CNTR_FOLDER_DEV}/docker/setup-datastore.sh --qa"
+    ${DOCKER} container exec docker_${CNTR_QA}_1 ${FOLDER_TESTS_BASEPATH}/run.sh
+    echo ===
+    echo === Tests report is at ${FOLDER_TESTS_REPORT}
+    echo ===
+fi
+
+Cleanup
+
+echo -e "\n\n"

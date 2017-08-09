@@ -2,14 +2,23 @@
 
 import os
 
-# We want to seamlessy run our API both locally and on Heroku. If running on
-# Heroku, sensible DB connection settings are stored in environment variables.
+API_PORT = int(os.environ.get('API_PORT', 5000))
+
 MONGO_HOST = os.environ.get('DATASTORE_HOST', 'data-store')
 MONGO_PORT = os.environ.get('DATASTORE_PORT', 27017)
 MONGO_USERNAME = os.environ.get('DATASTORE_USERNAME', 'user')
 MONGO_PASSWORD = os.environ.get('DATASTORE_PASSWORD', 'user')
 MONGO_DBNAME = os.environ.get('DATASTORE_DBNAME', 'shield-store')
 
+VNSFO_PROTOCOL = os.environ.get('VNSFO_PROTOCOL', 'http')
+VNSFO_HOST = os.environ.get('VNSFO_HOST', '__missing_vnsfo_address__')
+VNSFO_PORT = os.environ.get('VNSFO_PORT', '')
+VNSFO_API = os.environ.get('VNSFO_API', '__missing_vnsfo_api_basepath__')
+
+# NOTE: this shall be removed once AAA is in place.
+VNSFO_TENANT_ID = os.environ.get('VNSFO_TENANT_ID', '__no_tenant_set__')
+
+#
 # Enable reads (GET), inserts (POST) and DELETE for resources/collections
 # (if you omit this line, the API will default to ['GET'] and provide
 # read-only access to the endpoint).
@@ -53,6 +62,7 @@ vnsf_model = {
                 'type': 'dict',
                 'required': True,
                 'schema': {
+                    'package': {'type': 'string', 'empty': False, 'required': True},
                     'descriptor': {'type': 'string', 'empty': False, 'required': True},
                     'type': {'type': 'string', 'empty': False, 'allowed': ["OSM"], 'required': True},
 
