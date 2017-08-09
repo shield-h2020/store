@@ -62,6 +62,7 @@ vnsf_model = {
                 'type': 'dict',
                 'required': True,
                 'schema': {
+                    'package': {'type': 'string', 'empty': False, 'required': True},
                     'descriptor': {'type': 'string', 'empty': False, 'required': True},
                     'type': {'type': 'string', 'empty': False, 'allowed': ["OSM"], 'required': True},
 

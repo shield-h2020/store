@@ -44,7 +44,7 @@ class VnsfOrchestratorAdapter:
             server += ':' + port
 
         self.basepath = '{}://{}/{}'.format(protocol, server, api_basepath)
-        self.logger.info('vNSF Orchestrator API at: %s', self.basepath)
+        self.logger.debug('vNSF Orchestrator API at: %s', self.basepath)
 
     def _parse_vnsf_package(self, vnsf_package_path, vnsfd_file):
         """
@@ -72,21 +72,20 @@ class VnsfOrchestratorAdapter:
         self.logger.debug('extracted contents: %s', os.listdir(extracted_package_path))
         self.logger.debug('vNSFO package: %s',
                           os.listdir(os.path.join(extracted_package_path, os.listdir(extracted_package_path)[0])))
-        self.logger.debug('vnsfd_path: %s', vnsfd_file)
+        self.logger.debug('VNFD path: %s', vnsfd_file)
 
         # The vNSF Descriptor must be in the expected location so it's contents can be retrieved.
         vnfd_file_abs_path = os.path.join(extracted_package_path, vnsfd_file)
         if not os.path.isfile(vnfd_file_abs_path):
-            self.logger.error("Missing vNSFD. Expected at '%s'", vnsfd_file)
+            self.logger.error("Missing VNFD. Expected at '%s'", vnsfd_file)
             raise VnsfoMissingVnsfDescriptor(err.PKG_MISSING_VNSFD)
         with open(vnfd_file_abs_path, 'r') as stream:
             vnsfd = stream.read()
 
-        # Set the vNSF package data useful for the onboarding operation.
-        package_data = dict()
-        package_data['descriptor'] = vnsfd
+        self.logger.debug('VNFD\n%s', vnsfd)
 
-        self.logger.debug('vNSFD\n%s', vnsfd)
+        # Set the vNSF package data useful for the onboarding operation.
+        package_data = {'descriptor': vnsfd}
 
         shutil.rmtree(extracted_package_path)
 
@@ -106,7 +105,8 @@ class VnsfOrchestratorAdapter:
         :param tenant_id: The tenant where to onboard the vNSF.
         :param vnsf_package_path: The file system path where the OSM VNF package is stored.
         :param vnsfd_file: The relative path to the VNF Descriptor within the OSM VNF package.
-        :return:
+
+        :return: the VNF package data.
         """
 
         # Extract the vNSF package details relevant for onboarding.
