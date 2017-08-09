@@ -1,15 +1,16 @@
 import logging
 
 import os
-import shutil
 import tarfile
-import tempfile
 import yaml
+from shutil import rmtree
+from tempfile import gettempdir, mkdtemp
 from werkzeug.datastructures import ImmutableMultiDict, FileStorage
 from werkzeug.utils import secure_filename
 
 import settings as cfg
 import store_errors as err
+from utils import extract_package
 from vnsfo import VnsfOrchestratorAdapter
 
 
@@ -17,19 +18,11 @@ class VnsfMissingPackage(Exception):
     pass
 
 
-class VnsfWrongPackageCompression(Exception):
+class VnsfWrongPackageFormat(Exception):
     pass
 
 
 class VnsfPackageCompliance(Exception):
-    pass
-
-
-class VnsfMissingDescriptor(Exception):
-    pass
-
-
-class VnsfOrchestratorIssue(Exception):
     pass
 
 
@@ -51,7 +44,7 @@ class Vnsf:
         self.logger.info("Onboard vNSF from package '%s'", request.files['package'].filename)
 
         # Ensure it's a SHIELD vNSF package.
-        extracted_package_path, manifest_path = self._lint_vnsf_package(request)
+        extracted_package_path, manifest_path = self._lint_vnsf_package(request.files)
 
         # Get the SHIELD manifest data.
         with open(manifest_path, 'r') as stream:
@@ -87,44 +80,43 @@ class Vnsf:
         request.form = ImmutableMultiDict(package_data)
 
         if os.path.isdir(extracted_package_path):
-            shutil.rmtree(extracted_package_path)
+            rmtree(extracted_package_path)
 
-    def _lint_vnsf_package(self, request):
+    def _lint_vnsf_package(self, files):
         """
         Ensures the vNSF package is compliant. The package is stored locally so it's contents can be processed.
 
-        :param request: The request data.
+        :param files: The packages to onboard (as files MultiDict field from
+        http://werkzeug.pocoo.org/docs/0.12/wrappers/#werkzeug.wrappers.BaseRequest).
 
         :return:  extracted package absolute file system path;
                   SHIELD manifest absolute file system path.
         """
 
-        if 'package' not in request.files:
+        if 'package' not in files:
             self.logger.error("Missing or wrong field in POST. 'package' should be used as the field name")
             raise VnsfMissingPackage(err.PKG_MISSING_FILE)
 
-        package_file = request.files['package']
+        package_file = files['package']
         if package_file and package_file.filename == '':
             self.logger.info('No package file provided in POST')
             raise VnsfMissingPackage(err.PKG_MISSING_FILE)
 
         filename = secure_filename(package_file.filename)
-        package_absolute_path = os.path.join(tempfile.gettempdir(), filename)
+        package_absolute_path = os.path.join(gettempdir(), filename)
 
         try:
             package_file.save(package_absolute_path)
 
             if not tarfile.is_tarfile(package_absolute_path):
                 self.logger.error(err.PKG_NOT_TARGZ)
-                raise VnsfWrongPackageCompression(err.PKG_NOT_TARGZ)
+                raise VnsfWrongPackageFormat(err.PKG_NOT_TARGZ)
 
             self.logger.debug("Package stored at '%s'", package_absolute_path)
 
-            extracted_package_path = tempfile.mkdtemp()
+            extracted_package_path = mkdtemp()
 
-            package = tarfile.open(package_absolute_path)
-            package.extractall(extracted_package_path)
-            package.close()
+            extract_package(package_absolute_path, extracted_package_path)
 
             # Get the SHIELD manifest data.
             manifest_path = os.path.join(extracted_package_path, 'manifest.yaml')

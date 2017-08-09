@@ -11,8 +11,8 @@ from flask import abort
 import log
 import settings as cfg
 import store_errors as err
-from vnsf import Vnsf, VnsfMissingPackage, VnsfWrongPackageCompression, VnsfPackageCompliance, \
-    VnsfMissingDescriptor, VnsfOrchestratorIssue
+from vnsf import Vnsf, VnsfMissingPackage, VnsfWrongPackageFormat, VnsfPackageCompliance
+from vnsfo import VnsfoMissingVnsfDescriptor, VnsfOrchestratorOnboardingException
 
 
 def onboard_vnsf(request):
@@ -29,13 +29,13 @@ def onboard_vnsf(request):
         vnsf = Vnsf()
         vnsf.onboard_vnsf(request)
 
-    except (VnsfMissingPackage, VnsfWrongPackageCompression, VnsfPackageCompliance) as e:
+    except (VnsfMissingPackage, VnsfWrongPackageFormat, VnsfPackageCompliance) as e:
         abort(err.HTTP_412_PRECONDITION_FAILED, e)
 
-    except VnsfMissingDescriptor as e:
+    except VnsfoMissingVnsfDescriptor as e:
         abort(err.HTTP_406_NOT_ACCEPTABLE, e)
 
-    except VnsfOrchestratorIssue as e:
+    except VnsfOrchestratorOnboardingException as e:
         abort(err.HTTP_502_BAD_GATEWAY, e)
 
 

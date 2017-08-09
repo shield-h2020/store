@@ -2,11 +2,12 @@ import logging
 
 import os
 import requests
-import shutil
 import tarfile
-import tempfile
+from shutil import rmtree
+from tempfile import mkdtemp
 
 import store_errors as err
+from utils import extract_package
 
 
 class VnsfoVnsfWrongPackageFormat(Exception):
@@ -45,51 +46,6 @@ class VnsfOrchestratorAdapter:
 
         self.basepath = '{}://{}/{}'.format(protocol, server, api_basepath)
         self.logger.debug('vNSF Orchestrator API at: %s', self.basepath)
-
-    def _parse_vnsf_package(self, vnsf_package_path, vnsfd_file):
-        """
-        Decompresses a vNSF package and looks for the expected files and content according to what the vNSF
-        Orchestrator is expecting.
-
-        :param vnsf_package_path: The file system path to the vNSF package (.tar.gz) file.
-        :param vnsfd_file: The path to where the vNSF Descriptor file (<name>_vnfd.yaml) is located within the package.
-
-        :return: The vNSF package data relevant to the onboarding operation.
-        """
-
-        # The vNSF package must be in the proper format (.tar.gz).
-        if not tarfile.is_tarfile(vnsf_package_path):
-            self.logger.error(err.PKG_NOT_TARGZ)
-            raise VnsfoVnsfWrongPackageFormat(err.PKG_NOT_TARGZ)
-
-        extracted_package_path = tempfile.mkdtemp()
-
-        package = tarfile.open(vnsf_package_path)
-        package.extractall(extracted_package_path)
-        package.close()
-
-        self.logger.debug('extracted package path: %s', extracted_package_path)
-        self.logger.debug('extracted contents: %s', os.listdir(extracted_package_path))
-        self.logger.debug('vNSFO package: %s',
-                          os.listdir(os.path.join(extracted_package_path, os.listdir(extracted_package_path)[0])))
-        self.logger.debug('VNFD path: %s', vnsfd_file)
-
-        # The vNSF Descriptor must be in the expected location so it's contents can be retrieved.
-        vnfd_file_abs_path = os.path.join(extracted_package_path, vnsfd_file)
-        if not os.path.isfile(vnfd_file_abs_path):
-            self.logger.error("Missing VNFD. Expected at '%s'", vnsfd_file)
-            raise VnsfoMissingVnsfDescriptor(err.PKG_MISSING_VNSFD)
-        with open(vnfd_file_abs_path, 'r') as stream:
-            vnsfd = stream.read()
-
-        self.logger.debug('VNFD\n%s', vnsfd)
-
-        # Set the vNSF package data useful for the onboarding operation.
-        package_data = {'descriptor': vnsfd}
-
-        shutil.rmtree(extracted_package_path)
-
-        return package_data
 
     def onboard_vnsf(self, tenant_id, vnsf_package_path, vnsfd_file):
         """
@@ -133,3 +89,46 @@ class VnsfOrchestratorAdapter:
             raise VnsfOrchestratorOnboardingException('Can not reach the Orquestrator')
 
         return package
+
+    def _parse_vnsf_package(self, vnsf_package_path, vnsfd_file):
+        """
+        Decompresses a vNSF package and looks for the expected files and content according to what the vNSF
+        Orchestrator is expecting.
+
+        :param vnsf_package_path: The file system path to the vNSF package (.tar.gz) file.
+        :param vnsfd_file: The path to where the vNSF Descriptor file (<name>_vnfd.yaml) is located within the package.
+
+        :return: The vNSF package data relevant to the onboarding operation.
+        """
+
+        # The vNSF package must be in the proper format (.tar.gz).
+        if not tarfile.is_tarfile(vnsf_package_path):
+            self.logger.error(err.PKG_NOT_TARGZ)
+            raise VnsfoVnsfWrongPackageFormat(err.PKG_NOT_TARGZ)
+
+        extracted_package_path = mkdtemp()
+
+        extract_package(vnsf_package_path, extracted_package_path)
+
+        self.logger.debug('extracted package path: %s', extracted_package_path)
+        self.logger.debug('extracted contents: %s', os.listdir(extracted_package_path))
+        self.logger.debug('vNSFO package: %s',
+                          os.listdir(os.path.join(extracted_package_path, os.listdir(extracted_package_path)[0])))
+        self.logger.debug('VNFD path: %s', vnsfd_file)
+
+        # The vNSF Descriptor must be in the expected location so it's contents can be retrieved.
+        vnfd_file_abs_path = os.path.join(extracted_package_path, vnsfd_file)
+        if not os.path.isfile(vnfd_file_abs_path):
+            self.logger.error("Missing VNFD. Expected at '%s'", vnsfd_file)
+            raise VnsfoMissingVnsfDescriptor(err.PKG_MISSING_VNSFD)
+        with open(vnfd_file_abs_path, 'r') as stream:
+            vnsfd = stream.read()
+
+        self.logger.debug('VNFD\n%s', vnsfd)
+
+        # Set the vNSF package data useful for the onboarding operation.
+        package_data = {'descriptor': vnsfd}
+
+        rmtree(extracted_package_path)
+
+        return package_data
