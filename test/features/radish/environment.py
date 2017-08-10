@@ -13,3 +13,7 @@ world.env = {
 world.endpoints = {
     'vnsfs': '{}/{}'.format(world.env['host'], 'vnsfs')
 }
+
+world.mock_vnsfo_endpoints = {
+    'onboard': 'upload'
+}

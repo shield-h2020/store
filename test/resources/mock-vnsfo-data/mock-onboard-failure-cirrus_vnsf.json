@@ -1,0 +1,4 @@
+//! params: {"api_server": "https://localhost"}
+//! statusCode: 406
+{
+}
