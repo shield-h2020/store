@@ -12,7 +12,7 @@ import log
 import settings as cfg
 import store_errors as err
 from vnsf import Vnsf, VnsfMissingPackage, VnsfWrongPackageFormat, VnsfPackageCompliance
-from vnsfo import VnsfoMissingVnsfDescriptor, VnsfOrchestratorOnboardingException
+from vnsfo import VnsfoMissingVnfDescriptor, VnsfOrchestratorOnboardingIssue, VnsfoVnsfWrongPackageFormat
 
 
 def onboard_vnsf(request):
@@ -29,14 +29,14 @@ def onboard_vnsf(request):
         vnsf = Vnsf()
         vnsf.onboard_vnsf(request)
 
-    except (VnsfMissingPackage, VnsfWrongPackageFormat, VnsfPackageCompliance) as e:
-        abort(err.HTTP_412_PRECONDITION_FAILED, e)
+    except (VnsfMissingPackage, VnsfWrongPackageFormat, VnsfoVnsfWrongPackageFormat) as e:
+        abort(err.HTTP_412_PRECONDITION_FAILED, e.message)
 
-    except VnsfoMissingVnsfDescriptor as e:
-        abort(err.HTTP_406_NOT_ACCEPTABLE, e)
+    except (VnsfPackageCompliance, VnsfoMissingVnfDescriptor) as e:
+        abort(err.HTTP_406_NOT_ACCEPTABLE, e.message)
 
-    except VnsfOrchestratorOnboardingException as e:
-        abort(err.HTTP_502_BAD_GATEWAY, e)
+    except VnsfOrchestratorOnboardingIssue as e:
+        abort(err.HTTP_502_BAD_GATEWAY, e.message)
 
 
 def send_minimal_vnsf_data(response):

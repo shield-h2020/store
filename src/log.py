@@ -4,7 +4,7 @@ import os
 import yaml
 
 
-def setup_logging(default_path='logging.yaml', default_level=logging.INFO, env_key='LOG_CFG'):
+def setup_logging(default_path='logging.yaml', default_level=logging.DEBUG, env_key='LOG_CFG'):
     """
     Setup logging configuration
 
