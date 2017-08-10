@@ -7,11 +7,11 @@ Feature: vNSF Decommissioning
   Validates the entire vNSF decommissioning process.
 
 
-  @smoke
-  Scenario Outline: Successful decommissioning
-    When I decommission a <vNSF>
-    Then I expect the response code <status>
-
-    Examples:
-      | vNSF                  | status |
-      | vnsf/xpto_vnfd.tar.gz | 204    |
+#  @smoke
+#  Scenario Outline: Successful decommissioning
+#    When I decommission a <vNSF>
+#    Then I expect the response code <status>
+#
+#    Examples:
+#      | vNSF                  | status |
+#      | vnsf/xpto_vnfd.tar.gz | 204    |

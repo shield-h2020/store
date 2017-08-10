@@ -149,11 +149,14 @@ def matches_file_json(step, file):
 @when(re.compile(u'I onboard a vNSF (.*)'))
 def vnsf_onboard(step, package):
     # Set proper vNSFO response.
-    dest_file = os.path.join(world.env['mock-vnsfo-folder'], 'any', 'any.post.json')
+    dest_file = os.path.join(world.env['mock-vnsfo-folder'], world.mock_vnsfo_endpoints['onboard'], 'index.post.json')
     dest_path = os.path.dirname(dest_file)
     if not os.path.exists(dest_path):
         os.makedirs(dest_path, exist_ok=True)
-    copyfile(os.path.join(world.env['mock-vnsfo-data'], step.context.mock_vnsfo['response_file']), dest_file)
+
+    src_file = os.path.join(world.env['mock-vnsfo-data'], step.context.mock_vnsfo['response_file'])
+    assert os.path.isfile(src_file)
+    copyfile(src_file, dest_file)
 
     # Onboard vNSF with the Orchestrator.
     with open(os.path.join(world.env['input_data'], package), 'rb') as f:
