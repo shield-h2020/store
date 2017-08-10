@@ -1,7 +1,6 @@
 import logging
 
 import os
-import tarfile
 import yaml
 from shutil import rmtree
 from tempfile import gettempdir, mkdtemp
@@ -10,25 +9,30 @@ from werkzeug.utils import secure_filename
 
 import settings as cfg
 import store_errors as err
-from utils import extract_package
+import utils
 from vnsfo import VnsfOrchestratorAdapter
 
 
-class VnsfMissingPackage(Exception):
-    pass
+class VnsfMissingPackage(utils.ExceptionMessage):
+    """vNSF package not provided."""
 
 
-class VnsfWrongPackageFormat(Exception):
-    pass
+class VnsfWrongPackageFormat(utils.ExceptionMessage):
+    """vNSF package file is not in .tar.gz format."""
 
 
-class VnsfPackageCompliance(Exception):
-    pass
+class VnsfPackageCompliance(utils.ExceptionMessage):
+    """vNSF package contents do not comply with the definition."""
 
 
 class Vnsf:
     def __init__(self, logger=None):
         self.logger = logger or logging.getLogger(__name__)
+
+        # Maintenance friendly.
+        self._missing_package = VnsfMissingPackage(err.PKG_MISSING_FILE)
+        self._wrong_package_format = VnsfWrongPackageFormat(err.PKG_NOT_TARGZ)
+        self._package_compliance = VnsfPackageCompliance(err.PKG_NOT_SHIELD)
 
     def onboard_vnsf(self, request):
         """
@@ -95,12 +99,12 @@ class Vnsf:
 
         if 'package' not in files:
             self.logger.error("Missing or wrong field in POST. 'package' should be used as the field name")
-            raise VnsfMissingPackage(err.PKG_MISSING_FILE)
+            raise self._missing_package
 
         package_file = files['package']
         if package_file and package_file.filename == '':
             self.logger.info('No package file provided in POST')
-            raise VnsfMissingPackage(err.PKG_MISSING_FILE)
+            raise self._missing_package
 
         filename = secure_filename(package_file.filename)
         package_absolute_path = os.path.join(gettempdir(), filename)
@@ -108,21 +112,22 @@ class Vnsf:
         try:
             package_file.save(package_absolute_path)
 
-            if not tarfile.is_tarfile(package_absolute_path):
+            if not utils.is_tar_gz_file(package_absolute_path):
                 self.logger.error(err.PKG_NOT_TARGZ)
-                raise VnsfWrongPackageFormat(err.PKG_NOT_TARGZ)
+                raise self._wrong_package_format
 
             self.logger.debug("Package stored at '%s'", package_absolute_path)
 
             extracted_package_path = mkdtemp()
 
-            extract_package(package_absolute_path, extracted_package_path)
+            utils.extract_package(package_absolute_path, extracted_package_path)
 
             # Get the SHIELD manifest data.
             manifest_path = os.path.join(extracted_package_path, 'manifest.yaml')
             if not os.path.isfile(manifest_path):
-                self.logger.error("Missing 'manifest.yaml' from package")
-                raise VnsfPackageCompliance(err.PKG_NOT_SHIELD)
+                self.logger.error("Missing 'manifest.yaml' from %s", extracted_package_path)
+                self.logger.error('Package contents: %s', os.listdir(extracted_package_path))
+                raise self._package_compliance
 
         finally:
             os.remove(package_absolute_path)

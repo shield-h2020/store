@@ -62,9 +62,9 @@ vnsf_model = {
                 'type': 'dict',
                 'required': True,
                 'schema': {
+                    'type': {'type': 'string', 'empty': False, 'allowed': ["OSM"], 'required': True},
                     'package': {'type': 'string', 'empty': False, 'required': True},
                     'descriptor': {'type': 'string', 'empty': False, 'required': True},
-                    'type': {'type': 'string', 'empty': False, 'allowed': ["OSM"], 'required': True},
 
                     #
                     # Due to a swagger editor bug the suitable name for this property can not be used.
