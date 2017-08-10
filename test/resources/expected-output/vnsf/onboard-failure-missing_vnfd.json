@@ -1,0 +1,7 @@
+{
+  "_error": {
+    "message": "vNF Descriptor not found where manifest.yaml places it",
+    "code": 406
+  },
+  "_status": "ERR"
+}
