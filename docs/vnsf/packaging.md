@@ -1,10 +1,76 @@
-
-> work in progress
-
-
 # vNSF Packaging
 
 ## Contents
+
+
+### Elements
+
+To foster vNF reuse and remove SHIELD applicability barriers the SHIELD vNF package format extends existing vNF formats by introducing:
+
+* a security manifest to ensure vNF tamper-proofing
+* a digitally-signed security manifest to prove provenance and integrity
+* support for including Orchestrator-specific vNF package format
+* a .tar.gz package format to enclose everything
+
+A SHIELD vNSF package (`.tar.gz` file) comprises:
+
+| Element | Format | Purpose |
+|-|-|-
+| manifest.yaml | YAML | Security manifest which defines the tamper-proof metadata to ensure the vNSF in operation wasn't tampered with since when it was onboarded
+| *&lt;vnf_package_file\>* | Orchestrator specific | The vNF package to onboard into the vNSF Orchestrator
+
+### Structure
+
+The structure of a SHIELD vNSF package is as follows:
+
+```bash
+.
+├── manifest.yaml           # SHIELD security manifest
+└── <vnf_package_file>      # Orchestrator-specific vNF package
+```
+
+This packaging is Orchestrator agnostic and allows for onboarding an existing vNF into SHIELD simply by providing a security manifest tailored to the vNF in question. Once this is done it is just a matter of producing a .tar.gz file with the contents mentioned and submit it to the Store.
+
+### Datamodel
+
+#### Security manifest (`manifest.yaml`)
+
+**Elements**
+
+| Field | Purpose |
+|-|-
+| manifest:vnsf | Defines a SHIELD vNSF package
+| type | The type of vNF the manifest describes. Allowed values: `OSM`
+| package | vNF file name within the SHIELD package. This file name, contents and format is Orchestrator specific. This manifest only identifies the file which holds the vNF package
+| descriptor | vNF Descriptor file within the vNF-specific package. Tipically a path to the actual file itself
+| security_info | The metadata used for attestation purposes to ensure the vNF wasn't tampred with
+
+**Example**
+
+```yaml
+manifest:vnsf:
+    type: OSM
+    package: cirros_vnf.tar.gz
+    descriptor: cirros_vnf/cirros_vnfd.yaml
+    security_info:
+        vdu:
+          - id: cirros_vnf-VM
+            hash: <image_hash_here>
+            attestation:
+                some_key: <TBD - provided by TM>
+                some_key: <TBD - provided by TM>
+                some_key: <TBD - provided by TM>
+                some_group: <TBD - provided by TM>
+                  some_key: <TBD - provided by TM>
+                  some_key: <TBD - provided by TM>
+```
+
+## Examples
+
+
+### OSM vNF packaging
+
+#### Elements
 
 The SHIELD vNSF package extends the OSM VNF package definition by adding the security details. The SHIELD vNSF package is thus a wrapper that contains the following elements, marked as *(M)*andatory or *(O)*ptional:
 
@@ -13,21 +79,30 @@ Element | Contents | Source
 manifest.yaml | (M) package contents definition along with the security information | SHIELD
 *&lt;vnf_name\>*_vnfd.yaml | (M) vNSF descriptor information. Follows the [OSM Information Model](https://osm.etsi.org/wikipub/images/0/0c/Osm-r1-information-model-descriptors.pdf) (page 47) | OSM
 charms | (O) [juju charm](https://jujucharms.com/) configuration for the VNF | OSM
-checksums.txt | (M) image file(s) hash(es) | SHIELD
+checksums.txt | (M) image file(s) hash(es) | OSM
 cloud_init | (O) instantiation configurations | OSM
 icons | (O) used on the OSM Composer | OSM
 images | (O) VDU image files for the vNSF | OSM
 README | (O) vNSF related information | OSM
 scripts | (O) base configuration scripts once the vNSF is up and running | OSM
 
+#### Structure
+
 The structure of a SHIELD vNSF package is as follows:
 
 ```bash
 .
 ├── manifest.yaml           # SHIELD
-└── <vnf_name>_vnfd         # OSM
+└── <vnf_name>.tar.gz       # OSM VNF package
+```
+
+The structure of the OSM vNF package is:
+
+```bash
+.
+├── <vnf_name>_vnf          # OSM
     ├── charms              # OSM
-    ├── checksums.txt       # SHIELD
+    ├── checksums.txt       # OSM
     ├── cloud_init          # OSM
     ├── icons               # OSM
     ├── images              # OSM
@@ -36,113 +111,80 @@ The structure of a SHIELD vNSF package is as follows:
     └── <vnf_name>.yaml     # OSM
 ```
 
-## Data model
+#### Example
 
-The contents of the two YAML files are described below:
+**Security manifest** (`manifest.yaml`)
 
-### &lt;vnf_name\>.yaml
+```yaml
+manifest:vnsf:
+    type: OSM
+    package: cirros_vnf.tar.gz
+    descriptor: cirros_vnf/cirros_vnfd.yaml
+    security_info:
+        vdu:
+          - id: cirros_vnf-VM
+            hash: <image_hash_here>
+            attestation:
+                some_key: <TBD - provided by TM>
+                some_key: <TBD - provided by TM>
+                some_key: <TBD - provided by TM>
+                some_group: <TBD - provided by TM>
+                  some_key: <TBD - provided by TM>
+                  some_key: <TBD - provided by TM>
+```
+
+**OSM vNF Descriptor** (`cirros_vnfd.yaml`)
 
 ```yaml
 vnfd:vnfd-catalog:
     vnfd:
-    -   id: xpto_vnfd
-        name: xpto_vnfd
-        short-name: xpto_vnfd
-        description: Generated by OSM pacakage generator
+    -   id: cirros_vnfd
+        name: cirros_vnfd
+        short-name: cirros_vnfd
+        description: Simple VNF example with a cirros
         vendor: OSM
         version: '1.0'
 
         # Place the logo as png in icons directory and provide the name here
-        # logo: <update, optional>
+        logo: cirros-64.png
 
         # Management interface
         mgmt-interface:
-            vdu-id: xpto_vnfd-VM
+            vdu-id: cirros_vnfd-VM
 
         # Atleast one VDU need to be specified
         vdu:
-        # Additional VDUs can be created by copying the
-        # VDU descriptor below
-        -   id: xpto_vnfd-VM
-            name: xpto_vnfd-VM
-            description: xpto_vnfd-VM
+        -   id: cirros_vnfd-VM
+            name: cirros_vnfd-VM
+            description: cirros_vnfd-VM
             count: 1
 
             # Flavour of the VM to be instantiated for the VDU
             vm-flavor:
-                vcpu-count: 2
-                memory-mb: 4096
-                storage-gb: 10
+                vcpu-count: 1
+                memory-mb: 512
+                storage-gb: 1
 
-            # Image including the full path
-            image: '/path/to/img/file'
+            # Image/checksum or image including the full path
+            image: cirros034
+            #checksum:
 
             external-interface:
             # Specify the external interfaces
             # There can be multiple interfaces defined
             -   name: eth0
                 virtual-interface:
-                    type: VIRTIO
+                    type: OM-MGMT
                     bandwidth: '0'
-                    vpci: '0000:00:0a.0'
+                    vpci: 0000:00:0a.0
                 vnfd-connection-point-ref: eth0
-            -   name: eth1
-                virtual-interface:
-                    type: VIRTIO
-                    bandwidth: '0'
-                    vpci: '0000:00:0b.0'
-                vnfd-connection-point-ref: eth1
 
         connection-point:
             -   name: eth0
                 type: VPORT
-            -   name: eth1
-                type: VPORT
-
-        # Uncomment and update below to enable juju
-        # charm configuration for the VNF
-        # vnf-configuration:
-        #     juju:
-        #         charm: <charm name>
-        #     service-primitive:
-        #     -   name: config
-        #         parameter:
-        #         -   name: <config parameter>
-        #             data-type: [STRING|INTEGER]
-        #             mandatory: [true|false]
-        #             default-value: <value>
-        #     -   name: <action name>
-        #         parameter:
-        #         -   name: <action parameter>
-        #             data-type: [STRING|INTEGER]
-        #             mandatory: [true|false]
-        #             default-value: <value>
-        #     initial-config-primitive:
-        #     -   name: config
-        #         parameter:
-        #         -   name: <config name>
-        #             value: <value>
-        #     -   name: <action name>
-        #         parameter:
-        #         -   name: <action parameter>
-        #             value: <value>
 ```
 
-### manifest.yaml
-
-```yaml
-manifest:vnsf:
-    descriptor: xpto_vnfd/xpto_vnfd.yaml
-    type: OSM
-    security_info:
-        vdu:
-          - id: xpto_vnfd-VM
-            hash: 7fb693dfd95a14dd6ef6df837c872027
-            attestation:
-                somekey: <TBD - provided by TM>
-```
-
-## Generation
+#### SHIELD Package Generation
 
 A SHIELD vNSF package can be generated by leveraging on the [OSM VNF packet generation](https://osm.etsi.org/wikipub/index.php/Creating_your_own_VNF_package_%28Release_ONE%29), then adding the extra files introduced for the SHIELD vNSFs.
 
