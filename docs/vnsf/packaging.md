@@ -5,11 +5,11 @@
 
 ### Elements
 
-To foster vNF reuse and remove SHIELD applicability barriers the SHIELD vNF package format extends existing vNF formats by introducing:
+To foster VNF reuse and remove SHIELD applicability barriers the SHIELD VNF package format extends existing VNF formats by introducing:
 
-* a security manifest to ensure vNF tamper-proofing
+* a security manifest to ensure VNF tamper-proofing
 * a digitally-signed security manifest to prove provenance and integrity
-* support for including Orchestrator-specific vNF package format
+* support for including Orchestrator-specific VNF package format
 * a .tar.gz package format to enclose everything
 
 A SHIELD vNSF package (`.tar.gz` file) comprises:
@@ -17,7 +17,7 @@ A SHIELD vNSF package (`.tar.gz` file) comprises:
 | Element | Format | Purpose |
 |-|-|-
 | manifest.yaml | YAML | Security manifest which defines the tamper-proof metadata to ensure the vNSF in operation wasn't tampered with since when it was onboarded
-| *&lt;vnf_package_file\>* | Orchestrator specific | The vNF package to onboard into the vNSF Orchestrator
+| *&lt;vnf_package_file\>* | Orchestrator specific | The VNF package to onboard into the vNSF Orchestrator
 
 ### Structure
 
@@ -26,10 +26,10 @@ The structure of a SHIELD vNSF package is as follows:
 ```bash
 .
 ├── manifest.yaml           # SHIELD security manifest
-└── <vnf_package_file>      # Orchestrator-specific vNF package
+└── <vnf_package_file>      # Orchestrator-specific VNF package
 ```
 
-This packaging is Orchestrator agnostic and allows for onboarding an existing vNF into SHIELD simply by providing a security manifest tailored to the vNF in question. Once this is done it is just a matter of producing a .tar.gz file with the contents mentioned and submit it to the Store.
+This packaging is Orchestrator agnostic and allows for onboarding an existing VNF into SHIELD simply by providing a security manifest tailored to the VNF in question. Once this is done it is just a matter of producing a .tar.gz file with the contents mentioned and submit it to the Store.
 
 ### Datamodel
 
@@ -40,10 +40,10 @@ This packaging is Orchestrator agnostic and allows for onboarding an existing vN
 | Field | Purpose |
 |-|-
 | manifest:vnsf | Defines a SHIELD vNSF package
-| type | The type of vNF the manifest describes. Allowed values: `OSM`
-| package | vNF file name within the SHIELD package. This file name, contents and format is Orchestrator specific. This manifest only identifies the file which holds the vNF package
-| descriptor | vNF Descriptor file within the vNF-specific package. Tipically a path to the actual file itself
-| security_info | The metadata used for attestation purposes to ensure the vNF wasn't tampred with
+| type | The type of VNF the manifest describes. Allowed values: `OSM`
+| package | VNF file name within the SHIELD package. This file name, contents and format is Orchestrator specific. This manifest only identifies the file which holds the VNF package
+| descriptor | VNF Descriptor file within the VNF-specific package. Tipically a path to the actual file itself
+| security_info | The metadata used for attestation purposes to ensure the VNF wasn't tampred with
 
 **Example**
 
@@ -68,7 +68,7 @@ manifest:vnsf:
 ## Examples
 
 
-### OSM vNF packaging
+### OSM VNF packaging
 
 #### Elements
 
@@ -96,7 +96,7 @@ The structure of a SHIELD vNSF package is as follows:
 └── <vnf_name>.tar.gz       # OSM VNF package
 ```
 
-The structure of the OSM vNF package is:
+The structure of the OSM VNF package is:
 
 ```bash
 .
@@ -133,7 +133,7 @@ manifest:vnsf:
                   some_key: <TBD - provided by TM>
 ```
 
-**OSM vNF Descriptor** (`cirros_vnfd.yaml`)
+**OSM VNF Descriptor** (`cirros_vnfd.yaml`)
 
 ```yaml
 vnfd:vnfd-catalog:

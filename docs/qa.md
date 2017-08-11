@@ -97,7 +97,7 @@ docker container exec -it docker_qa_1 bash
 cd ${FOLDER_TESTS_FEATURES}
 ```
 
-From this point on one can [select what to run](#test-selection) and [produce a beautified report](#reports) of the run.
+From this point on one can [select what to run](#selection) and [produce a beautified report](#reports) of the run.
 
 
 ## Selection
@@ -111,6 +111,16 @@ It is possible to run only a specific set of features or scenarios from the enti
 * identify the group(s) to run by its [tag(s)](http://radish.readthedocs.io/en/latest/tutorial.html#tags)
 
         radish --cucumber-json </path/to/report/output.json> --tags 'health-check or smoke' .
+
+### Groups
+
+To cater for different purposes of validation the scenarios are [tagged](http://radish.readthedocs.io/en/latest/tutorial.html#tags) with one or more  markers to state to which group(s) it belongs to. The [selection](#selection) is done through stating which group(s) to run. The available groups are presented next.
+
+|Group|Purpose|
+|-|-|
+| health-check | Ensures the QA environment is properly set up and ready to perform the intended validations.
+| smoke | Performs a rapid validation using a small set of features and scenarios. Less time-consuming option to determine the QA status of a build.
+| coverage | Intended to validate the features and scenarios to a finer detail covering the most options and possible side effects. The most time-consuming operation to determine the QA status of a build.
 
 
 ## Reports
