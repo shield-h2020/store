@@ -13,12 +13,12 @@ services:
             - ${SHARED_FOLDER_DEV}:${CNTR_FOLDER_DEV}
 
 
-    # Development environment.
-    ${CNTR_DEV}:
+    # Store environment.
+    ${CNTR_STORE}:
         env_file:        ${ENV_FILE}
         build:
           context:       .
-          dockerfile:    ${DOCKER_FILE_DEV}
+          dockerfile:    ${DOCKER_FILE_STORE}
         ports:
             - "${API_PORT}:${API_PORT}"
         volumes:
