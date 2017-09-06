@@ -5,7 +5,7 @@ services:
     # Data Store.
     ${CNTR_DATASTORE}:
         image: mongo
-        env_file:        .env
+        env_file:          ${ENV_FILE}
         build:
             context:       .
             dockerfile:    ${DOCKER_FILE_DATASTORE}
@@ -15,7 +15,7 @@ services:
 
     # Development environment.
     ${CNTR_DEV}:
-        env_file:        .env
+        env_file:        ${ENV_FILE}
         build:
           context:       .
           dockerfile:    ${DOCKER_FILE_DEV}
