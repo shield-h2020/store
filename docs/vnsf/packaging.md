@@ -77,7 +77,7 @@ The SHIELD vNSF package extends the OSM VNF package definition by adding the sec
 Element | Contents | Source
 -|-|-
 manifest.yaml | (M) package contents definition along with the security information | SHIELD
-*&lt;vnf_name\>*_vnfd.yaml | (M) vNSF descriptor information. Follows the [OSM Information Model](hhttps://osm.etsi.org/wikipub/images/2/26/OSM_R2_Information_Model.pdf) (page 47) | OSM
+*&lt;vnf_name\>*_vnfd.yaml | (M) vNSF descriptor information. Follows the [OSM Information Model](https://osm.etsi.org/wikipub/images/2/26/OSM_R2_Information_Model.pdf) (page 47) | OSM
 charms | (O) [juju charm](https://jujucharms.com/) configuration for the VNF | OSM
 checksums.txt | (M) image file(s) hash(es) | OSM
 cloud_init | (O) instantiation configurations | OSM
