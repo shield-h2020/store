@@ -394,8 +394,11 @@ if [ $p_check_build = true ]; then
     echo "Waiting for the containers to be ready" && sleep 10
     ${DOCKER} container exec docker_${DATASTORE_HOST}_1 bash -c "${CNTR_FOLDER_DEV}/docker/setup-datastore.sh --environment ${p_environment} --qa"
     ${DOCKER} container exec docker_${CNTR_QA}_1 ${FOLDER_TESTS_BASEPATH}/run.sh
+
+    HOST_FOLDER_DEV=$(cd "${SHARED_FOLDER_DEV}"; pwd)
+    REPORT_PATH="${FOLDER_TESTS_REPORT/$CNTR_FOLDER_DEV/$HOST_FOLDER_DEV}"
     echo ===
-    echo === Tests report is at ${FOLDER_TESTS_REPORT}
+    echo === Tests report is at $REPORT_PATH
     echo ===
 fi
 
