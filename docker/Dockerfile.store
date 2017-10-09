@@ -1,0 +1,19 @@
+
+#
+# vNSF Store environment
+#
+
+FROM centos:7
+
+LABEL project="shield-store"
+
+# Dependencies
+RUN yum update -y && \
+    yum install -y epel-release && yum makecache fast && \
+    yum install -y python34 python34-pip && \
+    pip3 install --upgrade pip && \
+    yum clean all
+
+WORKDIR /usr/share/dev/store
+
+ENTRYPOINT ["/usr/share/dev/store/docker/setup-store.sh"]

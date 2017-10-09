@@ -1,0 +1,12 @@
+
+#
+# MongoDB data store
+#
+
+FROM mongo:3.4.6
+
+LABEL project="shield-store"
+
+WORKDIR /usr/share/dev/store/docker
+
+CMD ["mongod", "--port", "27017"]
