@@ -26,7 +26,6 @@
 
 
 import logging
-
 import os
 import requests
 from shutil import rmtree
@@ -76,7 +75,10 @@ class VnsfOrchestratorAdapter:
         if port is not None:
             server += ':' + port
 
-        self.basepath = '{}://{}/{}'.format(protocol, server, api_basepath)
+        self.basepath = '{}://{}'.format(protocol, server)
+        if len(api_basepath) > 0:
+            self.basepath = '{}/{}'.format(self.basepath, api_basepath)
+
         self.logger.debug('vNSF Orchestrator API at: %s', self.basepath)
 
     def onboard_vnsf(self, tenant_id, vnsf_package_path, vnsfd_file):
