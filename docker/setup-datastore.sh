@@ -45,6 +45,8 @@ Creates the data store for the vNSF & NS Store. This script is intended to run t
 OPTIONS
 --environment        The file holding all the settings to use for the data store configuration.
 
+--reset              Removes all data from the datastore for the given environment.
+
 --qa                 (Optional) Load up settings for Quality Assurance instead of regular ones.
 
   -h, --help           Prints this usage message.
@@ -57,6 +59,10 @@ EXAMPLES
   $0 --environment .env.qa --qa
 
     Creates the data store to hold the vNSF & NS data for the Store according to the settings from the '.env.qa' file. Uses remaining settings from the QA definition as well.
+
+  $0 --environment .env.production --reset
+
+    Removes all the data for the .env.production environment.
 
 USAGE_MSG
 }
@@ -77,6 +83,7 @@ USAGE_MSG
 _PARAM_INVALID_VALUE="__##_INVALID_VALUE_##__"
 
 p_environment=${_PARAM_INVALID_VALUE}
+p_reset=${_PARAM_INVALID_VALUE}
 p_qa=${_PARAM_INVALID_VALUE}
 
 
@@ -135,13 +142,15 @@ ErrorInvalidParameter() {
 # ******************************************************************************
 HandleOptions() {
 
-    parseParamsCmd=`getopt -n$0 -o h:: -a --long environment:,qa -- "$@"`
+    parseParamsCmd=`getopt -n$0 -o h:: -a --long environment:,reset,qa -- "$@"`
 
     if [ $? != 0 ] ; then Usage; echo; echo; exit 1 ; fi
 
     eval set -- "$parseParamsCmd"
 
     [ $# -eq 0 ] && Usage
+
+    actionSet=0
 
     while [ $# -gt 0 ]
     do
@@ -152,6 +161,11 @@ HandleOptions() {
                 p_environment=$2
                 actionSet=1
                 shift
+                ;;
+
+            --reset)
+                p_reset=true
+                actionSet=1
                 ;;
 
             --qa)
@@ -260,6 +274,13 @@ echo "_VARS_BLOCK_" >> ${ENV_TMP_FILE}
 echo >> ${ENV_TMP_FILE}
 . ${ENV_TMP_FILE} > ${ENV_FILE}
 
+# Default command is to setup the data store.
+cmd=${CNTR_FOLDER_DEV}/docker/mongodb-init.js
 
-# Setup mongoDB data store.
-mongo --port ${DATASTORE_PORT} --eval "var PORT='$DATASTORE_PORT', STORE_COLLECTION='$DATASTORE_DBNAME', STORE_USER='$DATASTORE_USERNAME', STORE_PASS='$DATASTORE_PASSWORD'" ${CNTR_FOLDER_DEV}/docker/mongodb-init.js
+if [ $p_reset = true ]; then
+    # Clear data store contents.
+    cmd=${CNTR_FOLDER_DEV}/docker/mongodb-reset.js
+fi
+
+# Set mongoDB data store.
+mongo --port ${DATASTORE_PORT} --eval "var PORT='$DATASTORE_PORT', STORE_COLLECTION='$DATASTORE_DBNAME', STORE_USER='$DATASTORE_USERNAME', STORE_PASS='$DATASTORE_PASSWORD'" $cmd

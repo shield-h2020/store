@@ -26,6 +26,8 @@
 
 
 import logging
+import subprocess
+import time
 
 import os
 import yaml
@@ -112,6 +114,10 @@ class Vnsf:
 
         if os.path.isdir(extracted_package_path):
             rmtree(extracted_package_path)
+
+        # Hack for Y1 demo.
+        time.sleep(8)
+        subprocess.call(['/usr/bin/python3', '/opt/shield/review/y1/packages/onboard_ns_package.py'])
 
     def _lint_vnsf_package(self, files):
         """
