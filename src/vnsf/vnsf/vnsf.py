@@ -26,44 +26,44 @@
 
 
 import logging
-import subprocess
-import time
 
 import os
 import yaml
 from shutil import rmtree
+from storeutils import tar_package, exceptions
 from tempfile import gettempdir, mkdtemp
-from werkzeug.datastructures import ImmutableMultiDict, FileStorage
+from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
-import settings as cfg
-import store_errors as err
-import utils
-from vnsfo import VnsfOrchestratorAdapter
+PKG_MISSING_FILE = 'No package provided'
+PKG_NOT_TARGZ = 'Package is not a valid .tar.gz file'
+PKG_NOT_SHIELD = 'Package does not comply with the SHIELD format'
 
 
-class VnsfMissingPackage(utils.ExceptionMessage):
+class VnsfMissingPackage(exceptions.ExceptionMessage):
     """vNSF package not provided."""
 
 
-class VnsfWrongPackageFormat(utils.ExceptionMessage):
+class VnsfWrongPackageFormat(exceptions.ExceptionMessage):
     """vNSF package file is not in .tar.gz format."""
 
 
-class VnsfPackageCompliance(utils.ExceptionMessage):
+class VnsfPackageCompliance(exceptions.ExceptionMessage):
     """vNSF package contents do not comply with the definition."""
 
 
-class Vnsf:
-    def __init__(self, logger=None):
+class VnsfHelper:
+    def __init__(self, vnsfo, logger=None):
         self.logger = logger or logging.getLogger(__name__)
 
         # Maintenance friendly.
-        self._missing_package = VnsfMissingPackage(err.PKG_MISSING_FILE)
-        self._wrong_package_format = VnsfWrongPackageFormat(err.PKG_NOT_TARGZ)
-        self._package_compliance = VnsfPackageCompliance(err.PKG_NOT_SHIELD)
+        self._missing_package = VnsfMissingPackage(PKG_MISSING_FILE)
+        self._wrong_package_format = VnsfWrongPackageFormat(PKG_NOT_TARGZ)
+        self._package_compliance = VnsfPackageCompliance(PKG_NOT_SHIELD)
 
-    def onboard_vnsf(self, request):
+        self.vnsfo = vnsfo
+
+    def onboard_vnsf(self, tenant_id, vnsf_package):
         """
         Registers a vNSF into the Store and onboards it with the Orchestrator.
 
@@ -71,13 +71,19 @@ class Vnsf:
         manifest file is stored as binary so it can be provided for attestation purposes (thus ensuring
         tamper-proofing).
 
-        :param request: the HTTP request data.
+        :param tenant_id: the tenant identifier to onboard the vNSF.
+        :param vnsf_package: the package to onboard (as files MultiDict field from
+        http://werkzeug.pocoo.org/docs/0.12/wrappers/#werkzeug.wrappers.BaseRequest).
+
+        :return:    the manifest file as a FileStorage stream (
+        http://werkzeug.pocoo.org/docs/0.12/datastructures/#werkzeug.datastructures.FileStorage).
+                    the package metadata as a dictionary.
         """
 
-        self.logger.info("Onboard vNSF from package '%s'", request.files['package'].filename)
+        self.logger.info("Onboard vNSF from package '%s'", vnsf_package.filename)
 
         # Ensure it's a SHIELD vNSF package.
-        extracted_package_path, manifest_path = self._lint_vnsf_package(request.files)
+        extracted_package_path, manifest_path = self._extract_package(vnsf_package)
 
         # Get the SHIELD manifest data.
         with open(manifest_path, 'r') as stream:
@@ -86,55 +92,43 @@ class Vnsf:
 
         self.logger.debug('shield package: %s', os.listdir(extracted_package_path))
         self.logger.debug('osm package: %s | path: %s', manifest['manifest:vnsf']['package'],
-                          os.path.join(extracted_package_path, manifest['manifest:vnsf']['package']))
+                          os.path.join(extracted_package_path, manifest['manifest:vnsf'][
+                              'package']))
 
         # Onboard the VNF into the actual Orchestrator.
-        vnsfo = VnsfOrchestratorAdapter(cfg.VNSFO_PROTOCOL, cfg.VNSFO_HOST, cfg.VNSFO_PORT, cfg.VNSFO_API)
-        vnsf_package = vnsfo.onboard_vnsf(cfg.VNSFO_TENANT_ID,
-                                          os.path.join(extracted_package_path,
-                                                       manifest['manifest:vnsf']['package']),
-                                          manifest['manifest:vnsf']['descriptor'])
+        # NOTE: any exception raised by the vNSFO must be handled by the caller, hence no try/catch here.
+        onboarded_package = self.vnsfo.onboard_vnsf(tenant_id,
+                                                    os.path.join(extracted_package_path,
+                                                                 manifest['manifest:vnsf']['package']),
+                                                    manifest['manifest:vnsf']['descriptor'])
 
-        # Ensure the SHIELD manifest is stored as a binary file.
-        # NOTE: the file is closed by Eve once stored.
+        # Provide the manifest as a file stream.
         stream = open(manifest_path, 'rb')
-        fs = FileStorage(stream)
-        files = request.files.copy()
-        files['manifest_file'] = fs
-        request.files = ImmutableMultiDict(files)
+        manifest_fs = FileStorage(stream)
 
-        # Convert the vNSF package into the document data.
-        # NOTE: there's no need to deep copy as the data won't be modified until it gets stored in the database.
-        package_data = request.form.copy()
+        # Build vNSF package metadata.
+        package_data = dict()
         package_data['registry'] = {'vendor': "vNSF maker A", 'capabilities': ["some stuff"]}
         package_data['state'] = 'sandboxed'
         package_data['manifest'] = manifest
-        package_data['descriptor'] = vnsf_package['descriptor']
-        request.form = ImmutableMultiDict(package_data)
+        package_data['descriptor'] = onboarded_package['descriptor']
 
         if os.path.isdir(extracted_package_path):
             rmtree(extracted_package_path)
 
-        # Hack for Y1 demo.
-        time.sleep(8)
-        subprocess.call(['/usr/bin/python3', '/opt/shield/review/y1/packages/onboard_ns_package.py'])
+        return manifest_fs, package_data
 
-    def _lint_vnsf_package(self, files):
+    def _extract_package(self, package_file):
         """
         Ensures the vNSF package is compliant. The package is stored locally so it's contents can be processed.
 
-        :param files: The packages to onboard (as files MultiDict field from
+        :param package_file: The package to onboard (as files MultiDict field from
         http://werkzeug.pocoo.org/docs/0.12/wrappers/#werkzeug.wrappers.BaseRequest).
 
         :return:  extracted package absolute file system path;
                   SHIELD manifest absolute file system path.
         """
 
-        if 'package' not in files:
-            self.logger.error("Missing or wrong field in POST. 'package' should be used as the field name")
-            raise self._missing_package
-
-        package_file = files['package']
         if package_file and package_file.filename == '':
             self.logger.info('No package file provided in POST')
             raise self._missing_package
@@ -145,15 +139,15 @@ class Vnsf:
         try:
             package_file.save(package_absolute_path)
 
-            if not utils.is_tar_gz_file(package_absolute_path):
-                self.logger.error(err.PKG_NOT_TARGZ)
+            if not tar_package.is_tar_gz_file(package_absolute_path):
+                self.logger.error(PKG_NOT_TARGZ)
                 raise self._wrong_package_format
 
             self.logger.debug("Package stored at '%s'", package_absolute_path)
 
             extracted_package_path = mkdtemp()
 
-            utils.extract_package(package_absolute_path, extracted_package_path)
+            tar_package.extract_package(package_absolute_path, extracted_package_path)
 
             # Get the SHIELD manifest data.
             manifest_path = os.path.join(extracted_package_path, 'manifest.yaml')

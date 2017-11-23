@@ -29,14 +29,17 @@ import json
 import logging
 
 import base64
-from eve import Eve
-from flask import abort
-
-import log
 import settings as cfg
-import store_errors as err
-from vnsf import Vnsf, VnsfMissingPackage, VnsfWrongPackageFormat, VnsfPackageCompliance
-from vnsfo import VnsfoMissingVnfDescriptor, VnsfOrchestratorOnboardingIssue, VnsfoVnsfWrongPackageFormat
+from eve import Eve
+from storeutils import log
+from vnsf.vnsf import VnsfHelper, VnsfMissingPackage, VnsfWrongPackageFormat, VnsfPackageCompliance
+from vnsfo.vnsfo import VnsfoFactory
+from vnsfo.vnsfo_adapter import VnsfoMissingVnfDescriptor, VnsfOrchestratorOnboardingIssue, \
+    VnsfoVnsfWrongPackageFormat, VnsfOrchestratorUnreacheable
+from werkzeug.datastructures import ImmutableMultiDict
+from werkzeug.exceptions import *
+
+PKG_MISSING_FILE = 'No package provided'
 
 
 def onboard_vnsf(request):
@@ -46,21 +49,45 @@ def onboard_vnsf(request):
     The SHIELD manifest is checked for integrity and compliance. Metadata is stored for the catalogue and the actual
     manifest file is stored as binary so it can be provided for attestation purposes (thus ensuring tamper-proofing).
 
-    :param request: the HTTP request data.
+    :param request: the HTTP request data, holding a single vNSF package. If more than one package file is provided
+    it gets ignored.
     """
 
     try:
-        vnsf = Vnsf()
-        vnsf.onboard_vnsf(request)
+        # It's assumed that only one vNSF package file is received.
+        if 'package' not in request.files:
+            logger.error("Missing or wrong field in POST. 'package' should be used as the field name")
+            raise VnsfMissingPackage(PKG_MISSING_FILE)
+
+        vnsfo = VnsfoFactory.get_orchestrator('OSM', cfg.VNSFO_PROTOCOL, cfg.VNSFO_HOST, cfg.VNSFO_PORT,
+                                              cfg.VNSFO_API)
+
+        vnsf = VnsfHelper(vnsfo)
+        manifest_fs, package_data = vnsf.onboard_vnsf(cfg.VNSFO_TENANT_ID, request.files['package'])
+
+        # Ensure the SHIELD manifest is stored as a binary file.
+        # NOTE: the file is closed by Eve once stored.
+        files = request.files.copy()
+        files['manifest_file'] = manifest_fs
+        request.files = ImmutableMultiDict(files)
+
+        # Convert the vNSF package into the document data.
+        # NOTE: there's no need to deep copy as the data won't be modified until it gets stored in the database.
+        form_data = request.form.copy()
+        form_data['registry'] = {'vendor': "vNSF maker A", 'capabilities': ["some stuff"]}
+        form_data['state'] = 'sandboxed'
+        form_data['manifest'] = package_data['manifest']
+        form_data['descriptor'] = package_data['descriptor']
+        request.form = ImmutableMultiDict(form_data)
 
     except (VnsfMissingPackage, VnsfWrongPackageFormat, VnsfoVnsfWrongPackageFormat) as e:
-        abort(err.HTTP_412_PRECONDITION_FAILED, e.message)
+        raise PreconditionFailed(e.message)
 
     except (VnsfPackageCompliance, VnsfoMissingVnfDescriptor) as e:
-        abort(err.HTTP_406_NOT_ACCEPTABLE, e.message)
+        raise NotAcceptable(e.message)
 
-    except VnsfOrchestratorOnboardingIssue as e:
-        abort(err.HTTP_502_BAD_GATEWAY, e.message)
+    except (VnsfOrchestratorOnboardingIssue, VnsfOrchestratorUnreacheable) as e:
+        raise BadGateway(e.message)
 
 
 def send_minimal_vnsf_data(response):

@@ -24,62 +24,59 @@
 # Horizon 2020 program. The authors would like to acknowledge the contributions
 # of their colleagues of the SHIELD partner consortium (www.shield-h2020.eu).
 
+import json
 
-import logging
 import os
 import requests
 from shutil import rmtree
+from storeutils import http_utils, tar_package
 from tempfile import mkdtemp
 
-import store_errors as err
-import utils
+from .vnsfo_adapter import VnsfOrchestratorAdapter, PKG_NOT_VNSFO
 
 
-class VnsfoVnsfWrongPackageFormat(utils.ExceptionMessage):
-    """Wrong vNSFO package format."""
-
-
-class VnsfoMissingVnfDescriptor(utils.ExceptionMessage):
-    """Missing vNSF Descriptor from the package."""
-
-
-class VnsfOrchestratorOnboardingIssue(utils.ExceptionMessage):
-    """vNSFO onboarding operation failed."""
-
-
-class VnsfOrchestratorAdapter:
+class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
     """
-    Interface with the vNSF Orchestrator through it's Service Orquestrator REST API.
-
-    The documentation available at the time of coding this is for OSM Release One (March 1, 2017) and can be found at
-    https://osm.etsi.org/wikipub/images/2/24/Osm-r1-so-rest-api-guide.pdf. Despite the apparently straight forward
-    way for onboarding vNSF & NS referred by the documentation the endpoints mentioned are not available outside
-    localhost. Thus a workaround is required to get this to work.
-
-    Such workaround consist in using the REST interface provided by the composer available at
-    OSM/UI/skyquake/plugins/composer/routes.js and which implementation is at
-    OSM/UI/skyquake/plugins/composer/api/composer.js. From these two files one can actually find the Service
-    Orquestrator REST API endpoints being called to perform the required operation. From there it's just a matter of
-    calling the proper composer endpoint so it can carry out the intended operation. Ain't life great?!
+    Open Source Mano Orchestrator adapter.
     """
 
     def __init__(self, protocol, server, port, api_basepath, logger=None):
-        self.logger = logger or logging.getLogger(__name__)
+        super().__init__(protocol, server, port, api_basepath, logger)
 
-        # Maintenance friendly.
-        self._wrong_package_format = VnsfoVnsfWrongPackageFormat(err.PKG_NOT_VNSFO)
-        self._missing_vnf_descriptor = VnsfoMissingVnfDescriptor(err.PKG_MISSING_VNFD)
-        self._onboarding_issue = VnsfOrchestratorOnboardingIssue('Can not onboard vNSF into the vNFSO')
-        self._unreachable = VnsfOrchestratorOnboardingIssue('Can not reach the Orquestrator')
+    def apply_policy(self, tenant_id, policy):
+        """
+        Sends a security policy through the Orchestrator REST interface.
 
-        if port is not None:
-            server += ':' + port
+        :param tenant_id: The tenant to apply the policy to.
+        :param policy: The security policy data.
+        """
 
-        self.basepath = '{}://{}'.format(protocol, server)
-        if len(api_basepath) > 0:
-            self.basepath = '{}/{}'.format(self.basepath, api_basepath)
+        sec_policy = dict()
+        sec_policy['action'] = 'set-policies'
+        sec_policy['params'] = dict()
+        sec_policy['params']['policy'] = policy['recommendation']
 
-        self.logger.debug('vNSF Orchestrator API at: %s', self.basepath)
+        self.logger.debug('Policy for Orchestrator: %r', json.dumps(sec_policy))
+
+        url = '{}/{}'.format(self.basepath, 'vnsf/action')
+
+        headers = {'Content-Type': 'application/json'}
+
+        self.logger.debug("Send policy data to '%s'", url)
+
+        try:
+            r = requests.post(url, headers=headers, json=sec_policy, verify=False)
+
+            if len(r.text) > 0:
+                self.logger.debug(r.text)
+
+            if not r.status_code == http_utils.HTTP_200_OK:
+                self.logger.error('vNFSO policy at {}. Status: {}'.format(url, r.status_code))
+                raise self._policy_issue
+
+        except requests.exceptions.ConnectionError:
+            self.logger.error('Error conveying policy at %s', url)
+            raise self._unreachable
 
     def onboard_vnsf(self, tenant_id, vnsf_package_path, vnsfd_file):
         """
@@ -95,14 +92,12 @@ class VnsfOrchestratorAdapter:
         :param tenant_id: The tenant where to onboard the vNSF.
         :param vnsf_package_path: The file system path where the OSM VNF package is stored.
         :param vnsfd_file: The relative path to the VNF Descriptor within the OSM VNF package.
-
-        :return: the VNF package data.
         """
 
         # Extract the vNSF package details relevant for onboarding.
-        package = self._parse_vnf_package(vnsf_package_path, vnsfd_file)
+        package_data = self._parse_vnf_package(vnsf_package_path, vnsfd_file)
 
-        self.logger.debug("package data: %s", package)
+        self.logger.debug("package data: %s", package_data)
 
         url = '{}/upload?api_server=https://localhost'.format(self.basepath)
 
@@ -119,7 +114,7 @@ class VnsfOrchestratorAdapter:
             if len(r.text) > 0:
                 self.logger.debug(r.text)
 
-            if not r.status_code == 200:
+            if not r.status_code == http_utils.HTTP_200_OK:
                 self.logger.error('vNFSO onboarding at {}. Status: {}'.format(url, r.status_code))
                 raise self._onboarding_issue
 
@@ -127,8 +122,8 @@ class VnsfOrchestratorAdapter:
             self.logger.error('Error onboarding the vNSF at %s', url)
             raise self._unreachable
 
-        return package
-
+        return package_data
+    
     def _parse_vnf_package(self, vnf_package_path, vnfd_file):
         """
         Decompresses a vNF package and looks for the expected files and content according to what the vNSF
@@ -140,20 +135,20 @@ class VnsfOrchestratorAdapter:
         :return: The vNSF package data relevant to the onboarding operation.
         """
 
-        # The vNSF package must be in the proper format (.tar.gz).
-        if not utils.is_tar_gz_file(vnf_package_path):
-            self.logger.error(err.PKG_NOT_VNSFO)
+        # The vNSF package must be in '.tar.gz' format.
+        if not tar_package.is_tar_gz_file(vnf_package_path):
+            self.logger.error(PKG_NOT_VNSFO)
             raise self._wrong_package_format
 
         extracted_package_path = mkdtemp()
 
-        utils.extract_package(vnf_package_path, extracted_package_path)
+        tar_package.extract_package(vnf_package_path, extracted_package_path)
 
         self.logger.debug('extracted package path: %s', extracted_package_path)
         self.logger.debug('extracted contents: %s', os.listdir(extracted_package_path))
 
         # The vNF package folder must exist. The folder name is the same as the VNF package one with .tar.gz removed.
-        vnf_folder_abs_path = os.path.join(extracted_package_path, utils.get_tar_gz_basename(vnf_package_path))
+        vnf_folder_abs_path = os.path.join(extracted_package_path, tar_package.get_tar_gz_basename(vnf_package_path))
         if not os.path.isdir(vnf_folder_abs_path):
             self.logger.error("Missing VNF folder. Expected at '%s'", vnf_folder_abs_path)
             raise self._missing_vnf_descriptor

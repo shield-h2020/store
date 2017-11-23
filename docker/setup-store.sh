@@ -24,10 +24,16 @@
 # Horizon 2020 program. The authors would like to acknowledge the contributions
 # of their colleagues of the SHIELD partner consortium (www.shield-h2020.eu).
 
+CURR_DIR=${PWD}
 
-pip3.4 install -r ${CNTR_FOLDER_DEV}/docker/requirements-store.txt
+pip3.6 install -r ${CNTR_FOLDER_DEV}/docker/requirements-store.txt
 
+# Install SHIELD packages.
+cd ${CNTR_FOLDER_DEV}/src/utils && pip3.6 install --upgrade .
+cd ${CNTR_FOLDER_DEV}/src/vnsf && pip3.6 install --upgrade .
+cd ${CNTR_FOLDER_DEV}/src/vnsfo && pip3.6 install --upgrade .
 
+cd ${CURR_DIR}
 
 #
 # DO NOT REMOVE THIS - LEAVE IT AS THE LAST LINE IN THE FILE.

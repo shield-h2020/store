@@ -1,4 +1,4 @@
-#!/bin/bash
+# -*- coding: utf-8 -*-
 
 #  Copyright (c) 2017 SHIELD, UBIWHERE
 # ALL RIGHTS RESERVED.
@@ -25,11 +25,13 @@
 # of their colleagues of the SHIELD partner consortium (www.shield-h2020.eu).
 
 
-pip3.6 install -r ${CNTR_FOLDER_DEV}/docker/requirements-qa.txt
+# this is a namespace package
 
+try:
+    import pkg_resources
 
+    pkg_resources.declare_namespace(__name__)
+except ImportError:
+    import pkgutil
 
-#
-# DO NOT REMOVE THIS - LEAVE IT AS THE LAST LINE IN THE FILE.
-# Convey the commands from the command line so the container does what it is intended to do once it is up and running.
-exec "$@"
+    __path__ = pkgutil.extend_path(__path__, __name__)

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 #  Copyright (c) 2017 SHIELD, UBIWHERE
 # ALL RIGHTS RESERVED.
 #
@@ -23,12 +25,23 @@
 # of their colleagues of the SHIELD partner consortium (www.shield-h2020.eu).
 
 
-manifest:vnsf:
-    descriptor: xpto_vnfd/xpto_vnfd.yaml
-    type: OSM
-    security:
-        vdu:
-            id: xpto_vnfd-VM
-            hash: 7fb693dfd95a14dd6ef6df837c872027
-            attestation:
-                somekey: <TBD - provided by TM>
+import codecs
+import os.path as path
+from setuptools import setup, find_packages
+
+cwd = path.dirname(__file__)
+long_desc = codecs.open(path.join(cwd, 'README.md'), 'r', 'utf-8').read()
+
+setup(
+    name="vnsf-orchestrator",
+    version="0.1",
+    packages=find_packages(),
+    exclude_package_data={'': ['README.md']},
+    author="betakoder",
+    author_email="betakoder@outlook.com",
+    description="vNSF Orchestrator Adapter",
+    license="Apache License, Version 2.0",
+    keywords="shield vnsf backend",
+    url="https://github.com/shield-h2020/dashboard",
+    long_description=long_desc
+)
