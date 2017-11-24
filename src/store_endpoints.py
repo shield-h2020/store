@@ -31,10 +31,8 @@ vnsfs = {
     # 'title' tag used in item links.
     'item_title': 'vnsfs',
     'schema': store_model.vnsf_model,
-    'resource_methods': ['POST', 'GET', 'DELETE'],
-    # 'datasource': {
-    #     'projection': {'package': 0}
-    # }
+    'resource_methods': ['POST', 'GET'],
+    'item_methods': ['GET', 'DELETE'],
     }
 
 vnsf_attestation = {
