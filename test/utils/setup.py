@@ -1,4 +1,4 @@
-#!/bin/sh
+# -*- coding: utf-8 -*-
 
 #  Copyright (c) 2017 SHIELD, UBIWHERE
 # ALL RIGHTS RESERVED.
@@ -25,18 +25,24 @@
 # of their colleagues of the SHIELD partner consortium (www.shield-h2020.eu).
 
 
-CURRENT_PATH=${PWD}
+import codecs
+import os.path as path
+from setuptools import setup, find_packages
 
-TESTS_REPORT_JSON=${FOLDER_TESTS_REPORT}/result.json
-TESTS_REPORT_HTML=${FOLDER_TESTS_REPORT}/report.html
-REPORT_TOOL=${FOLDER_TESTS_TOOLS}/html_report.js
+cwd = path.dirname(__file__)
+long_desc = codecs.open(path.join(cwd, 'README.md'), 'r', 'utf-8').read()
 
-cd ${FOLDER_TESTS_BASEPATH}
-
-# Run tests.
-radish --cucumber-json ${TESTS_REPORT_JSON} ${FOLDER_TESTS_FEATURES}
-
-# Beautify tests report.
-node ${REPORT_TOOL} -s ${TESTS_REPORT_JSON} -o ${TESTS_REPORT_HTML}
-
-cd ${CURRENT_PATH}
+setup(
+    name="store-testing-utils",
+    version="0.1",
+    packages=find_packages(),
+    include_package_data=True,
+    exclude_package_data={'': ['README.md']},
+    author="betakoder",
+    author_email="betakoder@outlook.com",
+    description="Store Testing Utilities for the backend",
+    license="Apache License, Version 2.0",
+    keywords="shield store backend testing utils",
+    url="https://github.com/shield-h2020/dashboard",
+    long_description=long_desc
+)

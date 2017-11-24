@@ -1,4 +1,4 @@
-#!/bin/sh
+# -*- coding: utf-8 -*-
 
 #  Copyright (c) 2017 SHIELD, UBIWHERE
 # ALL RIGHTS RESERVED.
@@ -25,18 +25,13 @@
 # of their colleagues of the SHIELD partner consortium (www.shield-h2020.eu).
 
 
-CURRENT_PATH=${PWD}
+# this is a namespace package
 
-TESTS_REPORT_JSON=${FOLDER_TESTS_REPORT}/result.json
-TESTS_REPORT_HTML=${FOLDER_TESTS_REPORT}/report.html
-REPORT_TOOL=${FOLDER_TESTS_TOOLS}/html_report.js
+try:
+    import pkg_resources
 
-cd ${FOLDER_TESTS_BASEPATH}
+    pkg_resources.declare_namespace(__name__)
+except ImportError:
+    import pkgutil
 
-# Run tests.
-radish --cucumber-json ${TESTS_REPORT_JSON} ${FOLDER_TESTS_FEATURES}
-
-# Beautify tests report.
-node ${REPORT_TOOL} -s ${TESTS_REPORT_JSON} -o ${TESTS_REPORT_HTML}
-
-cd ${CURRENT_PATH}
+    __path__ = pkgutil.extend_path(__path__, __name__)

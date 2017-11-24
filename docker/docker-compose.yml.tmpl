@@ -45,7 +45,7 @@ services:
           context:       .
           dockerfile:    ${DOCKER_FILE_STORE}
         ports:
-            - "${API_PORT}:${API_PORT}"
+            - "${BACKENDAPI_PORT}:${BACKENDAPI_PORT}"
         volumes:
             - ${SHARED_FOLDER_DEV}:${CNTR_FOLDER_DEV}
             - /opt/shield:/opt/shield

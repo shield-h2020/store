@@ -1,4 +1,4 @@
-#!/bin/sh
+# -*- coding: utf-8 -*-
 
 #  Copyright (c) 2017 SHIELD, UBIWHERE
 # ALL RIGHTS RESERVED.
@@ -25,18 +25,24 @@
 # of their colleagues of the SHIELD partner consortium (www.shield-h2020.eu).
 
 
-CURRENT_PATH=${PWD}
+import store_model
 
-TESTS_REPORT_JSON=${FOLDER_TESTS_REPORT}/result.json
-TESTS_REPORT_HTML=${FOLDER_TESTS_REPORT}/report.html
-REPORT_TOOL=${FOLDER_TESTS_TOOLS}/html_report.js
+vnsfs = {
+    # 'title' tag used in item links.
+    'item_title': 'vnsfs',
+    'schema': store_model.vnsf_model,
+    'resource_methods': ['POST', 'GET', 'DELETE'],
+    # 'datasource': {
+    #     'projection': {'package': 0}
+    # }
+    }
 
-cd ${FOLDER_TESTS_BASEPATH}
-
-# Run tests.
-radish --cucumber-json ${TESTS_REPORT_JSON} ${FOLDER_TESTS_FEATURES}
-
-# Beautify tests report.
-node ${REPORT_TOOL} -s ${TESTS_REPORT_JSON} -o ${TESTS_REPORT_HTML}
-
-cd ${CURRENT_PATH}
+vnsf_attestation = {
+    'url': 'vnsfs/attestation',
+    'schema': store_model.vnsf_model,
+    'datasource': {
+        'source': 'vnsfs'
+        },
+    'resource_methods': ['GET'],
+    'hateoas': False,
+    }

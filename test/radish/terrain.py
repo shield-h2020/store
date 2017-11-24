@@ -1,4 +1,4 @@
-#!/bin/sh
+# -*- coding: utf-8 -*-
 
 #  Copyright (c) 2017 SHIELD, UBIWHERE
 # ALL RIGHTS RESERVED.
@@ -24,19 +24,20 @@
 # Horizon 2020 program. The authors would like to acknowledge the contributions
 # of their colleagues of the SHIELD partner consortium (www.shield-h2020.eu).
 
+import os
+from radish import before, world
+from shutil import rmtree
 
-CURRENT_PATH=${PWD}
 
-TESTS_REPORT_JSON=${FOLDER_TESTS_REPORT}/result.json
-TESTS_REPORT_HTML=${FOLDER_TESTS_REPORT}/report.html
-REPORT_TOOL=${FOLDER_TESTS_TOOLS}/html_report.js
+@before.each_scenario
+def setup_scenario(step):
+    # Avoid poisoning mocked responses for the vNSFO.
+    if os.path.exists(world.env['mock']['vnsfo_folder']):
+        rmtree(world.env['mock']['vnsfo_folder'])
 
-cd ${FOLDER_TESTS_BASEPATH}
+    # Mock vNSFO context.
+    step.context.mock_vnsfo = dict()
 
-# Run tests.
-radish --cucumber-json ${TESTS_REPORT_JSON} ${FOLDER_TESTS_FEATURES}
-
-# Beautify tests report.
-node ${REPORT_TOOL} -s ${TESTS_REPORT_JSON} -o ${TESTS_REPORT_HTML}
-
-cd ${CURRENT_PATH}
+    # API context.
+    step.context.api = dict()
+    step.context.api['response'] = dict()
