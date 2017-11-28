@@ -242,7 +242,7 @@ HandleOptions() {
 HandleOptions "$@"
 
 
-ENV_FILE_FULL=$(mktemp /tmp/XXXXXXX)
+ENV_FILE_FULL=$(mktemp)
 
 # Load deployment-specific settings.
 cat ${p_environment} > ${ENV_FILE_FULL}
@@ -264,8 +264,8 @@ set -ae
 
 
 # Do nested variables interpolation as the shell doesn't seem do it.
-ENV_FILE=$(mktemp /tmp/XXXXXXX)
-ENV_TMP_FILE=$(mktemp /tmp/XXXXXXX)
+ENV_FILE=$(mktemp)
+ENV_TMP_FILE=$(mktemp)
 echo "#!/bin/sh" > ${ENV_TMP_FILE}
 echo ". ${ENV_FILE_FULL}" >> ${ENV_TMP_FILE}
 echo "cat <<_VARS_BLOCK_" >> ${ENV_TMP_FILE}

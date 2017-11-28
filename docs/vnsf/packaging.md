@@ -43,6 +43,7 @@ This packaging is Orchestrator agnostic and allows for onboarding an existing VN
 | type | The type of VNF the manifest describes. Allowed values: `OSM`
 | package | VNF file name within the SHIELD package. This file name, contents and format is Orchestrator specific. This manifest only identifies the file which holds the VNF package
 | descriptor | VNF Descriptor file within the VNF-specific package. Tipically a path to the actual file itself
+| properties | vNSF characterization and purpose-related details
 | security_info | The metadata used for attestation purposes to ensure the VNF wasn't tampred with
 
 **Example**
@@ -52,6 +53,9 @@ manifest:vnsf:
     type: OSM
     package: cirros_vnf.tar.gz
     descriptor: cirros_vnf/cirros_vnfd.yaml
+    properties:
+        vendor: some vendor name
+        capabilities: ['Virtual Cirr OS']
     security_info:
         vdu:
           - id: cirros_vnf-VM
@@ -100,15 +104,15 @@ The structure of the OSM VNF package is:
 
 ```bash
 .
-├── <vnf_name>_vnf          # OSM
-    ├── charms              # OSM
-    ├── checksums.txt       # OSM
-    ├── cloud_init          # OSM
-    ├── icons               # OSM
-    ├── images              # OSM
-    ├── README              # OSM
-    ├── scripts             # OSM
-    └── <vnf_name>.yaml     # OSM
+├── <vnf_name>_vnf              # OSM
+    ├── charms                  # OSM
+    ├── checksums.txt           # OSM
+    ├── cloud_init              # OSM
+    ├── icons                   # OSM
+    ├── images                  # OSM
+    ├── README                  # OSM
+    ├── scripts                 # OSM
+    └── <vnf_name>_vnfd.yaml    # OSM
 ```
 
 #### Example
@@ -120,6 +124,9 @@ manifest:vnsf:
     type: OSM
     package: cirros_vnf.tar.gz
     descriptor: cirros_vnf/cirros_vnfd.yaml
+    properties:
+        vendor: some vendor name
+        capabilities: ['Virtual Cirr OS']
     security_info:
         vdu:
           - id: cirros_vnf-VM

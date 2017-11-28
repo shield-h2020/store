@@ -200,30 +200,134 @@
         ],
         "description": "Takes a vNSF out of service which prevents it from ever being instantiated again.For a running NS or vNSF a graceful decommission is provided through the schedule of the operation for a later date."
       }
+    },
+    "/nss": {
+      "get": {
+        "summary": "Retrieves one or more nss",
+        "responses": {
+          "200": {
+            "description": "An array of nss",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/nss"
+              }
+            }
+          }
+        },
+        "tags": [
+          "nss"
+        ]
+      },
+      "post": {
+        "summary": "Stores one or more nss",
+        "parameters": [
+          {
+            "in": "formData",
+            "type": "file",
+            "name": "package",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "operation has been successful"
+          }
+        },
+        "tags": [
+          "nss"
+        ]
+      }
+    },
+    "/nss/{nssId}": {
+      "get": {
+        "summary": "Retrieves a nss document",
+        "responses": {
+          "200": {
+            "description": "nss document fetched successfully",
+            "schema": {
+              "$ref": "#/definitions/nss"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/parameters/nss__id"
+          }
+        ],
+        "tags": [
+          "nss"
+        ]
+      },
+      "delete": {
+        "summary": "Deletes a nss document",
+        "responses": {
+          "204": {
+            "description": "nss document deleted successfully"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/parameters/nss__id"
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "description": "Current value of the _etag field",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "nss"
+        ]
+      }
+    },
+    "/vnsfs/attestation": {
+      "get": {
+        "summary": "Retrieves one or more vnsfs/attestation",
+        "responses": {
+          "200": {
+            "description": "An array of vnsfs/attestation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Attestation"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Attestation"
+        ]
+      }
+    },
+    "/vnsfs/attestation/{attestationId}": {
+      "get": {
+        "summary": "Retrieves a Attestation document",
+        "responses": {
+          "200": {
+            "description": "Attestation document fetched successfully",
+            "schema": {
+              "$ref": "#/definitions/Attestation"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/parameters/Attestation__id"
+          }
+        ],
+        "tags": [
+          "Attestation"
+        ]
+      }
     }
   },
   "definitions": {
     "vnsfs": {
       "type": "object",
       "properties": {
-        "registry": {
-          "type": "object",
-          "properties": {
-            "vendor": {
-              "type": "string"
-            },
-            "capabilities": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          "required": [
-            "vendor",
-            "capabilities"
-          ]
-        },
         "state": {
           "enum": [
             "submitted",
@@ -250,6 +354,24 @@
                 },
                 "descriptor": {
                   "type": "string"
+                },
+                "properties": {
+                  "type": "object",
+                  "properties": {
+                    "vendor": {
+                      "type": "string"
+                    },
+                    "capabilities": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "vendor",
+                    "capabilities"
+                  ]
                 },
                 "security_info": {
                   "type": "object",
@@ -294,6 +416,200 @@
                 "type",
                 "package",
                 "descriptor",
+                "properties",
+                "security_info"
+              ]
+            }
+          }
+        },
+        "descriptor": {
+          "type": "string"
+        },
+        "manifest_file": {
+          "type": "string"
+        },
+        "_id": {
+          "type": "string",
+          "format": "objectid"
+        }
+      },
+      "required": [
+        "state",
+        "manifest",
+        "descriptor"
+      ]
+    },
+    "nss": {
+      "type": "object",
+      "properties": {
+        "owner_id": {
+          "type": "string",
+          "format": "objectid"
+        },
+        "state": {
+          "enum": [
+            "submitted",
+            "sandboxed",
+            "onboarded",
+            "decommissioned"
+          ],
+          "type": "string"
+        },
+        "manifest": {
+          "type": "object",
+          "properties": {
+            "manifest:ns": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "enum": [
+                    "OSM"
+                  ],
+                  "type": "string"
+                },
+                "package": {
+                  "type": "string"
+                },
+                "descriptor": {
+                  "type": "string"
+                },
+                "properties": {
+                  "type": "object",
+                  "properties": {
+                    "capabilities": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "capabilities"
+                  ]
+                }
+              },
+              "required": [
+                "type",
+                "package",
+                "descriptor",
+                "properties"
+              ]
+            }
+          },
+          "required": [
+            "manifest:ns"
+          ]
+        },
+        "descriptor": {
+          "type": "string"
+        },
+        "manifest_file": {
+          "type": "string"
+        },
+        "_id": {
+          "type": "string",
+          "format": "objectid"
+        }
+      },
+      "required": [
+        "owner_id",
+        "state",
+        "manifest",
+        "descriptor"
+      ]
+    },
+    "Attestation": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "enum": [
+            "submitted",
+            "sandboxed",
+            "onboarded",
+            "decommissioned"
+          ],
+          "type": "string"
+        },
+        "manifest": {
+          "type": "object",
+          "properties": {
+            "manifest:vnsf": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "enum": [
+                    "OSM"
+                  ],
+                  "type": "string"
+                },
+                "package": {
+                  "type": "string"
+                },
+                "descriptor": {
+                  "type": "string"
+                },
+                "properties": {
+                  "type": "object",
+                  "properties": {
+                    "vendor": {
+                      "type": "string"
+                    },
+                    "capabilities": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "vendor",
+                    "capabilities"
+                  ]
+                },
+                "security_info": {
+                  "type": "object",
+                  "properties": {
+                    "vdu": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "hash": {
+                            "type": "string"
+                          },
+                          "attestation": {
+                            "type": "object",
+                            "properties": {
+                              "somekey": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "somekey"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "hash",
+                          "attestation"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "vdu"
+                  ]
+                }
+              },
+              "required": [
+                "type",
+                "package",
+                "descriptor",
+                "properties",
                 "security_info"
               ]
             }
@@ -308,16 +624,12 @@
         "manifest_file": {
           "type": "string"
         },
-        "package": {
-          "type": "string"
-        },
         "_id": {
           "type": "string",
           "format": "objectid"
         }
       },
       "required": [
-        "registry",
         "state",
         "manifest",
         "descriptor"
@@ -332,11 +644,33 @@
       "description": "",
       "type": "string",
       "format": "objectid"
+    },
+    "nss__id": {
+      "in": "path",
+      "name": "nssId",
+      "required": true,
+      "description": "",
+      "type": "string",
+      "format": "objectid"
+    },
+    "Attestation__id": {
+      "in": "path",
+      "name": "attestationId",
+      "required": true,
+      "description": "",
+      "type": "string",
+      "format": "objectid"
     }
   },
   "tags": [
     {
       "name": "vnsfs"
+    },
+    {
+      "name": "nss"
+    },
+    {
+      "name": "Attestation"
     }
   ]
 }

@@ -98,8 +98,8 @@ vnsf_model = {
                     'package': {'type': 'string', 'empty': False, 'required': True},
                     'descriptor': {'type': 'string', 'empty': False, 'required': True},
 
-                    # vNSF "pedigree".
-                    'registry': {
+                    # vNSF description.
+                    'properties': {
                         'type': 'dict',
                         'required': True,
                         'schema': {
@@ -192,8 +192,8 @@ ns_model = {
                     # are decompressed.
                     'descriptor': {'type': 'string', 'empty': False, 'required': True},
 
-                    # NS "pedigree".
-                    'registry': {
+                    # NS description.
+                    'properties': {
                         'type': 'dict',
                         'required': True,
                         'schema': {
