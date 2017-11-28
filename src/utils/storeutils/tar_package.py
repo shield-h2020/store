@@ -43,6 +43,10 @@ def is_tar_gz_file(file_path):
     :return: whether it is a .tar.gz.
     """
 
+    # File must exist.
+    if not os.path.isfile(file_path):
+        return False
+
     # It must be a .tar file.
     if not tarfile.is_tarfile(file_path):
         return False

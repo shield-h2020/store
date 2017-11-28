@@ -68,5 +68,6 @@ TRANSPARENT_SCHEMA_RULES = True
 # be accessible to the API consumer.
 DOMAIN = {
     'vnsfs': store_endpoints.vnsfs,
+    'nss': store_endpoints.nss,
     'attestation': store_endpoints.vnsf_attestation
     }

@@ -78,15 +78,6 @@ policy_model = {
     }
 
 vnsf_model = {
-    # vNSF "pedigree".
-    'registry': {
-        'type': 'dict',
-        'required': True,
-        'schema': {
-            'vendor': {'type': 'string', 'empty': False, 'required': True},
-            'capabilities': {'type': 'list', 'empty': False, 'required': True},
-            }
-        },
     'state': {
         'type': 'string',
         'empty': False,
@@ -106,6 +97,16 @@ vnsf_model = {
                     'type': {'type': 'string', 'empty': False, 'allowed': ["OSM"], 'required': True},
                     'package': {'type': 'string', 'empty': False, 'required': True},
                     'descriptor': {'type': 'string', 'empty': False, 'required': True},
+
+                    # vNSF "pedigree".
+                    'registry': {
+                        'type': 'dict',
+                        'required': True,
+                        'schema': {
+                            'vendor': {'type': 'string', 'empty': False, 'required': True},
+                            'capabilities': {'type': 'list', 'empty': False, 'required': True},
+                            }
+                        },
 
                     #
                     # Due to a swagger editor bug the suitable name for this property can not be used.
@@ -148,5 +149,68 @@ vnsf_model = {
     'manifest_file': {'type': 'media'},
 
     # Needed (for onboarding vNSFs) as the parameter name for the package file. After the POST it's no longer used.
+    'package': {'type': 'media'}
+    }
+
+ns_model = {
+    # To whom this Network Service belongs to.
+    'owner_id': {
+        'type': 'objectid',
+        'empty': False,
+        'required': True
+        },
+
+    # The current state of the Network Service.
+    'state': {
+        'type': 'string',
+        'empty': False,
+        'allowed': ["submitted", "sandboxed", "onboarded", "decommissioned"],
+        'required': True
+        },
+
+    # Manifest details.
+    'manifest': {
+        'type': 'dict',
+        'required': True,
+        'schema': {
+            'manifest:ns': {
+                'type': 'dict',
+                'required': True,
+                'schema': {
+                    # The package schema used.
+                    'type': {
+                        'type': 'string',
+                        'empty': False,
+                        'allowed': ["OSM"],
+                        'required': True},
+
+                    # Name of the package file.
+                    'package': {
+                        'type': 'string', 'empty': False, 'required': True},
+
+                    # (Relative) Path to the descriptor file, including the file name and extension, once the files
+                    # are decompressed.
+                    'descriptor': {'type': 'string', 'empty': False, 'required': True},
+
+                    # NS "pedigree".
+                    'registry': {
+                        'type': 'dict',
+                        'required': True,
+                        'schema': {
+                            'capabilities': {'type': 'list', 'empty': False, 'required': True},
+                            }
+                        },
+                    }
+                }
+            }
+        },
+
+    # Actual NS Descriptor.
+    'descriptor': {'type': 'string', 'required': True},
+
+    # Actual manifest binary.
+    'manifest_file': {'type': 'media'},
+
+    # Needed (for onboarding NSs) as the parameter name for the package file. After the POST it's no longer used.
     'package': {'type': 'media'}
     }

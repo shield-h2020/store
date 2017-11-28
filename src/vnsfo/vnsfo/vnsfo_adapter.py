@@ -30,10 +30,11 @@ from abc import abstractmethod, ABCMeta
 from storeutils import exceptions, http_utils
 
 # Onboarding package-related.
-PKG_MISSING_VNFD = 'vNF Descriptor not found where manifest.yaml places it'
+PKG_MISSING_VNFD = 'vNSF Descriptor not found where manifest.yaml places it'
+PKG_MISSING_NSD = 'Network Service Descriptor not found where manifest.yaml places it'
 PKG_NOT_VNSFO = 'Package does not comply with the vNSFO format'
-ONBOARDING_ISSUE = 'Can not onboard vNSF into the vNFSO'
-VNSFO_UNREACHABLE = 'Can not reach the Orquestrator'
+ONBOARDING_ISSUE = 'Can not onboard the package into the vNFSO'
+VNSFO_UNREACHABLE = 'Can not reach the Orchestrator'
 POLICY_ISSUE = 'Can not convey policy to the vNFSO'
 
 
@@ -43,6 +44,14 @@ class VnsfoVnsfWrongPackageFormat(exceptions.ExceptionMessage):
 
 class VnsfoMissingVnfDescriptor(exceptions.ExceptionMessage):
     """Missing vNSF Descriptor from the package."""
+
+
+class VnsfoNsWrongPackageFormat(exceptions.ExceptionMessage):
+    """Wrong Network Descriptor package format."""
+
+
+class VnsfoMissingNsDescriptor(exceptions.ExceptionMessage):
+    """Missing Network Service Descriptor from the package."""
 
 
 class VnsfOrchestratorOnboardingIssue(exceptions.ExceptionMessage):
@@ -77,8 +86,10 @@ class VnsfOrchestratorAdapter(metaclass=ABCMeta):
         self.logger = logging.getLogger(__name__)
 
         # Maintenance friendly.
-        self._wrong_package_format = VnsfoVnsfWrongPackageFormat(PKG_NOT_VNSFO)
-        self._missing_vnf_descriptor = VnsfoMissingVnfDescriptor(PKG_MISSING_VNFD)
+        self._wrong_vnsf_package_format = VnsfoVnsfWrongPackageFormat(PKG_NOT_VNSFO)
+        self._missing_vnsf_descriptor = VnsfoMissingVnfDescriptor(PKG_MISSING_VNFD)
+        self._wrong_ns_package_format = VnsfoNsWrongPackageFormat(PKG_NOT_VNSFO)
+        self._missing_ns_descriptor = VnsfoMissingNsDescriptor(PKG_MISSING_NSD)
         self._onboarding_issue = VnsfOrchestratorOnboardingIssue(ONBOARDING_ISSUE)
         self._unreachable = VnsfOrchestratorUnreacheable(VNSFO_UNREACHABLE)
         self._policy_issue = VnsfOrchestratorPolicyIssue(POLICY_ISSUE)
@@ -104,10 +115,24 @@ class VnsfOrchestratorAdapter(metaclass=ABCMeta):
         Onboards a vNSF with the Orchestrator.
 
         :param tenant_id: The tenant where to onboard the vNSF.
-        :param vnsf_package_path: The file system path where the OSM VNF package is stored.
-        :param vnsfd_file: The relative path to the VNF Descriptor within the OSM VNF package.
+        :param vnsf_package_path: The file system path where the vNSF package is stored.
+        :param vnsfd_file: The relative path to the VNF Descriptor within the package.
 
         :return: the VNF package data.
+        """
+
+        pass
+
+    @abstractmethod
+    def onboard_ns(self, tenant_id, ns_package_path, nsd_file):
+        """
+        Onboards a vNSF with the Orchestrator.
+
+        :param tenant_id: The tenant where to onboard the Network Service.
+        :param ns_package_path: The file system path where the Network Service package is stored.
+        :param nsd_file: The relative path to the Network Service Descriptor within the package.
+
+        :return: the Network Service package data.
         """
 
         pass

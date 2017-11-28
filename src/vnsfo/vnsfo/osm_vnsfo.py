@@ -95,7 +95,7 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
         """
 
         # Extract the vNSF package details relevant for onboarding.
-        package_data = self._parse_vnf_package(vnsf_package_path, vnsfd_file)
+        package_data = self._parse_vnsf_package(vnsf_package_path, vnsfd_file)
 
         self.logger.debug("package data: %s", package_data)
 
@@ -123,8 +123,8 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
             raise self._unreachable
 
         return package_data
-    
-    def _parse_vnf_package(self, vnf_package_path, vnfd_file):
+
+    def _parse_vnsf_package(self, vnf_package_path, vnfd_file):
         """
         Decompresses a vNF package and looks for the expected files and content according to what the vNSF
         Orchestrator is expecting.
@@ -138,7 +138,7 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
         # The vNSF package must be in '.tar.gz' format.
         if not tar_package.is_tar_gz_file(vnf_package_path):
             self.logger.error(PKG_NOT_VNSFO)
-            raise self._wrong_package_format
+            raise self._wrong_vnsf_package_format
 
         extracted_package_path = mkdtemp()
 
@@ -151,7 +151,7 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
         vnf_folder_abs_path = os.path.join(extracted_package_path, tar_package.get_tar_gz_basename(vnf_package_path))
         if not os.path.isdir(vnf_folder_abs_path):
             self.logger.error("Missing VNF folder. Expected at '%s'", vnf_folder_abs_path)
-            raise self._missing_vnf_descriptor
+            raise self._missing_vnsf_descriptor
 
         self.logger.debug('vNSFO package: %s', os.listdir(vnf_folder_abs_path))
         self.logger.debug('VNFD path: %s', vnfd_file)
@@ -160,7 +160,7 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
         vnfd_file_abs_path = os.path.join(extracted_package_path, vnfd_file)
         if not os.path.isfile(vnfd_file_abs_path):
             self.logger.error("Missing VNFD. Expected at '%s'", vnfd_file)
-            raise self._missing_vnf_descriptor
+            raise self._missing_vnsf_descriptor
         with open(vnfd_file_abs_path, 'r') as stream:
             vnsfd = stream.read()
 
@@ -168,6 +168,98 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
         # Set the vNSF package data useful for the onboarding operation.
         package_data = {'descriptor': vnsfd}
+
+        rmtree(extracted_package_path)
+
+        return package_data
+
+    def onboard_ns(self, tenant_id, ns_package_path, nsd_file):
+        """
+        Onboards a vNSF with the Orchestrator.
+
+        :param tenant_id: The tenant where to onboard the Network Service.
+        :param ns_package_path: The file system path where the Network Service package is stored.
+        :param nsd_file: The relative path to the Network Service Descriptor within the package.
+
+        :return: the Network Service package data.
+        """
+
+        # Extract the Network Service package details relevant for onboarding.
+        package_data = self._parse_ns_package(ns_package_path, nsd_file)
+
+        self.logger.debug("package data: %s", package_data)
+
+        url = '{}/upload?api_server=https://localhost'.format(self.basepath)
+
+        # 'Content-Type': 'multipart/form-data' is set by the requests library.
+        headers = {'Authorization': 'Basic YWRtaW46YWRtaW4='}
+
+        files = {'package': (os.path.split(ns_package_path)[1], open(ns_package_path, 'rb'))}
+
+        self.logger.debug("Onboard Network Service package '%s' to '%s'", ns_package_path, url)
+
+        try:
+            r = requests.post(url, headers=headers, files=files, verify=False)
+
+            if len(r.text) > 0:
+                self.logger.debug(r.text)
+
+            if not r.status_code == http_utils.HTTP_200_OK:
+                self.logger.error('vNFSO onboarding at {}. Status: {}'.format(url, r.status_code))
+                raise self._onboarding_issue
+
+        except requests.exceptions.ConnectionError:
+            self.logger.error('Error onboarding the Network Service at %s', url)
+            raise self._unreachable
+
+        return package_data
+
+    def _parse_ns_package(self, ns_package_path, nsd_file):
+        """
+        Decompresses a Network Service package and looks for the expected files and content according to what the vNSF
+        Orchestrator is expecting.
+
+        :param ns_package_path: The file system path to the Network Service package (.tar.gz) file.
+        :param nsd_file: The path to where the Network Service Descriptor file (<name>_nsd.yaml) is located within
+        the package.
+
+        :return: The Network Service package data relevant to the onboarding operation.
+        """
+
+        # The Network Service package must be in '.tar.gz' format.
+        if not tar_package.is_tar_gz_file(ns_package_path):
+            self.logger.error(PKG_NOT_VNSFO)
+            raise self._wrong_ns_package_format
+
+        extracted_package_path = mkdtemp()
+
+        tar_package.extract_package(ns_package_path, extracted_package_path)
+
+        self.logger.debug('extracted package path: %s', extracted_package_path)
+        self.logger.debug('extracted contents: %s', os.listdir(extracted_package_path))
+
+        # The Network Service package folder must exist. The folder name is the same as the Network Service package
+        # one with .tar.gz removed.
+        ns_folder_abs_path = os.path.join(extracted_package_path, tar_package.get_tar_gz_basename(ns_package_path))
+        if not os.path.isdir(ns_folder_abs_path):
+            self.logger.error("Missing Network Service folder. Expected at '%s'", ns_folder_abs_path)
+            raise self._missing_ns_descriptor
+
+        self.logger.debug('vNSFO package: %s', os.listdir(ns_folder_abs_path))
+        self.logger.debug('NSD path: %s', nsd_file)
+
+        # The Network Service Descriptor must be in the expected location so it's contents can be retrieved.
+        nsd_file_abs_path = os.path.join(extracted_package_path, nsd_file)
+        if not os.path.isfile(nsd_file_abs_path):
+            self.logger.error("Missing NSD. Expected at '%s'", nsd_file)
+            raise self._missing_ns_descriptor
+        with open(nsd_file_abs_path, 'r') as stream:
+            nsd = stream.read()
+
+        self.logger.debug('NSD\n%s', nsd)
+
+        # Set the vNSF package data useful for the onboarding operation.
+        package_data = {'descriptor': nsd}
 
         rmtree(extracted_package_path)
 

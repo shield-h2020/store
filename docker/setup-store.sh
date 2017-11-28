@@ -31,6 +31,7 @@ pip3.6 install -r ${CNTR_FOLDER_DEV}/docker/requirements-store.txt
 # Install SHIELD packages.
 cd ${CNTR_FOLDER_DEV}/src/utils && pip3.6 install --upgrade .
 cd ${CNTR_FOLDER_DEV}/src/vnsf && pip3.6 install --upgrade .
+cd ${CNTR_FOLDER_DEV}/src/ns && pip3.6 install --upgrade .
 cd ${CNTR_FOLDER_DEV}/src/vnsfo && pip3.6 install --upgrade .
 
 cd ${CURR_DIR}

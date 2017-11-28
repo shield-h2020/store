@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2017 SHIELD, UBIWHERE
 # ALL RIGHTS RESERVED.
 #
@@ -23,31 +21,3 @@
 # funded by the European Commission under Grant number 700199 through the
 # Horizon 2020 program. The authors would like to acknowledge the contributions
 # of their colleagues of the SHIELD partner consortium (www.shield-h2020.eu).
-
-
-import store_model
-
-vnsfs = {
-    'item_title': 'vnsfs',
-    'schema': store_model.vnsf_model,
-    'resource_methods': ['POST', 'GET'],
-    'item_methods': ['GET', 'DELETE'],
-    }
-
-vnsf_attestation = {
-    'url': 'vnsfs/attestation',
-    'schema': store_model.vnsf_model,
-    'datasource': {
-        'source': 'vnsfs'
-        },
-    'resource_methods': ['GET'],
-    'hateoas': False,
-    }
-
-nss = {
-    'item_title': 'nss',
-    'schema': store_model.ns_model,
-    'resource_methods': ['POST', 'GET'],
-    'item_methods': ['GET', 'DELETE'],
-    }
-

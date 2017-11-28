@@ -25,29 +25,23 @@
 # of their colleagues of the SHIELD partner consortium (www.shield-h2020.eu).
 
 
-import store_model
+import codecs
+import os.path as path
+from setuptools import setup, find_packages
 
-vnsfs = {
-    'item_title': 'vnsfs',
-    'schema': store_model.vnsf_model,
-    'resource_methods': ['POST', 'GET'],
-    'item_methods': ['GET', 'DELETE'],
-    }
+cwd = path.dirname(__file__)
+long_desc = codecs.open(path.join(cwd, 'README.md'), 'r', 'utf-8').read()
 
-vnsf_attestation = {
-    'url': 'vnsfs/attestation',
-    'schema': store_model.vnsf_model,
-    'datasource': {
-        'source': 'vnsfs'
-        },
-    'resource_methods': ['GET'],
-    'hateoas': False,
-    }
-
-nss = {
-    'item_title': 'nss',
-    'schema': store_model.ns_model,
-    'resource_methods': ['POST', 'GET'],
-    'item_methods': ['GET', 'DELETE'],
-    }
-
+setup(
+    name="ns",
+    version="0.1",
+    packages=find_packages(),
+    exclude_package_data={'': ['README.md']},
+    author="betakoder",
+    author_email="betakoder@outlook.com",
+    description="Network Service Helper",
+    license="Apache License, Version 2.0",
+    keywords="shield ns store backend",
+    url="https://github.com/shield-h2020/dashboard",
+    long_description=long_desc
+)

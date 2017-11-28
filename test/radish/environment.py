@@ -23,9 +23,11 @@ world.env = {
     }
 
 world.endpoints = {
-    'vnsfs': '{}/{}'.format(world.env['hosts']['backend_api']['host'], 'vnsfs')
+    'vnsfs': '{}/{}'.format(world.env['hosts']['backend_api']['host'], 'vnsfs'),
+    'nss': '{}/{}'.format(world.env['hosts']['backend_api']['host'], 'nss')
     }
 
 world.mock_vnsfo_endpoints = {
-    'onboard': 'upload'
+    'onboard_vnsf': 'upload',
+    'onboard_ns': 'upload'
     }

@@ -7,10 +7,10 @@ from shutil import copyfile
 from storetestingutils.steps_utils import *
 
 
-@when(re.compile(u'I onboard a vNSF (.*)'))
-def vnsf_onboard(step, package):
+@when(re.compile(u'I onboard a NS (.*)'))
+def ns_onboard(step, package):
     # Set proper vNSFO response.
-    dest_file = os.path.join(world.env['mock']['vnsfo_folder'], world.mock_vnsfo_endpoints['onboard_vnsf'],
+    dest_file = os.path.join(world.env['mock']['vnsfo_folder'], world.mock_vnsfo_endpoints['onboard_ns'],
                              'index.post.json')
     dest_path = os.path.dirname(dest_file)
     if not os.path.exists(dest_path):
@@ -20,15 +20,7 @@ def vnsf_onboard(step, package):
     assert os.path.isfile(src_file)
     copyfile(src_file, dest_file)
 
-    # Onboard vNSF with the Orchestrator.
+    # Onboard NS with the Orchestrator.
     with open(os.path.join(world.env['data']['input_data'], package), 'rb') as f:
         files = {'package': f}
-        http_post_file(step, world.endpoints['vnsfs'], files)
-
-
-@when(re.compile(u'I decommission a (.*)'))
-def vnsf_decommission(step, vnsf):
-    vnsf_onboard(step, vnsf)
-    url = '{}/{}'.format(world.endpoints['vnsfs'], step.context.api['response']['json']['_id'])
-    headers = {'If-Match': step.context.api['response']['json']['_etag']}
-    http_delete(step, url, headers=headers)
+        http_post_file(step, world.endpoints['nss'], files)

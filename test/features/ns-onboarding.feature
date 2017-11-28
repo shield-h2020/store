@@ -23,48 +23,47 @@
 # of their colleagues of the SHIELD partner consortium (www.shield-h2020.eu).
 
 
-Feature: vNSF Onboarding
-  Validates the entire vNSF onboarding process.
+Feature: Network Service Onboarding
+  Validates the entire NS onboarding process.
 
 
   @smoke
-  Scenario Outline: Onboarding vNSF packages
+  Scenario Outline: Onboarding NS packages
     Given I mock the vNSFO response with <mock_file>
-    When I onboard a vNSF <package>
+    When I onboard a NS <package>
     Then I expect the response code <status>
     Then I expect the JSON response to be as in <response>
 
     Examples:
-      | mock_file                                  | package                        | status | response                              |
+      | mock_file                              | package                    | status | response                          |
       # (codes: HTTP_201_CREATED, HTTP_502_BAD_GATEWAY)
 
-      # Sucessful Store and the vNSFO operation.
-      | vnsf/mock-onboard-success-cirros_vnsf.json | vnsf/shield_cirros_vnsf.tar.gz | 201    | vnsf/onboard-success-cirros_vnsf.json |
+      # Sucessful Store and the NS operation.
+      | ns/mock-onboard-success-cirros_ns.json | ns/shield_cirros_ns.tar.gz | 201    | ns/onboard-success-cirros_ns.json |
       # vNSFO failure.
-      | vnsf/mock-onboard-failure-cirros_vnsf.json | vnsf/shield_cirros_vnsf.tar.gz | 502    | vnsf/onboard-failure-cirros_vnsf.json |
-
+      | ns/mock-onboard-failure-cirros_ns.json | ns/shield_cirros_ns.tar.gz | 502    | ns/onboard-failure-cirros_ns.json |
 
   @coverage
-  Scenario Outline: vNSF packages onboarding failures
+  Scenario Outline: NS packages onboarding failures
     Given I mock the vNSFO response with <mock_file>
-    When I onboard a vNSF <package>
+    When I onboard a NS <package>
     Then I expect the response code <status>
     Then I expect the JSON response to be as in <response>
 
     Examples:
-      | mock_file                                  | package                                           | status | response                                     |
+      | mock_file                              | package                                       | status | response                                   |
       # (codes: HTTP_406_NOT_ACCEPTABLE, HTTP_412_PRECONDITION_FAILED)
 
       # SHIELD package format isn't compliant (no .tar.gz format).
-      | vnsf/mock-onboard-success-cirros_vnsf.json | vnsf/shield_cirros_vnsf.wrong_format.tar          | 412    | vnsf/onboard-failure-wrong_format.json       |
+      | ns/mock-onboard-success-cirros_ns.json | ns/shield_cirros_ns.wrong_format.tar          | 412    | ns/onboard-failure-wrong_format.json       |
       # SHIELD package format isn't valid (no .tar.gz format).
-      | vnsf/mock-onboard-success-cirros_vnsf.json | vnsf/shield_cirros_vnsf.other_format.zip          | 412    | vnsf/onboard-failure-wrong_format.json       |
+      | ns/mock-onboard-success-cirros_ns.json | ns/shield_cirros_ns.other_format.zip          | 412    | ns/onboard-failure-wrong_format.json       |
       # vNSFO package format isn't compliant (vNSFO package is no .tar.gz).
-      | vnsf/mock-onboard-success-cirros_vnsf.json | vnsf/shield_cirros_vnsf.wrong_format_vnsfo.tar.gz | 412    | vnsf/onboard-failure-wrong_format_vnsfo.json |
+      | ns/mock-onboard-success-cirros_ns.json | ns/shield_cirros_ns.wrong_format_vnsfo.tar.gz | 412    | ns/onboard-failure-wrong_format_vnsfo.json |
       # vNSFO package missing VNFD file.
-      | vnsf/mock-onboard-success-cirros_vnsf.json | vnsf/shield_cirros_vnsf.missing_vnfd.tar.gz       | 406    | vnsf/onboard-failure-missing_vnfd.json       |
+      | ns/mock-onboard-success-cirros_ns.json | ns/shield_cirros_ns.missing_nsd.tar.gz        | 406    | ns/onboard-failure-missing_nsd.json        |
       # SHIELD package impersonation (not an actual .tar.gz file, just the extension).
-      | vnsf/mock-onboard-success-cirros_vnsf.json | vnsf/shield_cirros_vnsf.impersonate.tar.gz        | 412    | vnsf/onboard-failure-wrong_format.json       |
+      | ns/mock-onboard-success-cirros_ns.json | ns/shield_cirros_ns.impersonate.tar.gz        | 412    | ns/onboard-failure-wrong_format.json       |
       # vNSFO package impersonation (not an actual .tar.gz file, just the extension).
-      | vnsf/mock-onboard-success-cirros_vnsf.json | vnsf/shield_cirros_vnsf.impersonate_vnsfo.tar.gz  | 412    | vnsf/onboard-failure-impersonate_vnsfo.json  |
+      | ns/mock-onboard-success-cirros_ns.json | ns/shield_cirros_ns.impersonate_vnsfo.tar.gz  | 412    | ns/onboard-failure-impersonate_vnsfo.json  |
 

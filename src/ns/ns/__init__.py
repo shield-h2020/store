@@ -25,29 +25,13 @@
 # of their colleagues of the SHIELD partner consortium (www.shield-h2020.eu).
 
 
-import store_model
+# this is a namespace package
 
-vnsfs = {
-    'item_title': 'vnsfs',
-    'schema': store_model.vnsf_model,
-    'resource_methods': ['POST', 'GET'],
-    'item_methods': ['GET', 'DELETE'],
-    }
+try:
+    import pkg_resources
 
-vnsf_attestation = {
-    'url': 'vnsfs/attestation',
-    'schema': store_model.vnsf_model,
-    'datasource': {
-        'source': 'vnsfs'
-        },
-    'resource_methods': ['GET'],
-    'hateoas': False,
-    }
+    pkg_resources.declare_namespace(__name__)
+except ImportError:
+    import pkgutil
 
-nss = {
-    'item_title': 'nss',
-    'schema': store_model.ns_model,
-    'resource_methods': ['POST', 'GET'],
-    'item_methods': ['GET', 'DELETE'],
-    }
-
+    __path__ = pkgutil.extend_path(__path__, __name__)

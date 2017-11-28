@@ -30,12 +30,12 @@ import logging
 
 import base64
 import settings as cfg
+import store_docs
 from eve import Eve
 from eve_swagger import swagger, add_documentation
+from ns_hooks import NsHooks
 from storeutils import log
 from vnsf_hooks import VnsfHooks
-
-import store_docs
 
 
 def send_attestation(request, response):
@@ -57,9 +57,14 @@ def send_attestation(request, response):
 
 
 app = Eve()
+
+# vNSF hooks.
 app.on_pre_POST_vnsfs += VnsfHooks.onboard_vnsf
 app.on_fetched_item_vnsfs += VnsfHooks.send_minimal_vnsf_data
 app.on_post_GET_attestation += send_attestation
+
+# Network Services hooks.
+app.on_pre_POST_nss += NsHooks.onboard_ns
 
 app.register_blueprint(swagger)
 

@@ -40,39 +40,39 @@ PKG_NOT_TARGZ = 'Package is not a valid .tar.gz file'
 PKG_NOT_SHIELD = 'Package does not comply with the SHIELD format'
 
 
-class VnsfMissingPackage(exceptions.ExceptionMessage):
-    """vNSF package not provided."""
+class NsMissingPackage(exceptions.ExceptionMessage):
+    """Network Service package not provided."""
 
 
-class VnsfWrongPackageFormat(exceptions.ExceptionMessage):
-    """vNSF package file is not in .tar.gz format."""
+class NsWrongPackageFormat(exceptions.ExceptionMessage):
+    """Network Service package file is not in .tar.gz format."""
 
 
-class VnsfPackageCompliance(exceptions.ExceptionMessage):
-    """vNSF package contents do not comply with the definition."""
+class NsPackageCompliance(exceptions.ExceptionMessage):
+    """Network Service package contents do not comply with the definition."""
 
 
-class VnsfHelper:
+class NsHelper:
     def __init__(self, vnsfo):
         self.logger = logging.getLogger(__name__)
 
         # Maintenance friendly.
-        self._missing_package = VnsfMissingPackage(PKG_MISSING_FILE)
-        self._wrong_package_format = VnsfWrongPackageFormat(PKG_NOT_TARGZ)
-        self._package_compliance = VnsfPackageCompliance(PKG_NOT_SHIELD)
+        self._missing_package = NsMissingPackage(PKG_MISSING_FILE)
+        self._wrong_package_format = NsWrongPackageFormat(PKG_NOT_TARGZ)
+        self._package_compliance = NsPackageCompliance(PKG_NOT_SHIELD)
 
         self.vnsfo = vnsfo
 
-    def onboard_vnsf(self, tenant_id, vnsf_package):
+    def onboard_ns(self, tenant_id, ns_package):
         """
-        Registers a vNSF into the Store and onboards it with the Orchestrator.
+        Registers a Network Service into the Store and onboards it with the Orchestrator.
 
         The SHIELD manifest is checked for integrity and compliance. Metadata is stored for the catalogue and the actual
         manifest file is stored as binary so it can be provided for attestation purposes (thus ensuring
         tamper-proofing).
 
-        :param tenant_id: the tenant identifier to onboard the vNSF.
-        :param vnsf_package: the package to onboard (as files MultiDict field from
+        :param tenant_id: the tenant identifier to onboard the Network Service.
+        :param ns_package: the package to onboard (as files MultiDict field from
         http://werkzeug.pocoo.org/docs/0.12/wrappers/#werkzeug.wrappers.BaseRequest).
 
         :return:    the manifest file as a FileStorage stream (
@@ -80,10 +80,10 @@ class VnsfHelper:
                     the package metadata as a dictionary.
         """
 
-        self.logger.info("Onboard vNSF from package '%s'", vnsf_package.filename)
+        self.logger.info("Onboard Network Service from package '%s'", ns_package.filename)
 
-        # Ensure it's a SHIELD vNSF package.
-        extracted_package_path, manifest_path = self._extract_package(vnsf_package)
+        # Ensure it's a SHIELD Network Service package.
+        extracted_package_path, manifest_path = self._extract_package(ns_package)
 
         # Get the SHIELD manifest data.
         with open(manifest_path, 'r') as stream:
@@ -91,22 +91,22 @@ class VnsfHelper:
             self.logger.debug('SHIELD manifest\n%s', manifest)
 
         self.logger.debug('shield package: %s', os.listdir(extracted_package_path))
-        self.logger.debug('osm package: %s | path: %s', manifest['manifest:vnsf']['package'],
-                          os.path.join(extracted_package_path, manifest['manifest:vnsf'][
+        self.logger.debug('osm package: %s | path: %s', manifest['manifest:ns']['package'],
+                          os.path.join(extracted_package_path, manifest['manifest:ns'][
                               'package']))
 
-        # Onboard the VNF into the actual Orchestrator.
+        # Onboard the Network Service into the actual Orchestrator.
         # NOTE: any exception raised by the vNSFO must be handled by the caller, hence no try/catch here.
-        onboarded_package = self.vnsfo.onboard_vnsf(tenant_id,
-                                                    os.path.join(extracted_package_path,
-                                                                 manifest['manifest:vnsf']['package']),
-                                                    manifest['manifest:vnsf']['descriptor'])
+        onboarded_package = self.vnsfo.onboard_ns(tenant_id,
+                                                  os.path.join(extracted_package_path,
+                                                               manifest['manifest:ns']['package']),
+                                                  manifest['manifest:ns']['descriptor'])
 
         # Provide the manifest as a file stream.
         stream = open(manifest_path, 'rb')
         manifest_fs = FileStorage(stream)
 
-        # Build vNSF package metadata.
+        # Build the Network Service package metadata.
         package_data = dict()
         package_data['state'] = 'sandboxed'
         package_data['manifest'] = manifest
@@ -119,7 +119,8 @@ class VnsfHelper:
 
     def _extract_package(self, package_file):
         """
-        Ensures the vNSF package is compliant. The package is stored locally so it's contents can be processed.
+        Ensures the Network Service package is compliant. The package is stored locally so it's contents can be
+        processed.
 
         :param package_file: The package to onboard (as files MultiDict field from
         http://werkzeug.pocoo.org/docs/0.12/wrappers/#werkzeug.wrappers.BaseRequest).
