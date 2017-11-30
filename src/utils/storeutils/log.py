@@ -31,16 +31,17 @@ import os
 import yaml
 
 
-def setup_logging(default_path='logging.yaml', default_level=logging.INFO, env_key='LOG_CFG'):
+def setup_logging(config_file='logging.yaml', default_level=logging.INFO, env_key='LOG_CFG'):
     """
     Setup logging configuration
 
     """
-    path = default_path
-    value = os.getenv(env_key, None)
 
-    if value:
-        path = value
+    path = config_file
+    cfg_from_env = os.getenv(env_key, None)
+
+    if cfg_from_env:
+        path = cfg_from_env
 
     if os.path.exists(path):
         with open(path, 'rt') as f:

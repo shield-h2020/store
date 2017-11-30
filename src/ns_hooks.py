@@ -88,10 +88,13 @@ class NsHooks:
             request.form = ImmutableMultiDict(form_data)
 
         except (NsMissingPackage, NsWrongPackageFormat, VnsfoNsWrongPackageFormat) as e:
+            logger.error(e)
             raise PreconditionFailed(e.message)
 
         except (NsPackageCompliance, VnsfoMissingNsDescriptor) as e:
+            logger.error(e)
             raise NotAcceptable(e.message)
 
         except (VnsfOrchestratorOnboardingIssue, VnsfOrchestratorUnreacheable) as e:
+            logger.error(e)
             raise BadGateway(e.message)

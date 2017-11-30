@@ -73,7 +73,7 @@ app.config['SWAGGER_INFO'] = store_docs.swagger_info
 add_documentation({'paths': store_docs.paths})
 
 if __name__ == '__main__':
-    log.setup_logging()
+    log.setup_logging(config_file='src/logging.yaml')
     logger = logging.getLogger(__name__)
 
     # use '0.0.0.0' to ensure your REST API is reachable from all your

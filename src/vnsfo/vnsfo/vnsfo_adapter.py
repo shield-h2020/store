@@ -83,7 +83,7 @@ class VnsfOrchestratorAdapter(metaclass=ABCMeta):
     """
 
     def __init__(self, protocol, server, port, api_basepath, logger=None):
-        self.logger = logging.getLogger(__name__)
+        self.logger = logger or logging.getLogger(__name__)
 
         # Maintenance friendly.
         self._wrong_vnsf_package_format = VnsfoVnsfWrongPackageFormat(PKG_NOT_VNSFO)

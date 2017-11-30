@@ -53,8 +53,8 @@ class NsPackageCompliance(exceptions.ExceptionMessage):
 
 
 class NsHelper:
-    def __init__(self, vnsfo):
-        self.logger = logging.getLogger(__name__)
+    def __init__(self, vnsfo, logger=None):
+        self.logger = logger or logging.getLogger(__name__)
 
         # Maintenance friendly.
         self._missing_package = NsMissingPackage(PKG_MISSING_FILE)

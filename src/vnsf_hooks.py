@@ -89,12 +89,15 @@ class VnsfHooks:
             request.form = ImmutableMultiDict(form_data)
 
         except (VnsfMissingPackage, VnsfWrongPackageFormat, VnsfoVnsfWrongPackageFormat) as e:
+            logger.error(e)
             raise PreconditionFailed(e.message)
 
         except (VnsfPackageCompliance, VnsfoMissingVnfDescriptor) as e:
+            logger.error(e)
             raise NotAcceptable(e.message)
 
         except (VnsfOrchestratorOnboardingIssue, VnsfOrchestratorUnreacheable) as e:
+            logger.error(e)
             raise BadGateway(e.message)
 
     def send_minimal_vnsf_data(response):

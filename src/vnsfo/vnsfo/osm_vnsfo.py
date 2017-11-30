@@ -25,6 +25,7 @@
 # of their colleagues of the SHIELD partner consortium (www.shield-h2020.eu).
 
 import json
+import logging
 
 import os
 import requests
@@ -42,6 +43,7 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
     def __init__(self, protocol, server, port, api_basepath, logger=None):
         super().__init__(protocol, server, port, api_basepath, logger)
+        self.logger = logger or logging.getLogger(__name__)
 
     def apply_policy(self, tenant_id, policy):
         """
@@ -99,23 +101,21 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
         self.logger.debug("package data: %s", package_data)
 
-        url = '{}/upload?api_server=https://localhost'.format(self.basepath)
+        url = '{}/package/onboard'.format(self.basepath)
 
         # 'Content-Type': 'multipart/form-data' is set by the requests library.
-        headers = {'Authorization': 'Basic YWRtaW46YWRtaW4='}
-
         files = {'package': (os.path.split(vnsf_package_path)[1], open(vnsf_package_path, 'rb'))}
 
         self.logger.debug("Onboard vNSF package '%s' to '%s'", vnsf_package_path, url)
 
         try:
-            r = requests.post(url, headers=headers, files=files, verify=False)
+            r = requests.post(url, files=files, verify=False)
 
             if len(r.text) > 0:
                 self.logger.debug(r.text)
 
             if not r.status_code == http_utils.HTTP_200_OK:
-                self.logger.error('vNFSO onboarding at {}. Status: {}'.format(url, r.status_code))
+                self.logger.error('vNFSO onboarding at {}. Msg: {} | Status: {}'.format(url, r.reason, r.status_code))
                 raise self._onboarding_issue
 
         except requests.exceptions.ConnectionError:
@@ -189,23 +189,20 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
         self.logger.debug("package data: %s", package_data)
 
-        url = '{}/upload?api_server=https://localhost'.format(self.basepath)
-
-        # 'Content-Type': 'multipart/form-data' is set by the requests library.
-        headers = {'Authorization': 'Basic YWRtaW46YWRtaW4='}
+        url = '{}/package/onboard'.format(self.basepath)
 
         files = {'package': (os.path.split(ns_package_path)[1], open(ns_package_path, 'rb'))}
 
         self.logger.debug("Onboard Network Service package '%s' to '%s'", ns_package_path, url)
 
         try:
-            r = requests.post(url, headers=headers, files=files, verify=False)
+            r = requests.post(url, files=files, verify=False)
 
             if len(r.text) > 0:
                 self.logger.debug(r.text)
 
             if not r.status_code == http_utils.HTTP_200_OK:
-                self.logger.error('vNFSO onboarding at {}. Status: {}'.format(url, r.status_code))
+                self.logger.error('vNFSO onboarding at {}. Msg: {} | Status: {}'.format(url, r.reason, r.status_code))
                 raise self._onboarding_issue
 
         except requests.exceptions.ConnectionError:
