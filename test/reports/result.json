@@ -14,7 +14,7 @@
                         "line": 8,
                         "name": "When I list the endpoints",
                         "result": {
-                            "duration": 5960000.0,
+                            "duration": 7628000.0,
                             "status": "passed"
                         }
                     },
@@ -23,7 +23,7 @@
                         "line": 9,
                         "name": "Then I expect the JSON response to be as in api-endpoints.json",
                         "result": {
-                            "duration": 478000.0,
+                            "duration": 476000.0,
                             "status": "passed"
                         }
                     }
@@ -57,23 +57,370 @@
                 "id": "2",
                 "keyword": "Scenario Outline",
                 "line": 6,
-                "name": "Successful onboarding - row 0",
+                "name": "Onboarding vNSF packages - row 0",
                 "steps": [
                     {
-                        "keyword": "When",
-                        "line": 12,
-                        "name": "When I onboard a vNSF vnsf/xpto_vnfd.tar.gz",
+                        "keyword": "Given",
+                        "line": 17,
+                        "name": "Given I mock the vNSFO response with mock-onboard-success-cirrus_vnsf.json",
                         "result": {
-                            "duration": 278031000.0,
+                            "duration": 24000.0,
+                            "status": "passed"
+                        }
+                    },
+                    {
+                        "keyword": "When",
+                        "line": 17,
+                        "name": "When I onboard a vNSF vnsf/shield_cirros_vnsf.tar.gz",
+                        "result": {
+                            "duration": 95492000.0,
                             "status": "passed"
                         }
                     },
                     {
                         "keyword": "Then",
-                        "line": 12,
-                        "name": "Then I expect the JSON response to be as in vnsf/onboard-success-no_images.json",
+                        "line": 17,
+                        "name": "Then I expect the response code 201",
                         "result": {
-                            "duration": 399000.0,
+                            "duration": 263000.0,
+                            "status": "passed"
+                        }
+                    },
+                    {
+                        "keyword": "Then",
+                        "line": 17,
+                        "name": "Then I expect the JSON response to be as in vnsf/onboard-success-cirrus_vnsf.json",
+                        "result": {
+                            "duration": 506999.99999999994,
+                            "status": "passed"
+                        }
+                    }
+                ],
+                "tags": [],
+                "type": "scenario"
+            },
+            {
+                "description": "",
+                "id": "3",
+                "keyword": "Scenario Outline",
+                "line": 6,
+                "name": "Onboarding vNSF packages - row 1",
+                "steps": [
+                    {
+                        "keyword": "Given",
+                        "line": 19,
+                        "name": "Given I mock the vNSFO response with mock-onboard-failure-cirrus_vnsf.json",
+                        "result": {
+                            "duration": 41000.0,
+                            "status": "passed"
+                        }
+                    },
+                    {
+                        "keyword": "When",
+                        "line": 19,
+                        "name": "When I onboard a vNSF vnsf/shield_cirros_vnsf.tar.gz",
+                        "result": {
+                            "duration": 32831000.0,
+                            "status": "passed"
+                        }
+                    },
+                    {
+                        "keyword": "Then",
+                        "line": 19,
+                        "name": "Then I expect the response code 502",
+                        "result": {
+                            "duration": 167000.0,
+                            "status": "passed"
+                        }
+                    },
+                    {
+                        "keyword": "Then",
+                        "line": 19,
+                        "name": "Then I expect the JSON response to be as in vnsf/onboard-failure-cirrus_vnsf.json",
+                        "result": {
+                            "duration": 285000.0,
+                            "status": "passed"
+                        }
+                    }
+                ],
+                "tags": [],
+                "type": "scenario"
+            },
+            {
+                "description": "",
+                "id": "5",
+                "keyword": "Scenario Outline",
+                "line": 23,
+                "name": "vNSF packages onboarding failures - row 0",
+                "steps": [
+                    {
+                        "keyword": "Given",
+                        "line": 34,
+                        "name": "Given I mock the vNSFO response with mock-onboard-success-cirrus_vnsf.json",
+                        "result": {
+                            "duration": 40000.0,
+                            "status": "passed"
+                        }
+                    },
+                    {
+                        "keyword": "When",
+                        "line": 34,
+                        "name": "When I onboard a vNSF vnsf/shield_cirros_vnsf.wrong_format.tar",
+                        "result": {
+                            "duration": 8816000.0,
+                            "status": "passed"
+                        }
+                    },
+                    {
+                        "keyword": "Then",
+                        "line": 34,
+                        "name": "Then I expect the response code 412",
+                        "result": {
+                            "duration": 91000.0,
+                            "status": "passed"
+                        }
+                    },
+                    {
+                        "keyword": "Then",
+                        "line": 34,
+                        "name": "Then I expect the JSON response to be as in vnsf/onboard-failure-wrong_format.json",
+                        "result": {
+                            "duration": 309000.0,
+                            "status": "passed"
+                        }
+                    }
+                ],
+                "tags": [],
+                "type": "scenario"
+            },
+            {
+                "description": "",
+                "id": "6",
+                "keyword": "Scenario Outline",
+                "line": 23,
+                "name": "vNSF packages onboarding failures - row 1",
+                "steps": [
+                    {
+                        "keyword": "Given",
+                        "line": 36,
+                        "name": "Given I mock the vNSFO response with mock-onboard-success-cirrus_vnsf.json",
+                        "result": {
+                            "duration": 41000.0,
+                            "status": "passed"
+                        }
+                    },
+                    {
+                        "keyword": "When",
+                        "line": 36,
+                        "name": "When I onboard a vNSF vnsf/shield_cirros_vnsf.other_format.zip",
+                        "result": {
+                            "duration": 9075000.0,
+                            "status": "passed"
+                        }
+                    },
+                    {
+                        "keyword": "Then",
+                        "line": 36,
+                        "name": "Then I expect the response code 412",
+                        "result": {
+                            "duration": 87000.0,
+                            "status": "passed"
+                        }
+                    },
+                    {
+                        "keyword": "Then",
+                        "line": 36,
+                        "name": "Then I expect the JSON response to be as in vnsf/onboard-failure-wrong_format.json",
+                        "result": {
+                            "duration": 346000.0,
+                            "status": "passed"
+                        }
+                    }
+                ],
+                "tags": [],
+                "type": "scenario"
+            },
+            {
+                "description": "",
+                "id": "7",
+                "keyword": "Scenario Outline",
+                "line": 23,
+                "name": "vNSF packages onboarding failures - row 2",
+                "steps": [
+                    {
+                        "keyword": "Given",
+                        "line": 38,
+                        "name": "Given I mock the vNSFO response with mock-onboard-success-cirrus_vnsf.json",
+                        "result": {
+                            "duration": 38000.0,
+                            "status": "passed"
+                        }
+                    },
+                    {
+                        "keyword": "When",
+                        "line": 38,
+                        "name": "When I onboard a vNSF vnsf/shield_cirros_vnsf.wrong_format_vnsfo.tar.gz",
+                        "result": {
+                            "duration": 17110000.0,
+                            "status": "passed"
+                        }
+                    },
+                    {
+                        "keyword": "Then",
+                        "line": 38,
+                        "name": "Then I expect the response code 412",
+                        "result": {
+                            "duration": 84000.0,
+                            "status": "passed"
+                        }
+                    },
+                    {
+                        "keyword": "Then",
+                        "line": 38,
+                        "name": "Then I expect the JSON response to be as in vnsf/onboard-failure-wrong_format_vnsfo.json",
+                        "result": {
+                            "duration": 282000.0,
+                            "status": "passed"
+                        }
+                    }
+                ],
+                "tags": [],
+                "type": "scenario"
+            },
+            {
+                "description": "",
+                "id": "8",
+                "keyword": "Scenario Outline",
+                "line": 23,
+                "name": "vNSF packages onboarding failures - row 3",
+                "steps": [
+                    {
+                        "keyword": "Given",
+                        "line": 40,
+                        "name": "Given I mock the vNSFO response with mock-onboard-success-cirrus_vnsf.json",
+                        "result": {
+                            "duration": 37000.0,
+                            "status": "passed"
+                        }
+                    },
+                    {
+                        "keyword": "When",
+                        "line": 40,
+                        "name": "When I onboard a vNSF vnsf/shield_cirros_vnsf.missing_vnfd.tar.gz",
+                        "result": {
+                            "duration": 14427000.0,
+                            "status": "passed"
+                        }
+                    },
+                    {
+                        "keyword": "Then",
+                        "line": 40,
+                        "name": "Then I expect the response code 406",
+                        "result": {
+                            "duration": 77000.0,
+                            "status": "passed"
+                        }
+                    },
+                    {
+                        "keyword": "Then",
+                        "line": 40,
+                        "name": "Then I expect the JSON response to be as in vnsf/onboard-failure-missing_vnfd.json",
+                        "result": {
+                            "duration": 257999.99999999997,
+                            "status": "passed"
+                        }
+                    }
+                ],
+                "tags": [],
+                "type": "scenario"
+            },
+            {
+                "description": "",
+                "id": "9",
+                "keyword": "Scenario Outline",
+                "line": 23,
+                "name": "vNSF packages onboarding failures - row 4",
+                "steps": [
+                    {
+                        "keyword": "Given",
+                        "line": 42,
+                        "name": "Given I mock the vNSFO response with mock-onboard-success-cirrus_vnsf.json",
+                        "result": {
+                            "duration": 34000.0,
+                            "status": "passed"
+                        }
+                    },
+                    {
+                        "keyword": "When",
+                        "line": 42,
+                        "name": "When I onboard a vNSF vnsf/shield_cirros_vnsf.impersonate.tar.gz",
+                        "result": {
+                            "duration": 6666000.0,
+                            "status": "passed"
+                        }
+                    },
+                    {
+                        "keyword": "Then",
+                        "line": 42,
+                        "name": "Then I expect the response code 412",
+                        "result": {
+                            "duration": 91000.0,
+                            "status": "passed"
+                        }
+                    },
+                    {
+                        "keyword": "Then",
+                        "line": 42,
+                        "name": "Then I expect the JSON response to be as in vnsf/onboard-failure-wrong_format.json",
+                        "result": {
+                            "duration": 259000.0,
+                            "status": "passed"
+                        }
+                    }
+                ],
+                "tags": [],
+                "type": "scenario"
+            },
+            {
+                "description": "",
+                "id": "10",
+                "keyword": "Scenario Outline",
+                "line": 23,
+                "name": "vNSF packages onboarding failures - row 5",
+                "steps": [
+                    {
+                        "keyword": "Given",
+                        "line": 44,
+                        "name": "Given I mock the vNSFO response with mock-onboard-success-cirrus_vnsf.json",
+                        "result": {
+                            "duration": 34000.0,
+                            "status": "passed"
+                        }
+                    },
+                    {
+                        "keyword": "When",
+                        "line": 44,
+                        "name": "When I onboard a vNSF vnsf/shield_cirros_vnsf.impersonate_vnsfo.tar.gz",
+                        "result": {
+                            "duration": 12483000.0,
+                            "status": "passed"
+                        }
+                    },
+                    {
+                        "keyword": "Then",
+                        "line": 44,
+                        "name": "Then I expect the response code 412",
+                        "result": {
+                            "duration": 77000.0,
+                            "status": "passed"
+                        }
+                    },
+                    {
+                        "keyword": "Then",
+                        "line": 44,
+                        "name": "Then I expect the JSON response to be as in vnsf/onboard-failure-impersonate_vnsfo.json",
+                        "result": {
+                            "duration": 271000.0,
                             "status": "passed"
                         }
                     }
@@ -89,46 +436,5 @@
         "tags": [],
         "type": "feature",
         "uri": "./vnsf-onboarding.feature"
-    },
-    {
-        "description": "\"\"\"\nNOTE: for the time being the decommissioning test is package-based, i.e., the package is first onboarded and right\nafterwards decommissioned. This is obviously not the desired behaviour but saves for now the overwork of populating\nthe data store beforehand. Also ensuring the record is no longer in the data store is a must.\n\"\"\"\nValidates the entire vNSF decommissioning process.",
-        "elements": [
-            {
-                "description": "",
-                "id": "2",
-                "keyword": "Scenario Outline",
-                "line": 11,
-                "name": "Successful decommissioning - row 0",
-                "steps": [
-                    {
-                        "keyword": "When",
-                        "line": 17,
-                        "name": "When I decommission a vnsf/xpto_vnfd.tar.gz",
-                        "result": {
-                            "duration": 37776000.0,
-                            "status": "passed"
-                        }
-                    },
-                    {
-                        "keyword": "Then",
-                        "line": 17,
-                        "name": "Then I expect the response code 204",
-                        "result": {
-                            "duration": 168000.0,
-                            "status": "passed"
-                        }
-                    }
-                ],
-                "tags": [],
-                "type": "scenario"
-            }
-        ],
-        "id": "3",
-        "keyword": "Feature",
-        "line": 1,
-        "name": "vNSF Decommissioning",
-        "tags": [],
-        "type": "feature",
-        "uri": "./vnsf-decommissioning.feature"
     }
 ]

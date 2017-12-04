@@ -1,15 +1,52 @@
 # -*- coding: utf-8 -*-
 
+#  Copyright (c) 2017 SHIELD, UBIWHERE
+# ALL RIGHTS RESERVED.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Neither the name of the SHIELD, UBIWHERE nor the names of its
+# contributors may be used to endorse or promote products derived from this
+# software without specific prior written permission.
+#
+# This work has been performed in the framework of the SHIELD project,
+# funded by the European Commission under Grant number 700199 through the
+# Horizon 2020 program. The authors would like to acknowledge the contributions
+# of their colleagues of the SHIELD partner consortium (www.shield-h2020.eu).
+
+
 import os
 
-# We want to seamlessy run our API both locally and on Heroku. If running on
-# Heroku, sensible DB connection settings are stored in environment variables.
+API_PORT = int(os.environ.get('API_PORT', 5000))
+
 MONGO_HOST = os.environ.get('DATASTORE_HOST', 'data-store')
 MONGO_PORT = os.environ.get('DATASTORE_PORT', 27017)
 MONGO_USERNAME = os.environ.get('DATASTORE_USERNAME', 'user')
 MONGO_PASSWORD = os.environ.get('DATASTORE_PASSWORD', 'user')
 MONGO_DBNAME = os.environ.get('DATASTORE_DBNAME', 'shield-store')
 
+VNSFO_PROTOCOL = os.environ.get('VNSFO_PROTOCOL', 'http')
+VNSFO_HOST = os.environ.get('VNSFO_HOST', '__missing_vnsfo_address__')
+VNSFO_PORT = os.environ.get('VNSFO_PORT', '')
+VNSFO_API = os.environ.get('VNSFO_API', '__missing_vnsfo_api_basepath__')
+
+# NOTE: this shall be removed once AAA is in place.
+VNSFO_TENANT_ID = os.environ.get('VNSFO_TENANT_ID', '__no_tenant_set__')
+
+# CORS for any domain.
+X_DOMAINS = '*'
+
+#
 # Enable reads (GET), inserts (POST) and DELETE for resources/collections
 # (if you omit this line, the API will default to ['GET'] and provide
 # read-only access to the endpoint).
@@ -53,8 +90,9 @@ vnsf_model = {
                 'type': 'dict',
                 'required': True,
                 'schema': {
-                    'descriptor': {'type': 'string', 'empty': False, 'required': True},
                     'type': {'type': 'string', 'empty': False, 'allowed': ["OSM"], 'required': True},
+                    'package': {'type': 'string', 'empty': False, 'required': True},
+                    'descriptor': {'type': 'string', 'empty': False, 'required': True},
 
                     #
                     # Due to a swagger editor bug the suitable name for this property can not be used.

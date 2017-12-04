@@ -1,3 +1,5 @@
+#!/bin/bash
+
 #  Copyright (c) 2017 SHIELD, UBIWHERE
 # ALL RIGHTS RESERVED.
 #
@@ -23,19 +25,11 @@
 # of their colleagues of the SHIELD partner consortium (www.shield-h2020.eu).
 
 
-certifi==2017.4.17
-chardet==3.0.4
-colorama==0.3.9
-colorful==0.4.0
-dictdiffer==0.6.1
-docopt==0.6.2
-humanize==0.5.1
-idna==2.5
-parse==1.8.2
-pysingleton==0.2.1
-radish-bdd==0.6.6
-radish-parse-type==0.3.5
-requests==2.18.1
-six==1.10.0
-tag-expressions==1.1.0
-urllib3==1.21.1
+pip3.4 install -r ${CNTR_FOLDER_DEV}/docker/requirements-store.txt
+
+
+
+#
+# DO NOT REMOVE THIS - LEAVE IT AS THE LAST LINE IN THE FILE.
+# Convey the commands from the command line so the container does what it is intended to do once it is up and running.
+exec "$@"

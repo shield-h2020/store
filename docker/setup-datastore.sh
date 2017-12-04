@@ -1,5 +1,30 @@
 #/bin/sh
 
+#  Copyright (c) 2017 SHIELD, UBIWHERE
+# ALL RIGHTS RESERVED.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Neither the name of the SHIELD, UBIWHERE nor the names of its
+# contributors may be used to endorse or promote products derived from this
+# software without specific prior written permission.
+#
+# This work has been performed in the framework of the SHIELD project,
+# funded by the European Commission under Grant number 700199 through the
+# Horizon 2020 program. The authors would like to acknowledge the contributions
+# of their colleagues of the SHIELD partner consortium (www.shield-h2020.eu).
+
+
 
 # ******************************************************************************
 # ******************************************************************************
@@ -18,26 +43,26 @@ Creates the data store for the vNSF & NS Store. This script is intended to run t
 
 
 OPTIONS
-  --production          (Optional) Creates the data store.
+--environment        The file holding all the settings to use for the data store configuration.
 
-  --staging             (Optional) Creates the data store for staging purposes.
+--reset              Removes all data from the datastore for the given environment.
 
-  --qa                  (Optional) Creates the data store for quality assurance purposes.
+--qa                 (Optional) Load up settings for Quality Assurance instead of regular ones.
 
   -h, --help           Prints this usage message.
 
 EXAMPLES
-  $0 --production
+  $0 --environment .env.production
 
-    Creates the data store to hold the vNSF & NS data for the Store.
+    Creates the data store to hold the vNSF & NS data for the Store according to the settings from the '.env.production' file.
 
-  $0 --staging
+  $0 --environment .env.qa --qa
 
-    Creates the stating environment data store to hold the vNSF & NS data for the Store.
+    Creates the data store to hold the vNSF & NS data for the Store according to the settings from the '.env.qa' file. Uses remaining settings from the QA definition as well.
 
-  $0 --qa
+  $0 --environment .env.production --reset
 
-    Creates the QA environment data store to hold the vNSF & NS data for the Store.
+    Removes all the data for the .env.production environment.
 
 USAGE_MSG
 }
@@ -57,8 +82,8 @@ USAGE_MSG
 
 _PARAM_INVALID_VALUE="__##_INVALID_VALUE_##__"
 
-p_production=${_PARAM_INVALID_VALUE}
-p_staging=${_PARAM_INVALID_VALUE}
+p_environment=${_PARAM_INVALID_VALUE}
+p_reset=${_PARAM_INVALID_VALUE}
 p_qa=${_PARAM_INVALID_VALUE}
 
 
@@ -117,7 +142,7 @@ ErrorInvalidParameter() {
 # ******************************************************************************
 HandleOptions() {
 
-    parseParamsCmd=`getopt -n$0 -o h:: -a --long production,staging,qa -- "$@"`
+    parseParamsCmd=`getopt -n$0 -o h:: -a --long environment:,reset,qa -- "$@"`
 
     if [ $? != 0 ] ; then Usage; echo; echo; exit 1 ; fi
 
@@ -125,27 +150,27 @@ HandleOptions() {
 
     [ $# -eq 0 ] && Usage
 
+    actionSet=0
+
     while [ $# -gt 0 ]
     do
 
         case "$1" in
 
-            --production)
-                p_production=true
+            --environment)
+                p_environment=$2
                 actionSet=1
                 shift
                 ;;
 
-            --staging)
-                p_staging=true
+            --reset)
+                p_reset=true
                 actionSet=1
-                shift
                 ;;
 
             --qa)
                 p_qa=true
                 actionSet=1
-                shift
                 ;;
 
             # Help
@@ -162,7 +187,7 @@ HandleOptions() {
 
             -*)
                 echo "Unknown option $1"
-                UsageBASE_ENV_FILE
+                Usage
                 exit 1
                 ;;
 
@@ -184,6 +209,14 @@ HandleOptions() {
     if [ $actionSet -eq 0 ] ; then
         echo -e "Missing option(s)\n"
         Usage
+        echo -e "\n\n"
+        exit 1
+    fi
+
+    if ! [ -f $p_environment ] ; then
+        $filepath=$(realpath ${p_environment})
+        echo -e "Cannot read environment file: ${filepath} \n"
+        echo -e "Please provide a valid file."
         echo -e "\n\n"
         exit 1
     fi
@@ -210,16 +243,16 @@ HandleOptions "$@"
 
 
 ENV_FILE_FULL=$(mktemp /tmp/XXXXXXX)
-cat .env > ${ENV_FILE_FULL}
 
-if [ $p_staging = true ]; then
-    # Load changes for Staging.
-    cat .env.staging >> ${ENV_FILE_FULL}
-fi
+# Load deployment-specific settings.
+cat ${p_environment} > ${ENV_FILE_FULL}
+
+# Append settings for standard operation.
+cat .env.base >> ${ENV_FILE_FULL}
 
 if [ $p_qa = true ]; then
-    # Load changes for QA.
-    cat .env.qa >> ${ENV_FILE_FULL}
+    # Override with settings from QA.
+    cat .env.base.qa >> ${ENV_FILE_FULL}
 fi
 
 . ${ENV_FILE_FULL}
@@ -241,6 +274,13 @@ echo "_VARS_BLOCK_" >> ${ENV_TMP_FILE}
 echo >> ${ENV_TMP_FILE}
 . ${ENV_TMP_FILE} > ${ENV_FILE}
 
+# Default command is to setup the data store.
+cmd=${CNTR_FOLDER_DEV}/docker/mongodb-init.js
 
-# Setup mongoDB data store.
-mongo --port ${DATASTORE_PORT} --eval "var PORT='$DATASTORE_PORT', STORE_COLLECTION='$DATASTORE_DBNAME', STORE_USER='$DATASTORE_USERNAME', STORE_PASS='$DATASTORE_PASSWORD'" ${CNTR_FOLDER_DEV}/docker/mongodb-init.js
+if [ $p_reset = true ]; then
+    # Clear data store contents.
+    cmd=${CNTR_FOLDER_DEV}/docker/mongodb-reset.js
+fi
+
+# Set mongoDB data store.
+mongo --port ${DATASTORE_PORT} --eval "var PORT='$DATASTORE_PORT', STORE_COLLECTION='$DATASTORE_DBNAME', STORE_USER='$DATASTORE_USERNAME', STORE_PASS='$DATASTORE_PASSWORD'" $cmd
