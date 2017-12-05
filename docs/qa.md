@@ -71,11 +71,11 @@ An example of the JSON notation to use when wanting to discard some output from 
 ```json
 {
   "ignore": [
-    "_etag",
-    "_updated",
-    "_id",
-    "_created",
-    "_links"
+    "root['_id']",
+    "root['_etag']",
+    "root['_created']",
+    "root['_updated']",
+    "root['_links']"
   ],
   "expected": {
     "_status": "OK"
@@ -138,4 +138,4 @@ Once the report is finished it outputs:
 Cucumber HTML report /path/to/pretty/report/output.html generated successfully.
 ```
 
-To view the beautified version of the report please open the `/path/to/pretty/report/output.html` file.
+To view the beautified version of the report please open the `/path/to/pretty/report/output.html` file in a web browser.

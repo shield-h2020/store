@@ -31,10 +31,10 @@ TESTS_REPORT_JSON=${FOLDER_TESTS_REPORT}/result.json
 TESTS_REPORT_HTML=${FOLDER_TESTS_REPORT}/report.html
 REPORT_TOOL=${FOLDER_TESTS_TOOLS}/html_report.js
 
-cd ${FOLDER_TESTS_FEATURES}
+cd ${FOLDER_TESTS_BASEPATH}
 
 # Run tests.
-radish --cucumber-json ${TESTS_REPORT_JSON} .
+radish --cucumber-json ${TESTS_REPORT_JSON} ${FOLDER_TESTS_FEATURES}
 
 # Beautify tests report.
 node ${REPORT_TOOL} -s ${TESTS_REPORT_JSON} -o ${TESTS_REPORT_HTML}

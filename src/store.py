@@ -29,50 +29,13 @@ import json
 import logging
 
 import base64
-from eve import Eve
-from flask import abort
-
-import log
 import settings as cfg
-import store_errors as err
-from vnsf import Vnsf, VnsfMissingPackage, VnsfWrongPackageFormat, VnsfPackageCompliance
-from vnsfo import VnsfoMissingVnfDescriptor, VnsfOrchestratorOnboardingIssue, VnsfoVnsfWrongPackageFormat
-
-
-def onboard_vnsf(request):
-    """
-    Registers a vNSF into the Store and onboards it with the Orchestrator.
-
-    The SHIELD manifest is checked for integrity and compliance. Metadata is stored for the catalogue and the actual
-    manifest file is stored as binary so it can be provided for attestation purposes (thus ensuring tamper-proofing).
-
-    :param request: the HTTP request data.
-    """
-
-    try:
-        vnsf = Vnsf()
-        vnsf.onboard_vnsf(request)
-
-    except (VnsfMissingPackage, VnsfWrongPackageFormat, VnsfoVnsfWrongPackageFormat) as e:
-        abort(err.HTTP_412_PRECONDITION_FAILED, e.message)
-
-    except (VnsfPackageCompliance, VnsfoMissingVnfDescriptor) as e:
-        abort(err.HTTP_406_NOT_ACCEPTABLE, e.message)
-
-    except VnsfOrchestratorOnboardingIssue as e:
-        abort(err.HTTP_502_BAD_GATEWAY, e.message)
-
-
-def send_minimal_vnsf_data(response):
-    """
-    Send the vNSF attestation-related data.
-
-    :param response: the response from the DB
-    :return: The vNSF with the "public" properties only.
-    """
-
-    del response['manifest_file']
-    del response['state']
+import store_docs
+from eve import Eve
+from eve_swagger import swagger, add_documentation
+from ns_hooks import NsHooks
+from storeutils import log
+from vnsf_hooks import VnsfHooks
 
 
 def send_attestation(request, response):
@@ -94,14 +57,25 @@ def send_attestation(request, response):
 
 
 app = Eve()
-app.on_pre_POST_vnsfs += onboard_vnsf
-app.on_fetched_item_vnsfs += send_minimal_vnsf_data
+
+# vNSF hooks.
+app.on_pre_POST_vnsfs += VnsfHooks.onboard_vnsf
+app.on_fetched_item_vnsfs += VnsfHooks.send_minimal_vnsf_data
 app.on_post_GET_attestation += send_attestation
 
+# Network Services hooks.
+app.on_pre_POST_nss += NsHooks.onboard_ns
+
+app.register_blueprint(swagger)
+
+app.config['SWAGGER_INFO'] = store_docs.swagger_info
+
+add_documentation({'paths': store_docs.paths})
+
 if __name__ == '__main__':
-    log.setup_logging()
+    log.setup_logging(config_file='src/logging.yaml')
     logger = logging.getLogger(__name__)
 
     # use '0.0.0.0' to ensure your REST API is reachable from all your
     # network (and not only your computer).
-    app.run(host='0.0.0.0', port=cfg.API_PORT, debug=True)
+    app.run(host='0.0.0.0', port=cfg.BACKENDAPI_PORT, debug=True)

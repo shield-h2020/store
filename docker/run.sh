@@ -355,8 +355,8 @@ set -ae
 SHARED_FOLDER_DEV=${PWD}/../
 
 # Do nested variables interpolation as the shell doesn't seem do it.
-ENV_FILE=$(mktemp /tmp/XXXXXXX)
-ENV_TMP_FILE=$(mktemp /tmp/XXXXXXX)
+ENV_FILE=$(mktemp)
+ENV_TMP_FILE=$(mktemp)
 echo "#!/bin/sh" > ${ENV_TMP_FILE}
 echo ". ${ENV_FILE_FULL}" >> ${ENV_TMP_FILE}
 echo "cat <<_VARS_BLOCK_" >> ${ENV_TMP_FILE}
@@ -416,7 +416,7 @@ ${DOCKER_COMPOSE} ${COMPOSE_FILES} up ${COMPOSE_FLAGS}
 
 if [ $p_check_build = true ]; then
     # Have the QA container setup the data store and run the tests.
-    echo "Waiting for the containers to be ready" && sleep 10
+    echo "Waiting for the containers to be ready..." && sleep 10
     ${DOCKER} container exec docker_${DATASTORE_HOST}_1 bash -c "${CNTR_FOLDER_DEV}/docker/setup-datastore.sh --environment ${p_environment} --qa"
     ${DOCKER} container exec docker_${CNTR_QA}_1 ${FOLDER_TESTS_BASEPATH}/run.sh
 

@@ -34,9 +34,10 @@ LABEL project="${CNTR_PROJECT}"
 
 # Dependencies
 RUN yum update -y && \
-    yum install -y epel-release && yum makecache fast && \
-    yum install -y python34 python34-pip && \
-    pip3 install --upgrade pip && \
+    yum install -y https://centos7.iuscommunity.org/ius-release.rpm \
+    yum makecache fast && \
+    yum install -y python36u python36u-pip && \
+    pip3.6 install --upgrade pip && \
     curl --silent --location https://rpm.nodesource.com/setup_8.x | bash - && \
     yum update -y && \
     yum install -y nodejs && \
@@ -47,7 +48,7 @@ ENV NODE_PATH /usr/lib/node_modules
 
 WORKDIR ${FOLDER_TESTS_BASEPATH}
 
-# Mock Probe Server.
+# Mock vNSF Orchestrator.
 CMD ["canned", "${CNTR_FOLDER_VNSFO}", "-p", "${CNTR_MOCK_VNSFO_PORT}"]
 
 ENTRYPOINT ["${CNTR_FOLDER_DEV}/docker/setup-qa.sh"]

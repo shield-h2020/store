@@ -16,7 +16,7 @@ Any tailoring to the Store deployment is done through the variables below. These
 Variable | Purpose | Format
 -|-|-
 `API_PORT` | TCP port where the Store REST API is running. | Number. User or Dynamic Port number as defined by [RFC 6335](https://tools.ietf.org/html/rfc6335)
-`VNSFO_PROTOCOL` | Protocol used to communicate with the vNSF Orchectrator | String. `http` or `https`
+`VNSFO_PROTOCOL` | Protocol used to communicate with the vNSF Orchestrator | String. `http` or `https`
 `VNSFO_HOST` | vNSF Orchestrator IP address | String. IP or DNS name where the vNSFO is running
 `VNSFO_PORT` | vNSF Orchestrator IP port | Number. Port number where the vNSFO REST API is listening for requests
 `VNSFO_API` | vNSF Orchestrator API basepath | String. Basepath to the vNSFO onboarding REST API

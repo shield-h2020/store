@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 #  Copyright (c) 2017 SHIELD, UBIWHERE
 # ALL RIGHTS RESERVED.
 #
@@ -28,7 +30,7 @@ disable_existing_loggers: False
 
 formatters:
     simple:
-        format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        format: "%(levelname) -10s %(asctime)s %(name) -30s %(funcName) -35s %(lineno) -5d: %(message)s'"
 
 handlers:
     console:
@@ -47,5 +49,5 @@ handlers:
         encoding: utf8
 
 root:
-    level: INFO
+    level: DEBUG
     handlers: [console, file]

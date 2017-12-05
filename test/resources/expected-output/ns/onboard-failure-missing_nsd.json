@@ -1,0 +1,7 @@
+{
+  "_error": {
+    "message": "Network Service Descriptor not found where manifest.yaml places it",
+    "code": 406
+  },
+  "_status": "ERR"
+}

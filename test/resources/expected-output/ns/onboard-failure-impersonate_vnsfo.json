@@ -1,0 +1,7 @@
+{
+  "_error": {
+    "message": "Package does not comply with the vNSFO format",
+    "code": 412
+  },
+  "_status": "ERR"
+}

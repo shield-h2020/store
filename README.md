@@ -53,7 +53,7 @@ TL;DR
 
 ```bash
 cd docker
-./run.sh --production
+./run.sh --environment .env.production --verbose
 ```
 
 Once everything is up and running the last lines on the screen should be something like:
@@ -61,16 +61,18 @@ Once everything is up and running the last lines on the screen should be somethi
 Creating docker_data-store_1
 Creating docker_dev_1 ... done
 
-dev_1         |  * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
-dev_1         |  * Restarting with stat
-dev_1         |  * Debugger is active!
-dev_1         |  * Debugger pin code: <XXX-XXX-XXX>
+store_1         |  * Running on http://0.0.0.0:6060/ (Press CTRL+C to quit)
+store_1         |  * Restarting with stat
+store_1         |  * Debugger is active!
+store_1         |  * Debugger pin code: <XXX-XXX-XXX>
 ```
 
 * First-time setup (from another terminal window):
 
 ```bash
-docker exec -it docker_data-store_1 bash -c "/usr/share/dev/store/docker/setup-datastore.sh --production"
+docker exec docker_store-persistence_1 bash -c "/usr/share/dev/store/docker/setup-datastore.sh --environment /usr/share/dev/store/docker/.env.production"
+
+
 ```
 
 After the first-time setup is finished, you should see that Mongo has been successfully installed.
@@ -79,9 +81,9 @@ At this point, two containers should be running; namely the store and the mongo 
 
 ```bash
 $ docker ps
-CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                    NAMES
-420133c8e114        docker_dev          "/usr/share/dev/st..."   14 minutes ago      Up 10 minutes       0.0.0.0:5000->5000/tcp   docker_dev_1
-bea2622e00d3        mongo               "docker-entrypoint..."   14 minutes ago      Up 10 minutes       27017/tcp                docker_data-store_1
+CONTAINER ID        IMAGE                             NAMES
+420133c8e114        docker_store                      docker_store_1
+bea2622e00d3        docker_store-persistence          docker_store-persistence_1
 ```
 
 Troubleshooting is possible after accessing the container through its name (last column from above): `docker exec -it $docker_container_name bash`
@@ -100,7 +102,7 @@ The first time the Store environment is set up one must create the data store to
 
 # Deployment
 
-The default settings deploy the Store API in the localhost and running on port 5000. To ensure the environment is up and running place a `GET` request to http://localhost:5000. The response should be a `200 OK` with the available endpoints presented in either XML:
+The default settings deploy the Store API in the localhost and running on port 6060. To ensure the environment is up and running place a `GET` request to http://localhost:6060. The response should be a `200 OK` with the available endpoints presented in either XML:
 
 ```xml
 <resource>
@@ -129,13 +131,19 @@ or JSON format if the `Accept: application/json` HTTP header is set:
 
 # API Documentation
 
-The documentation follows the [OpenAPI Specification](https://swagger.io/specification/) (fka Swagger RESTful API Documentation Specification) Version 2.0 and is defined in the [swagger.yaml](swagger.yaml) file. To have it in a user-friendly way simple paste its contents into the [Swagger Editor](https://editor.swagger.io/) and navigate the documentation Swagger style.
+The API to interact with the recommendations follows the RESTful principles and serves for CRUD operations on the recommendations.
+
+The [API documentation](http://petstore.swagger.io/?url=https://raw.githubusercontent.com/shield-h2020/store/master/swagger.json) follows the [OpenAPI Specification](https://swagger.io/specification/) (fka Swagger RESTful API Documentation Specification) Version 2.0 and is defined in the [swagger.json](swagger.json) file.
 
 # Packaging
 
 ## vNSF Packaging
 
 Please head to [vNSF Packaging](docs/vnsf/packaging.md) to understand how to package a vNSF for submission to the Store.
+
+## Network Service Packaging
+
+[Network Service packaging](docs/ns/packaging.md) details how to package a Network Service for submission to the Store.
 
 # Testing
 

@@ -30,7 +30,7 @@ Feature: Health Checks
 
 
   Scenario: Endpoints ready
-    When I list the endpoints
+    When I list the backend API endpoints
     Then I expect the JSON response to be as in api-endpoints.json
 
 

@@ -25,9 +25,14 @@
 # of their colleagues of the SHIELD partner consortium (www.shield-h2020.eu).
 
 
-pip3.4 install -r ${CNTR_FOLDER_DEV}/docker/requirements-qa.txt
+CURR_DIR=${PWD}
 
+pip3.6 install -r ${CNTR_FOLDER_DEV}/docker/requirements-qa.txt
 
+# Install SHIELD testing packages.
+cd ${CNTR_FOLDER_DEV}/test/utils && pip3.6 install --upgrade .
+
+cd ${CURR_DIR}
 
 #
 # DO NOT REMOVE THIS - LEAVE IT AS THE LAST LINE IN THE FILE.
