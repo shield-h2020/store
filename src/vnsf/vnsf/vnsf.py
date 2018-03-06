@@ -30,36 +30,53 @@ import logging
 import os
 import yaml
 from shutil import rmtree
-from storeutils import tar_package, exceptions
+from storeutils import tar_package
+from storeutils.error_utils import ExceptionMessage_, IssueHandling, IssueElement
 from tempfile import gettempdir, mkdtemp
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
-PKG_MISSING_FILE = 'No package provided'
-PKG_NOT_TARGZ = 'Package is not a valid .tar.gz file'
-PKG_NOT_SHIELD = 'Package does not comply with the SHIELD format'
+class VnsfMissingPackage(ExceptionMessage_):
+    """Network Service package not provided."""
 
 
-class VnsfMissingPackage(exceptions.ExceptionMessage):
-    """vNSF package not provided."""
-
-
-class VnsfWrongPackageFormat(exceptions.ExceptionMessage):
+class VnsfWrongPackageFormat(ExceptionMessage_):
     """vNSF package file is not in .tar.gz format."""
 
 
-class VnsfPackageCompliance(exceptions.ExceptionMessage):
+class VnsfPackageCompliance(ExceptionMessage_):
     """vNSF package contents do not comply with the definition."""
 
 
-class VnsfHelper:
+class VnsfTamperedPackage(ExceptionMessage_):
+    """vNSF package has been tampered with and is not safe to use."""
+
+
+class VnsfHelper(object):
+    errors = {
+        'ONBOARD_VNSF': {
+            'MISSING_PACKAGE': {
+                IssueElement.ERROR.name: ['No package file provided in POST'],
+                IssueElement.EXCEPTION.name: VnsfMissingPackage('No package provided')
+                },
+            'PKG_NOT_TARGZ': {
+                IssueElement.ERROR.name: ['Package is not a valid .tar.gz file'],
+                IssueElement.EXCEPTION.name: VnsfWrongPackageFormat('Package is not a valid .tar.gz file')
+                },
+            'PKG_NOT_SHIELD': {
+                IssueElement.ERROR.name: ["Missing 'manifest.yaml' from {}", 'Package contents: {}'],
+                IssueElement.EXCEPTION.name: VnsfPackageCompliance('Package does not comply with the SHIELD format')
+                },
+            'PKG_TAMPERED_NAME_MISMATCH': {
+                IssueElement.ERROR.name: ["Package file name ({}) doesn't match the one defined in the manifest ({})."],
+                IssueElement.EXCEPTION.name: VnsfTamperedPackage('Package file name mismatch')
+                },
+            }
+        }
+
     def __init__(self, vnsfo, logger=None):
         self.logger = logger or logging.getLogger(__name__)
-
-        # Maintenance friendly.
-        self._missing_package = VnsfMissingPackage(PKG_MISSING_FILE)
-        self._wrong_package_format = VnsfWrongPackageFormat(PKG_NOT_TARGZ)
-        self._package_compliance = VnsfPackageCompliance(PKG_NOT_SHIELD)
+        self.issue = IssueHandling(self.logger)
 
         self.vnsfo = vnsfo
 
@@ -90,16 +107,22 @@ class VnsfHelper:
             manifest = dict(yaml.safe_load(stream))
             self.logger.debug('SHIELD manifest\n%s', manifest)
 
+        vnsf_package_path = os.path.join(extracted_package_path,
+                                         manifest['manifest:vnsf']['package'])
+
         self.logger.debug('shield package: %s', os.listdir(extracted_package_path))
         self.logger.debug('osm package: %s | path: %s', manifest['manifest:vnsf']['package'],
                           os.path.join(extracted_package_path, manifest['manifest:vnsf'][
                               'package']))
 
+        # Ensure package integrity.
+        # self._integrity_check(manifest, vnsf_package_path)
+
+
         # Onboard the VNF into the actual Orchestrator.
         # NOTE: any exception raised by the vNSFO must be handled by the caller, hence no try/catch here.
         onboarded_package = self.vnsfo.onboard_vnsf(tenant_id,
-                                                    os.path.join(extracted_package_path,
-                                                                 manifest['manifest:vnsf']['package']),
+                                                    vnsf_package_path,
                                                     manifest['manifest:vnsf']['descriptor'])
 
         # Provide the manifest as a file stream.
@@ -129,8 +152,7 @@ class VnsfHelper:
         """
 
         if package_file and package_file.filename == '':
-            self.logger.info('No package file provided in POST')
-            raise self._missing_package
+            self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_VNSF']['MISSING_PACKAGE'])
 
         filename = secure_filename(package_file.filename)
         package_absolute_path = os.path.join(gettempdir(), filename)
@@ -139,8 +161,7 @@ class VnsfHelper:
             package_file.save(package_absolute_path)
 
             if not tar_package.is_tar_gz_file(package_absolute_path):
-                self.logger.error(PKG_NOT_TARGZ)
-                raise self._wrong_package_format
+                self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_VNSF']['PKG_NOT_TARGZ'])
 
             self.logger.debug("Package stored at '%s'", package_absolute_path)
 
@@ -151,11 +172,29 @@ class VnsfHelper:
             # Get the SHIELD manifest data.
             manifest_path = os.path.join(extracted_package_path, 'manifest.yaml')
             if not os.path.isfile(manifest_path):
-                self.logger.error("Missing 'manifest.yaml' from %s", extracted_package_path)
-                self.logger.error('Package contents: %s', os.listdir(extracted_package_path))
-                raise self._package_compliance
+                self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_VNSF']['PKG_NOT_SHIELD'],
+                                    [[extracted_package_path], [os.listdir(extracted_package_path)]])
 
         finally:
             os.remove(package_absolute_path)
 
         return extracted_package_path, manifest_path
+
+    def _integrity_check(self, manifest, vnsf_package_path):
+        """
+        Checks the vNSF package for tampering issues and ensures everything is as supposed to be.
+
+        :param manifest: The vNSF manifest.
+        :param vnsf_package_path: The path to the actual vNSF package.
+        :raise:  VnsfTamperedPackage: When the vNSF package has been tampered with and is not safe to use.
+        """
+
+        # Package name must match the manifest.
+        if not os.path.basename(vnsf_package_path) == manifest['manifest:vnsf']['package']:
+            self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_VNSF']['PKG_TAMPERED_NAME_MISMATCH'],
+                                [[vnsf_package_path], [manifest['manifest:vnsf']['package']]])
+
+        # Package hash must match the manifest.
+        manifest['manifest:vnsf']['hash']
+
+        # VDU(s) image hash must match the manifest.

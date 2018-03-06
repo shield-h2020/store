@@ -25,11 +25,28 @@
 # of their colleagues of the SHIELD partner consortium (www.shield-h2020.eu).
 
 
-def build_url(protocol, server, port, basepath):
+def build_url(server, port=None, basepath=None, protocol=None):
+    """
+    Build a URL given the parameters provided. Depending on the parameters it may just simply return a hostname/IP
+    address or None.
+
+    :param server: The server name or IP address.
+    :param port: The port where the server is listening for requests.
+    :param basepath: The base path where the "endpoints" are available.
+    :param protocol: The protocol to use for communicating with the server and reach the "endpoints"
+    :return: A full URL (depending on the parameters it may just simply return a hostname/IP address or None).
+    """
+
+    if server is None:
+        return None
+
     host = server
 
     if port is not None:
         host += ':' + port
+
+    if protocol is None:
+        return host
 
     url = '{}://{}'.format(protocol, host)
     if basepath is not None and len(basepath) > 0:

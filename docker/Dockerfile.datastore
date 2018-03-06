@@ -25,22 +25,13 @@
 
 
 #
-# vNSF Store environment
+# MongoDB data store
 #
 
-FROM centos:7
+FROM mongo:3.4.6
 
-LABEL project="${CNTR_PROJECT}"
+LABEL project="shield-store"
 
-# Dependencies
-RUN yum update -y && \
-    yum install -y https://centos7.iuscommunity.org/ius-release.rpm \
-    yum makecache fast && \
-    yum install -y python36u python36u-pip && \
-    pip3.6 install --upgrade pip && \
-    yum install -y git && \
-    yum clean all
+WORKDIR /usr/share/dev/store/docker
 
-WORKDIR ${CNTR_FOLDER_DEV}
-
-ENTRYPOINT ["${CNTR_FOLDER_DEV}/docker/setup-store.sh"]
+CMD ["mongod", "--port", "27917"]

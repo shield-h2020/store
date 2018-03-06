@@ -290,8 +290,9 @@ Shutdown() {
 
     # Stop and remove containers.
     containers=($($DOCKER ps -aq --filter label=project\=${CNTR_PROJECT}))
-    $DOCKER stop "${containers[@]}"
-    $DOCKER rm "${containers[@]}"
+    ${DOCKER_COMPOSE} down
+    #$DOCKER stop "${containers[@]}"
+    #$DOCKER rm "${containers[@]}"
 }
 
 
@@ -426,7 +427,5 @@ if [ $p_check_build = true ]; then
     echo === Tests report is at $REPORT_PATH
     echo ===
 fi
-
-Cleanup
 
 echo -e "\n\n"

@@ -96,6 +96,7 @@ vnsf_model = {
                 'schema': {
                     'type': {'type': 'string', 'empty': False, 'allowed': ["OSM"], 'required': True},
                     'package': {'type': 'string', 'empty': False, 'required': True},
+                    'hash': {'type': 'string', 'empty': False, 'required': True},
                     'descriptor': {'type': 'string', 'empty': False, 'required': True},
 
                     # vNSF description.

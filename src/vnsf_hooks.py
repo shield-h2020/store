@@ -28,9 +28,10 @@
 import logging
 
 import settings as cfg
+from storeutils.error_utils import IssueHandling, IssueElement
 from vnsf.vnsf import VnsfHelper, VnsfMissingPackage, VnsfWrongPackageFormat, VnsfPackageCompliance
 from vnsfo.vnsfo import VnsfoFactory
-from vnsfo.vnsfo_adapter import VnsfoMissingVnfDescriptor, VnsfOrchestratorOnboardingIssue, \
+from vnsfo.vnsfo_adapter import VnsfoMissingVnfDescriptor, VnsfOrchestratorOnboardingIssue, VnsfValidationIssue, \
     VnsfoVnsfWrongPackageFormat, VnsfOrchestratorUnreacheable
 from werkzeug.datastructures import ImmutableMultiDict
 from werkzeug.exceptions import *
@@ -43,6 +44,36 @@ class VnsfHooks:
     Handles the backstage operations required for the vNSF Store API. These operations are mostly targeted
     at pre and post hooks associated with the API.
     """
+
+    logger = logging.getLogger(__name__)
+
+    issue = IssueHandling(logger)
+
+    errors = {
+        'ONBOARD_VNSF': {
+            'PACKAGE_MISSING': {
+                IssueElement.ERROR.name: ["Missing or wrong field in POST. 'package' should be used as the field name"],
+                IssueElement.EXCEPTION.name: VnsfMissingPackage(
+                        'Can not onboard the package into the vNFSO')
+                },
+            'PACKAGE_ISSUE': {
+                IssueElement.ERROR.name: ['{}'],
+                IssueElement.EXCEPTION.name: PreconditionFailed()
+                },
+            'PACKAGE_COMPLIANCE': {
+                IssueElement.ERROR.name: ['{}'],
+                IssueElement.EXCEPTION.name: NotAcceptable()
+                },
+            'VNSF_VALIDATION_FAILURE': {
+                IssueElement.ERROR.name: ['{}'],
+                IssueElement.EXCEPTION.name: UnprocessableEntity(),
+                },
+            'VNSFO_ISSUE': {
+                IssueElement.ERROR.name: ['{}'],
+                IssueElement.EXCEPTION.name: PreconditionRequired()
+                }
+            }
+        }
 
     @staticmethod
     def onboard_vnsf(request):
@@ -57,13 +88,10 @@ class VnsfHooks:
         it gets ignored.
         """
 
-        logger = logging.getLogger(__name__)
-
         try:
             # It's assumed that only one vNSF package file is received.
             if 'package' not in request.files:
-                logger.error("Missing or wrong field in POST. 'package' should be used as the field name")
-                raise VnsfMissingPackage(PKG_MISSING_FILE)
+                VnsfHooks.issue.raise_ex(IssueElement.ERROR, VnsfHooks.errors['ONBOARD_VNSF']['PACKAGE_MISSING'])
 
             vnsfo = VnsfoFactory.get_orchestrator('OSM', cfg.VNSFO_PROTOCOL, cfg.VNSFO_HOST, cfg.VNSFO_PORT,
                                                   cfg.VNSFO_API)
@@ -89,16 +117,21 @@ class VnsfHooks:
             request.form = ImmutableMultiDict(form_data)
 
         except (VnsfMissingPackage, VnsfWrongPackageFormat, VnsfoVnsfWrongPackageFormat) as e:
-            logger.error(e)
-            raise PreconditionFailed(e.message)
+            VnsfHooks.issue.raise_ex_2(IssueElement.ERROR, VnsfHooks.errors['ONBOARD_VNSF']['PACKAGE_ISSUE'],
+                                       [[e.message]], e)
 
         except (VnsfPackageCompliance, VnsfoMissingVnfDescriptor) as e:
-            logger.error(e)
-            raise NotAcceptable(e.message)
+            VnsfHooks.issue.raise_ex_2(IssueElement.ERROR, VnsfHooks.errors['ONBOARD_VNSF']['PACKAGE_COMPLIANCE'],
+                                       [[e.message]], e)
 
         except (VnsfOrchestratorOnboardingIssue, VnsfOrchestratorUnreacheable) as e:
-            logger.error(e)
-            raise BadGateway(e.message)
+            VnsfHooks.issue.raise_ex_2(IssueElement.ERROR, VnsfHooks.errors['ONBOARD_VNSF']['VNSFO_ISSUE'],
+                                       [[e.message]], e)
+
+        except VnsfValidationIssue as e:
+            VnsfHooks.issue.raise_ex_2(IssueElement.ERROR, VnsfHooks.errors['ONBOARD_VNSF']['VNSF_VALIDATION_FAILURE'],
+                                       [[e.message]], e)
+
 
     def send_minimal_vnsf_data(response):
         """

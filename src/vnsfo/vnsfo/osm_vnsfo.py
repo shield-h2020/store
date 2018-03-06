@@ -31,9 +31,12 @@ import os
 import requests
 from shutil import rmtree
 from storeutils import http_utils, tar_package
+from storeutils.error_utils import IssueHandling, IssueElement, ExceptionMessage_
 from tempfile import mkdtemp
+from nsfval.sdk import validator as nsfval
+import pprint
 
-from .vnsfo_adapter import VnsfOrchestratorAdapter, PKG_NOT_VNSFO
+from .vnsfo_adapter import VnsfOrchestratorAdapter
 
 
 class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
@@ -44,6 +47,7 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
     def __init__(self, protocol, server, port, api_basepath, logger=None):
         super().__init__(protocol, server, port, api_basepath, logger)
         self.logger = logger or logging.getLogger(__name__)
+        self.issue = IssueHandling(self.logger)
 
     def apply_policy(self, tenant_id, policy):
         """
@@ -73,12 +77,12 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
                 self.logger.debug(r.text)
 
             if not r.status_code == http_utils.HTTP_200_OK:
-                self.logger.error('vNFSO policy at {}. Status: {}'.format(url, r.status_code))
-                raise self._policy_issue
+                self.issue.raise_ex(IssueElement.ERROR, self.errors['POLICY']['POLICY_ISSUE'],
+                                    [[url, r.status_code]])
 
         except requests.exceptions.ConnectionError:
-            self.logger.error('Error conveying policy at %s', url)
-            raise self._unreachable
+            self.issue.raise_ex(IssueElement.ERROR, self.errors['POLICY']['VNSFO_UNREACHABLE'],
+                                [[url]])
 
     def onboard_vnsf(self, tenant_id, vnsf_package_path, vnsfd_file):
         """
@@ -114,13 +118,13 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
             if len(r.text) > 0:
                 self.logger.debug(r.text)
 
-            if not r.status_code == http_utils.HTTP_202_ACCEPTED:
-                self.logger.error('vNFSO onboarding at {}. Msg: {} | Status: {}'.format(url, r.reason, r.status_code))
-                raise self._onboarding_issue
+            if not r.status_code == http_utils.HTTP_200_OK:
+                self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_VNSF']['ONBOARDING_ISSUE'],
+                                    [[url, r.reason, r.status_code]])
 
         except requests.exceptions.ConnectionError:
-            self.logger.error('Error onboarding the vNSF at %s', url)
-            raise self._unreachable
+            self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_VNSF']['VNSFO_UNREACHABLE'],
+                                [[url]])
 
         return package_data
 
@@ -137,8 +141,7 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
         # The vNSF package must be in '.tar.gz' format.
         if not tar_package.is_tar_gz_file(vnf_package_path):
-            self.logger.error(PKG_NOT_VNSFO)
-            raise self._wrong_vnsf_package_format
+            self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_VNSF']['VNSFPKG_NOT_VNSFO'])
 
         extracted_package_path = mkdtemp()
 
@@ -150,8 +153,8 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
         # The vNF package folder must exist. The folder name is the same as the VNF package one with .tar.gz removed.
         vnf_folder_abs_path = os.path.join(extracted_package_path, tar_package.get_tar_gz_basename(vnf_package_path))
         if not os.path.isdir(vnf_folder_abs_path):
-            self.logger.error("Missing VNF folder. Expected at '%s'", vnf_folder_abs_path)
-            raise self._missing_vnsf_descriptor
+            self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_VNSF']['PKG_MISSING_VNFD_FOLDER'],
+                                [[vnf_folder_abs_path]])
 
         self.logger.debug('vNSFO package: %s', os.listdir(vnf_folder_abs_path))
         self.logger.debug('VNFD path: %s', vnfd_file)
@@ -159,12 +162,20 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
         # The vNSF Descriptor must be in the expected location so it's contents can be retrieved.
         vnfd_file_abs_path = os.path.join(extracted_package_path, vnfd_file)
         if not os.path.isfile(vnfd_file_abs_path):
-            self.logger.error("Missing VNFD. Expected at '%s'", vnfd_file)
-            raise self._missing_vnsf_descriptor
+            self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_VNSF']['PKG_MISSING_VNFD'],
+                                [[vnfd_file]])
         with open(vnfd_file_abs_path, 'r') as stream:
             vnsfd = stream.read()
 
         self.logger.debug('VNFD\n%s', vnsfd)
+
+        # Validate vNSF Descriptor using NSFVal
+        val_result = nsfval.validate_vnf('osm', 'sit', vnfd_file_abs_path)
+        pprint.pprint(val_result)
+        if val_result['error_count'] != 0:
+            self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_VNSF']['VALIDATION_ERROR'], [[vnfd_file]])
+
+        self.logger.debug("vNSF descriptor '%s' validation PASS", vnfd_file)
 
         # Set the vNSF package data useful for the onboarding operation.
         package_data = {'descriptor': vnsfd}
@@ -201,13 +212,13 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
             if len(r.text) > 0:
                 self.logger.debug(r.text)
 
-            if not r.status_code == http_utils.HTTP_202_ACCEPTED:
-                self.logger.error('vNFSO onboarding at {}. Msg: {} | Status: {}'.format(url, r.reason, r.status_code))
-                raise self._onboarding_issue
+            if not r.status_code == http_utils.HTTP_200_OK:
+                self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_NS']['ONBOARDING_ISSUE'],
+                                    [[url, r.reason, r.status_code]])
 
         except requests.exceptions.ConnectionError:
-            self.logger.error('Error onboarding the Network Service at %s', url)
-            raise self._unreachable
+            self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_NS']['VNSFO_UNREACHABLE'],
+                                [[url]])
 
         return package_data
 
@@ -225,8 +236,7 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
         # The Network Service package must be in '.tar.gz' format.
         if not tar_package.is_tar_gz_file(ns_package_path):
-            self.logger.error(PKG_NOT_VNSFO)
-            raise self._wrong_ns_package_format
+            self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_NS']['NSPKG_NOT_VNSFO'])
 
         extracted_package_path = mkdtemp()
 
@@ -239,8 +249,8 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
         # one with .tar.gz removed.
         ns_folder_abs_path = os.path.join(extracted_package_path, tar_package.get_tar_gz_basename(ns_package_path))
         if not os.path.isdir(ns_folder_abs_path):
-            self.logger.error("Missing Network Service folder. Expected at '%s'", ns_folder_abs_path)
-            raise self._missing_ns_descriptor
+            self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_NS']['PKG_MISSING_NS_FOLDER'],
+                                [[ns_folder_abs_path]])
 
         self.logger.debug('vNSFO package: %s', os.listdir(ns_folder_abs_path))
         self.logger.debug('NSD path: %s', nsd_file)
@@ -248,12 +258,18 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
         # The Network Service Descriptor must be in the expected location so it's contents can be retrieved.
         nsd_file_abs_path = os.path.join(extracted_package_path, nsd_file)
         if not os.path.isfile(nsd_file_abs_path):
-            self.logger.error("Missing NSD. Expected at '%s'", nsd_file)
-            raise self._missing_ns_descriptor
+            self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_NS']['PKG_MISSING_NSD'],
+                                [[nsd_file]])
         with open(nsd_file_abs_path, 'r') as stream:
             nsd = stream.read()
 
         self.logger.debug('NSD\n%s', nsd)
+
+        # Validate NS Descriptor using NSFVal
+        val_result = nsfval.validate_ns('osm', 's', nsd_file_abs_path)
+        if val_result['error_count'] != val_result['warning_count'] != 0:
+            self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_NS']['VALIDATION_ERROR'], [[nsd_file]])
+        self.logger.debug("NS descriptor '%s' validation PASS", nsd_file)
 
         # Set the vNSF package data useful for the onboarding operation.
         package_data = {'descriptor': nsd}

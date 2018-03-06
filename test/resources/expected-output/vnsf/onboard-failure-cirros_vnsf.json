@@ -1,1 +1,7 @@
-{}
+{
+  "_error": {
+    "message": "Can not onboard the package into the vNFSO",
+    "code": 428
+  },
+  "_status": "ERR"
+}

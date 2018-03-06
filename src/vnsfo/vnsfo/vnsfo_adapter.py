@@ -24,77 +24,136 @@
 # Horizon 2020 program. The authors would like to acknowledge the contributions
 # of their colleagues of the SHIELD partner consortium (www.shield-h2020.eu).
 
+
 import logging
 
 from abc import abstractmethod, ABCMeta
-from storeutils import exceptions, http_utils
-
-# Onboarding package-related.
-PKG_MISSING_VNFD = 'vNSF Descriptor not found where manifest.yaml places it'
-PKG_MISSING_NSD = 'Network Service Descriptor not found where manifest.yaml places it'
-PKG_NOT_VNSFO = 'Package does not comply with the vNSFO format'
-ONBOARDING_ISSUE = 'Can not onboard the package into the vNFSO'
-VNSFO_UNREACHABLE = 'Can not reach the Orchestrator'
-POLICY_ISSUE = 'Can not convey policy to the vNFSO'
+from storeutils import http_utils
+from storeutils.error_utils import ExceptionMessage_, IssueHandling, IssueElement
 
 
-class VnsfoVnsfWrongPackageFormat(exceptions.ExceptionMessage):
+class VnsfoVnsfWrongPackageFormat(ExceptionMessage_):
     """Wrong vNSFO package format."""
 
 
-class VnsfoMissingVnfDescriptor(exceptions.ExceptionMessage):
+class VnsfoMissingVnfDescriptor(ExceptionMessage_):
     """Missing vNSF Descriptor from the package."""
 
 
-class VnsfoNsWrongPackageFormat(exceptions.ExceptionMessage):
+class VnsfoNsWrongPackageFormat(ExceptionMessage_):
     """Wrong Network Descriptor package format."""
 
 
-class VnsfoMissingNsDescriptor(exceptions.ExceptionMessage):
+class VnsfoMissingNsDescriptor(ExceptionMessage_):
     """Missing Network Service Descriptor from the package."""
 
 
-class VnsfOrchestratorOnboardingIssue(exceptions.ExceptionMessage):
+class VnsfOrchestratorOnboardingIssue(ExceptionMessage_):
     """vNSFO onboarding operation failed."""
 
 
-class VnsfOrchestratorPolicyIssue(exceptions.ExceptionMessage):
+class VnsfOrchestratorPolicyIssue(ExceptionMessage_):
     """vNSFO policy operation failed."""
 
 
-class VnsfOrchestratorUnreacheable(exceptions.ExceptionMessage):
+class VnsfOrchestratorUnreacheable(ExceptionMessage_):
     """vNSFO cannot be reached."""
 
 
-class VnsfOrchestratorAdapter(metaclass=ABCMeta):
-    """
-    Interface with the vNSF Orchestrator through it's Service Orquestrator REST API.
+class VnsfValidationIssue(ExceptionMessage_):
+    """Issues occurred when validating vNSF descriptor"""
 
-    The documentation available at the time of coding this is for OSM Release One (March 1, 2017) and can be found at
-    https://osm.etsi.org/wikipub/images/2/24/Osm-r1-so-rest-api-guide.pdf. Despite the apparently straight forward
-    way for onboarding vNSF & NS referred by the documentation the endpoints mentioned are not available outside
-    localhost. Thus a workaround is required to get this to work.
 
-    Such workaround consist in using the REST interface provided by the composer available at
-    OSM/UI/skyquake/plugins/composer/routes.js and which implementation is at
-    OSM/UI/skyquake/plugins/composer/api/composer.js. From these two files one can actually find the Service
-    Orquestrator REST API endpoints being called to perform the required operation. From there it's just a matter of
-    calling the proper composer endpoint so it can carry out the intended operation. Ain't life great?!
+class NSValidationIssue(ExceptionMessage_):
+    """Issues occurred when validating NS descriptor"""
+
+
+class VnsfOrchestratorAdapter(object, metaclass=ABCMeta):
     """
+    Define the interface for a vNSF Orchestrator. Each implementation must tailor its behaviour to the Orchestrator it
+    interacts with.
+    """
+
+    errors = {
+        'ONBOARD_VNSF': {
+            'PKG_MISSING_VNFD_FOLDER': {
+                IssueElement.ERROR.name: ["Missing VNF folder. Expected at '{}'"],
+                IssueElement.EXCEPTION.name: VnsfoMissingVnfDescriptor(
+                        'vNSF Descriptor not found where manifest.yaml places it')
+                },
+            'PKG_MISSING_VNFD': {
+                IssueElement.ERROR.name: ["Missing VNFD. Expected at '{}'"],
+                IssueElement.EXCEPTION.name: VnsfoMissingVnfDescriptor(
+                        'vNSF Descriptor not found where manifest.yaml places it')
+                },
+            'ONBOARDING_ISSUE': {
+                IssueElement.ERROR.name: ['vNFSO onboarding at {}. Msg: {} | Status: {}'],
+                IssueElement.EXCEPTION.name: VnsfOrchestratorOnboardingIssue(
+                        'Can not onboard the package into the vNFSO')
+                },
+            'VNSFPKG_NOT_VNSFO': {
+                IssueElement.ERROR.name: ['Package does not comply with the vNSFO format'],
+                IssueElement.EXCEPTION.name: VnsfOrchestratorUnreacheable(
+                        'Package does not comply with the vNSFO format')
+                },
+            'VNSFO_UNREACHABLE': {
+                IssueElement.ERROR.name: ['Error onboarding the vNSF at {}'],
+                IssueElement.EXCEPTION.name: VnsfOrchestratorUnreacheable('Can not reach the Orchestrator')
+                },
+            'VALIDATION_ERROR': {
+                IssueElement.ERROR.name: ['Error validating vNSF descriptor: {}'],
+                IssueElement.EXCEPTION.name: VnsfValidationIssue("Error validating vNSF descriptor")
+                },
+
+            },
+        'ONBOARD_NS': {
+            'PKG_MISSING_NS_FOLDER': {
+                IssueElement.ERROR.name: ["Missing Network Service folder. Expected at '{}'"],
+                IssueElement.EXCEPTION.name: VnsfoMissingVnfDescriptor(
+                        'Network Service Descriptor not found where manifest.yaml places it')
+                },
+            'PKG_MISSING_NSD': {
+                IssueElement.ERROR.name: ["Missing NSD. Expected at '{}'"],
+                IssueElement.EXCEPTION.name: VnsfoMissingNsDescriptor(
+                        'Network Service Descriptor not found where manifest.yaml places it')
+                },
+            'ONBOARDING_ISSUE': {
+                IssueElement.ERROR.name: ['vNFSO onboarding at {}. Msg: {} | Status: {}'],
+                IssueElement.EXCEPTION.name: VnsfOrchestratorOnboardingIssue(
+                        'Can not onboard the package into the vNFSO')
+                },
+            'NSPKG_NOT_VNSFO': {
+                IssueElement.ERROR.name: ['No package file provided in POST'],
+                IssueElement.EXCEPTION.name: VnsfOrchestratorUnreacheable(
+                        'Package does not comply with the vNSFO format')
+                },
+            'VNSFO_UNREACHABLE': {
+                IssueElement.ERROR.name: ['Error onboarding the Network Service at {}'],
+                IssueElement.EXCEPTION.name: VnsfOrchestratorUnreacheable('Can not reach the Orchestrator')
+                },
+            'VALIDATION_ERROR': {
+                IssueElement.ERROR.name: ['Error validating NS descriptor: {}'],
+                IssueElement.EXCEPTION.name: NSValidationIssue("Error validating NS descriptor")
+                },
+
+            },
+        'POLICY': {
+            'POLICY_ISSUE': {
+                IssueElement.ERROR.name: ['vNFSO policy at {}. Status: {}'],
+                IssueElement.EXCEPTION.name: VnsfOrchestratorPolicyIssue('Can not convey policy to the vNFSO')
+                },
+            'VNSFO_UNREACHABLE': {
+                IssueElement.ERROR.name: ['Error conveying policy at {}'],
+                IssueElement.EXCEPTION.name: VnsfOrchestratorUnreacheable('Can not reach the Orchestrator')
+                }
+            }
+        }
 
     def __init__(self, protocol, server, port, api_basepath, logger=None):
         self.logger = logger or logging.getLogger(__name__)
+        self.issue = IssueHandling(self.logger)
 
-        # Maintenance friendly.
-        self._wrong_vnsf_package_format = VnsfoVnsfWrongPackageFormat(PKG_NOT_VNSFO)
-        self._missing_vnsf_descriptor = VnsfoMissingVnfDescriptor(PKG_MISSING_VNFD)
-        self._wrong_ns_package_format = VnsfoNsWrongPackageFormat(PKG_NOT_VNSFO)
-        self._missing_ns_descriptor = VnsfoMissingNsDescriptor(PKG_MISSING_NSD)
-        self._onboarding_issue = VnsfOrchestratorOnboardingIssue(ONBOARDING_ISSUE)
-        self._unreachable = VnsfOrchestratorUnreacheable(VNSFO_UNREACHABLE)
-        self._policy_issue = VnsfOrchestratorPolicyIssue(POLICY_ISSUE)
-
-        self.basepath = http_utils.build_url(protocol, server, port, api_basepath)
+        self.basepath = http_utils.build_url(server, port, api_basepath, protocol)
 
         self.logger.debug('vNSF Orchestrator API at: %s', self.basepath)
 

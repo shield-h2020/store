@@ -32,16 +32,14 @@ from setuptools import setup, find_packages
 cwd = path.dirname(__file__)
 long_desc = codecs.open(path.join(cwd, 'README.md'), 'r', 'utf-8').read()
 
-setup(
-    name="vnsf-orchestrator",
-    version="0.1",
-    packages=find_packages(),
-    exclude_package_data={'': ['README.md']},
-    author="betakoder",
-    author_email="betakoder@outlook.com",
-    description="vNSF Orchestrator Adapter",
-    license="Apache License, Version 2.0",
-    keywords="shield vnsf backend",
-    url="https://github.com/shield-h2020/dashboard",
-    long_description=long_desc
-)
+setup(name="vnsf-orchestrator",
+      version="0.1",
+      packages=find_packages(),
+      exclude_package_dqata={'': ['README.md']},
+      author="betakoder",
+      author_email="betakoder@outlook.com",
+      description="vNSF Orchestrator Adapter",
+      license="Apache License, Version 2.0",
+      keywords="shield vnsf backend",
+      url="https://github.com/shield-h2020/store",
+      long_description=long_desc)

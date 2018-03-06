@@ -1,4 +1,4 @@
-//! statusCode: 202
+//! statusCode: 200
 {
   "transaction_id": "__some_id_here__"
 }

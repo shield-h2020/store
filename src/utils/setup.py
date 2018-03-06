@@ -30,15 +30,13 @@ from setuptools import setup, find_packages
 
 cwd = path.dirname(__file__)
 
-setup(
-    name="store-utils",
-    version="0.1",
-    packages=find_packages(),
-    exclude_package_data={'': ['README.md']},
-    author="betakoder",
-    author_email="betakoder@outlook.com",
-    description="Store Utilities",
-    license="Apache License, Version 2.0",
-    keywords="shield store backend utils",
-    url="https://github.com/shield-h2020/dashboard",
-)
+setup(name="store-utils",
+      version="0.1",
+      packages=find_packages(),
+      exclude_package_data={'': ['README.md']},
+      author="betakoder",
+      author_email="betakoder@outlook.com",
+      description="Store Utilities",
+      license="Apache License, Version 2.0",
+      keywords="shield store backend utils",
+      url="https://github.com/shield-h2020/store")

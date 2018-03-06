@@ -23,24 +23,30 @@
 # of their colleagues of the SHIELD partner consortium (www.shield-h2020.eu).
 
 
+version:             '3'
 
-#
-# vNSF Store environment
-#
+services:
 
-FROM centos:7
+    # Data Store.
+    store-persistence-qa:
+        image: mongo
+        env_file:          /tmp/tmp.JIvpHr4LbH
+        build:
+            context:       .
+            dockerfile:    Dockerfile.datastore
+        volumes:
+            - /home/lconceicao/projects/shield/store/docker/../:/usr/share/dev/store
 
-LABEL project="${CNTR_PROJECT}"
 
-# Dependencies
-RUN yum update -y && \
-    yum install -y https://centos7.iuscommunity.org/ius-release.rpm \
-    yum makecache fast && \
-    yum install -y python36u python36u-pip && \
-    pip3.6 install --upgrade pip && \
-    yum install -y git && \
-    yum clean all
-
-WORKDIR ${CNTR_FOLDER_DEV}
-
-ENTRYPOINT ["${CNTR_FOLDER_DEV}/docker/setup-store.sh"]
+    # Store environment.
+    store:
+        env_file:        /tmp/tmp.JIvpHr4LbH
+        build:
+          context:       .
+          dockerfile:    Dockerfile.store
+        ports:
+            - "6060:6060"
+        volumes:
+            - /home/lconceicao/projects/shield/store/docker/../:/usr/share/dev/store
+            - /opt/shield:/opt/shield
+        command:         python3.6 src/store.py
