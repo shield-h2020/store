@@ -42,6 +42,7 @@ This packaging is Orchestrator agnostic and allows for onboarding an existing VN
 | manifest:vnsf | Defines a SHIELD vNSF package
 | type | The type of VNF the manifest describes. Allowed values: `OSM`
 | package | VNF file name within the SHIELD package. This file name, contents and format is Orchestrator specific. This manifest only identifies the file which holds the VNF package
+| hash | The message digest for the VNF package mentioned in the package field
 | descriptor | VNF Descriptor file within the VNF-specific package. Tipically a path to the actual file itself
 | properties | vNSF characterization and purpose-related details
 | security_info | The metadata used for attestation purposes to ensure the VNF wasn't tampred with
@@ -52,6 +53,7 @@ This packaging is Orchestrator agnostic and allows for onboarding an existing VN
 manifest:vnsf:
     type: OSM
     package: cirros_vnf.tar.gz
+    hash: <image_hash_here>
     descriptor: cirros_vnf/cirros_vnfd.yaml
     properties:
         vendor: some vendor name

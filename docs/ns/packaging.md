@@ -41,6 +41,7 @@ This packaging is Orchestrator agnostic and allows for onboarding an existing Ne
 | manifest:ns | Defines a SHIELD Network Service package
 | type | The type of Network Service the manifest describes. Allowed values: `OSM`
 | package | Network Service file name within the SHIELD package. This file name, contents and format is Orchestrator specific. This manifest only identifies the file which holds the Network Service package
+| hash | The message digest for the NS package mentioned in the package field
 | descriptor | Network Service Descriptor file within the Network Service-specific package. Tipically a path to the actual file itself
 | properties | Network Service characterization and purpose-related details
 
@@ -50,6 +51,7 @@ This packaging is Orchestrator agnostic and allows for onboarding an existing Ne
 manifest:ns:
     type: OSM
     package: cirros_ns.tar.gz
+    hash: <image_hash_here>
     descriptor: cirros_ns/cirros_nsd.yaml
     properties:
         capabilities: ['Virtual Cirr OS']
