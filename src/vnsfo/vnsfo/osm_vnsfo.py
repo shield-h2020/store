@@ -29,15 +29,12 @@ import logging
 
 import os
 import requests
-import copy
-import flask
-from eve.methods.post import post_internal
+import yaml
 from shutil import rmtree
 from storeutils import http_utils, tar_package
 from storeutils.error_utils import IssueHandling, IssueElement, ExceptionMessage_
 from tempfile import mkdtemp
 from nsfval_sdk import sdk as nsfval
-
 from .vnsfo_adapter import VnsfOrchestratorAdapter
 
 
@@ -166,8 +163,15 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
         if not os.path.isfile(vnfd_file_abs_path):
             self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_VNSF']['PKG_MISSING_VNFD'],
                                 [[vnfd_file]])
+
+        vnsfd = None
         with open(vnfd_file_abs_path, 'r') as stream:
-            vnsfd = stream.read()
+            try:
+                vnsfd = yaml.load(stream)
+
+            except yaml.YAMLError:
+                self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_VNSF']['VNFD_FORMAT_INVALID'],
+                                    [[vnfd_file]])
 
         self.logger.debug('VNFD\n%s', vnsfd)
 
@@ -182,8 +186,14 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
             self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_VNSF']['VALIDATION_ERROR'], [[vnfd_file]])
         self.logger.debug("vNSF descriptor '%s' validation PASS", vnfd_file)
 
+        # Retrieve VNF ID
+        vnsf_id = vnsfd[list(vnsfd.keys())[0]]['vnfd'][0]['id']
+
         # Set the vNSF package data useful for the onboarding operation.
-        package_data = {'descriptor': vnsfd}
+        package_data = {
+            'vnsf_id': str(vnsf_id),  # assuming the descriptor only carries one VNFD
+            'descriptor': str(vnsfd)
+        }
 
         rmtree(extracted_package_path)
 
@@ -265,10 +275,22 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
         if not os.path.isfile(nsd_file_abs_path):
             self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_NS']['PKG_MISSING_NSD'],
                                 [[nsd_file]])
+
+        nsd = None
         with open(nsd_file_abs_path, 'r') as stream:
-            nsd = stream.read()
+            try:
+                nsd = yaml.load(stream)
+
+            except yaml.YAMLError:
+                self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_NS']['NSD_FORMAT_INVALID'],
+                                    [[nsd_file]])
 
         self.logger.debug('NSD\n%s', nsd)
+
+        # Retrieve NS ID
+        ns_id = nsd[list(nsd.keys())[0]]['nsd'][0]['id']
+
+        # Get vnsf dependencies
 
         # Validate NS Descriptor using NSFVal
         val_result = nsfval.validate_ns('osm', 's', nsd_file_abs_path)
@@ -282,7 +304,10 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
         self.logger.debug("NS descriptor '%s' validation PASS", nsd_file)
 
         # Set the vNSF package data useful for the onboarding operation.
-        package_data = {'descriptor': nsd}
+        package_data = {
+            'ns_id': str(ns_id),    # assuming the descriptor only carries one NSD
+            'descriptor': str(nsd)
+        }
 
         rmtree(extracted_package_path)
 

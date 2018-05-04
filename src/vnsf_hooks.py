@@ -127,6 +127,7 @@ class VnsfHooks:
             # NOTE: there's no need to deep copy as the data won't be modified until it gets stored in the database.
             form_data['state'] = 'sandboxed'
             form_data['manifest'] = package_data['manifest']
+            form_data['vnsf_id'] = package_data['vnsf_id']
             form_data['descriptor'] = package_data['descriptor']
 
         except (VnsfMissingPackage, VnsfWrongPackageFormat, VnsfoVnsfWrongPackageFormat) as e:

@@ -132,6 +132,7 @@ class VnsfHelper(object):
         package_data = dict()
         package_data['state'] = 'sandboxed'
         package_data['manifest'] = manifest
+        package_data['vnsf_id'] = onboarded_package['vnsf_id']
         package_data['descriptor'] = onboarded_package['descriptor']
 
         if os.path.isdir(extracted_package_path):

@@ -60,9 +60,14 @@ class VnsfOrchestratorUnreacheable(ExceptionMessage_):
     """vNSFO cannot be reached."""
 
 
+class VnsfInvalidFormat(ExceptionMessage_):
+    """vNSF descriptor has an invalid format"""
+
 class VnsfValidationIssue(ExceptionMessage_):
     """Issues occurred when validating vNSF descriptor"""
 
+class NsInvalidFormat(ExceptionMessage_):
+    """NS descriptor has an invalid format"""
 
 class NsValidationIssue(ExceptionMessage_):
     """Issues occurred when validating NS descriptor"""
@@ -100,6 +105,10 @@ class VnsfOrchestratorAdapter(object, metaclass=ABCMeta):
                 IssueElement.ERROR.name: ['Error onboarding the vNSF at {}'],
                 IssueElement.EXCEPTION.name: VnsfOrchestratorUnreacheable('Can not reach the Orchestrator')
                 },
+            'VNFD_FORMAT_INVALID': {
+                IssueElement.ERROR.name: ['Invalid format of VNFD {}'],
+                IssueElement.EXCEPTION.name: VnsfInvalidFormat('Can not read vNSF descriptor')
+            },
             'VALIDATION_ERROR': {
                 IssueElement.ERROR.name: ['Error validating vNSF descriptor: {}'],
                 IssueElement.EXCEPTION.name: VnsfValidationIssue("Error validating vNSF descriptor")
@@ -131,6 +140,10 @@ class VnsfOrchestratorAdapter(object, metaclass=ABCMeta):
                 IssueElement.ERROR.name: ['Error onboarding the Network Service at {}'],
                 IssueElement.EXCEPTION.name: VnsfOrchestratorUnreacheable('Can not reach the Orchestrator')
                 },
+            'NSD_FORMAT_INVALID': {
+                IssueElement.ERROR.name: ['Invalid format of NSD {}'],
+                IssueElement.EXCEPTION.name: NsInvalidFormat('Can not read NS descriptor')
+            },
             'VALIDATION_ERROR': {
                 IssueElement.ERROR.name: ['Error validating NS descriptor: {}'],
                 IssueElement.EXCEPTION.name: NsValidationIssue("Error validating NS descriptor")
@@ -183,7 +196,7 @@ class VnsfOrchestratorAdapter(object, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def onboard_ns(self, tenant_id, ns_package_path, nsd_file):
+    def onboard_ns(self, tenant_id, ns_package_path, nsd_file, validation_data):
         """
         Onboards a vNSF with the Orchestrator.
 

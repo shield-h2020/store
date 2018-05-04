@@ -79,11 +79,11 @@ policy_model = {
 
 vnsf_model = {
 
-    #'vnsf_id': {
-    #    'type': 'string',
-    #    'empty': False,
-    #    'required': True
-    #},
+    'vnsf_id': {
+        'type': 'string',
+        'empty': False,
+        'required': True
+    },
 
     'state': {
         'type': 'string',
@@ -178,6 +178,12 @@ ns_model = {
         'empty': False,
         'required': True
         },
+
+    'ns_id': {
+        'type': 'string',
+        'empty': False,
+        'required': True
+    },
 
     # The current state of the Network Service.
     'state': {

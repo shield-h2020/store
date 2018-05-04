@@ -127,6 +127,7 @@ class NsHooks:
             form_data['state'] = 'sandboxed'
             form_data['manifest'] = package_data['manifest']
             form_data['descriptor'] = package_data['descriptor']
+            form_data['ns_id'] = package_data['ns_id']
 
         except (NsMissingPackage, NsWrongPackageFormat, VnsfoNsWrongPackageFormat) as e:
             ex_response = NsHooks.issue.build_ex(
