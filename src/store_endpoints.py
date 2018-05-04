@@ -32,6 +32,7 @@ vnsfs = {
     'schema': store_model.vnsf_model,
     'resource_methods': ['POST', 'GET'],
     'item_methods': ['GET', 'DELETE'],
+    #'item_lookup_field': 'vnsf_id'
     }
 
 vnsf_attestation = {
@@ -51,3 +52,9 @@ nss = {
     'item_methods': ['GET', 'DELETE'],
     }
 
+validation = {
+    'item_title': 'validation',
+    'schema': store_model.validation_model,
+    'resource_methods': ['POST', 'GET'],
+    'item_methods': ['GET', 'DELETE'],
+}

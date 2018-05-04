@@ -28,10 +28,15 @@
 import logging
 
 import settings as cfg
+import flask
+from flask import abort, make_response, jsonify
+from storeutils import http_utils
+from eve.methods.post import post_internal
 from ns.ns import NsHelper, NsMissingPackage, NsWrongPackageFormat, NsPackageCompliance
 from vnsfo.vnsfo import VnsfoFactory
+from storeutils.error_utils import IssueHandling, IssueElement
 from vnsfo.vnsfo_adapter import VnsfoMissingNsDescriptor, VnsfOrchestratorOnboardingIssue, \
-    VnsfoNsWrongPackageFormat, VnsfOrchestratorUnreacheable
+    VnsfoNsWrongPackageFormat, VnsfOrchestratorUnreacheable, NsValidationIssue
 from werkzeug.datastructures import ImmutableMultiDict
 from werkzeug.exceptions import *
 
@@ -43,6 +48,34 @@ class NsHooks:
     Handles the backstage operations required for the Network Service Store API. These operations are mostly targeted
     at pre and post hooks associated with the API.
     """
+
+    logger = logging.getLogger(__name__)
+    issue = IssueHandling(logger)
+
+    errors = {
+        'ONBOARD_NS': {
+            'PACKAGE_MISSING': {
+                IssueElement.ERROR.name: ["Missing or wrong field in POST. 'package' should be used as the field name"],
+                IssueElement.EXCEPTION.name: NsMissingPackage('Can not onboard the package into the vNFSO')
+            },
+            'PACKAGE_ISSUE': {
+                IssueElement.ERROR.name: ['{}'],
+                IssueElement.EXCEPTION.name: PreconditionFailed()
+            },
+            'PACKAGE_COMPLIANCE': {
+                IssueElement.ERROR.name: ['{}'],
+                IssueElement.EXCEPTION.name: NotAcceptable()
+            },
+            'NS_VALIDATION_FAILURE': {
+                IssueElement.ERROR.name: ['{}'],
+                IssueElement.EXCEPTION.name: UnprocessableEntity(),
+            },
+            'VNSFO_ISSUE': {
+                IssueElement.ERROR.name: ['{}'],
+                IssueElement.EXCEPTION.name: BadGateway()
+            }
+        }
+    }
 
     @staticmethod
     def onboard_ns(request):
@@ -57,19 +90,27 @@ class NsHooks:
         file is provided it gets ignored.
         """
 
-        logger = logging.getLogger(__name__)
+        # Store validation data about the vnsf
+        validation_data = dict()
+
+        ex_response = None
+        form_data = request.form.copy()
 
         try:
             # It's assumed that only one NS package file is received.
             if 'package' not in request.files:
-                logger.error("Missing or wrong field in POST. 'package' should be used as the field name")
-                raise NsMissingPackage(PKG_MISSING_FILE)
+                ex_response = NsHooks.issue.build_ex(
+                    IssueElement.ERROR,
+                    NsHooks.errors['ONBOARD_NS']['PACKAGE_MISSING'],
+                    message="Missing or wrong field in POST. 'package' should be used as the field name"
+                )
+                return
 
             vnsfo = VnsfoFactory.get_orchestrator('OSM', cfg.VNSFO_PROTOCOL, cfg.VNSFO_HOST, cfg.VNSFO_PORT,
                                                   cfg.VNSFO_API)
 
             ns = NsHelper(vnsfo)
-            manifest_fs, package_data = ns.onboard_ns(cfg.VNSFO_TENANT_ID, request.files['package'])
+            manifest_fs, package_data = ns.onboard_ns(cfg.VNSFO_TENANT_ID, request.files['package'], validation_data)
 
             # Ensure the SHIELD manifest is stored as a binary file.
             # NOTE: the file is closed by Eve once stored.
@@ -82,21 +123,52 @@ class NsHooks:
 
             # Convert the Network Service package into the document data.
             # NOTE: there's no need to deep copy as the data won't be modified until it gets stored in the database.
-            form_data = request.form.copy()
             form_data['owner_id'] = '12ab34567c89d0123e4f5678'
             form_data['state'] = 'sandboxed'
             form_data['manifest'] = package_data['manifest']
             form_data['descriptor'] = package_data['descriptor']
-            request.form = ImmutableMultiDict(form_data)
 
         except (NsMissingPackage, NsWrongPackageFormat, VnsfoNsWrongPackageFormat) as e:
-            logger.error(e)
-            raise PreconditionFailed(e.message)
+            ex_response = NsHooks.issue.build_ex(
+                IssueElement.ERROR, NsHooks.errors['ONBOARD_NS']['PACKAGE_ISSUE'], [[e.message]], e.message
+            )
 
         except (NsPackageCompliance, VnsfoMissingNsDescriptor) as e:
-            logger.error(e)
-            raise NotAcceptable(e.message)
+            ex_response = NsHooks.issue.build_ex(
+                IssueElement.ERROR, NsHooks.errors['ONBOARD_NS']['PACKAGE_COMPLIANCE'], [[e.message]], e.message
+            )
 
         except (VnsfOrchestratorOnboardingIssue, VnsfOrchestratorUnreacheable) as e:
-            logger.error(e)
-            raise BadGateway(e.message)
+            ex_response = NsHooks.issue.build_ex(
+                IssueElement.ERROR, NsHooks.errors['ONBOARD_NS']['VNSFO_ISSUE'], [[e.message]], e.message
+            )
+
+        except NsValidationIssue as e:
+            ex_response = NsHooks.issue.build_ex(
+                IssueElement.ERROR, NsHooks.errors['ONBOARD_NS']['NS_VALIDATION_FAILURE'], [[e.message]], e.message
+            )
+
+        finally:
+            # Always persist the validation data, if existent
+            validation_ref = None
+            if validation_data:
+                app = flask.current_app
+                with app.test_request_context():
+                    r, _, _, status, _ = post_internal('validation', validation_data)
+                assert status == http_utils.HTTP_201_CREATED
+                validation_ref = r['_id']
+
+            # Check if exceptions were raised during the onboard process
+            if ex_response:
+                # Include validation data in the error response, if existent
+                if validation_ref:
+                    ex_response['validation'] = str(validation_ref)
+
+                # Abort the request and reply with a meaningful error
+                abort(make_response(jsonify(**ex_response), ex_response['_error']['code']))
+
+            # Onboard succeeded. Include the validation reference in the request form
+            if validation_ref:
+                form_data['validation'] = validation_ref
+            # Modify the request form to persist
+            request.form = ImmutableMultiDict(form_data)

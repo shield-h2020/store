@@ -78,12 +78,30 @@ policy_model = {
     }
 
 vnsf_model = {
+
+    #'vnsf_id': {
+    #    'type': 'string',
+    #    'empty': False,
+    #    'required': True
+    #},
+
     'state': {
         'type': 'string',
         'empty': False,
         'allowed': ["submitted", "sandboxed", "onboarded", "decommissioned"],
         'required': True
         },
+
+    'validation': {
+        'type': 'objectid',
+        'data_relation': {
+            'resource': 'validation',
+            'field': '_id',
+            'embeddable': True,
+        },
+        'required': False,
+        'empty': False,
+    },
 
     # Manifest details.
     'manifest': {
@@ -169,6 +187,17 @@ ns_model = {
         'required': True
         },
 
+    'validation': {
+        'type': 'objectid',
+        'data_relation': {
+            'resource': 'validation',
+            'field': '_id',
+            'embeddable': True,
+        },
+        'required': False,
+        'empty': False,
+    },
+
     # Manifest details.
     'manifest': {
         'type': 'dict',
@@ -215,3 +244,40 @@ ns_model = {
     # Needed (for onboarding NSs) as the parameter name for the package file. After the POST it's no longer used.
     'package': {'type': 'media'}
     }
+
+validation_model = {
+
+    # Description of validation errors and warnings
+    'result': {
+        'type': 'dict',
+        'empty': False,
+        'required': True,
+        'schema': {
+            'error_count': {'type': 'integer', 'empty': False, 'required': True},
+            'warning_count': {'type': 'integer', 'empty': False, 'required': True},
+            'issues': {'type': 'list', 'empty': True, 'required': True},
+        }
+    },
+
+    # Network topology
+    'topology': {
+        'type': 'list',
+        'empty': True,
+        'required': True,
+    },
+
+    # Forwarding graphs
+    'fwgraph': {
+        'type': 'list',
+        'empty': True,
+        'required': True,
+    },
+
+    # Validation log
+    'log': {
+        'type': 'string',
+        'empty': True,
+        'required': True,
+    }
+
+}

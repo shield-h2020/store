@@ -64,7 +64,7 @@ class VnsfValidationIssue(ExceptionMessage_):
     """Issues occurred when validating vNSF descriptor"""
 
 
-class NSValidationIssue(ExceptionMessage_):
+class NsValidationIssue(ExceptionMessage_):
     """Issues occurred when validating NS descriptor"""
 
 
@@ -133,7 +133,7 @@ class VnsfOrchestratorAdapter(object, metaclass=ABCMeta):
                 },
             'VALIDATION_ERROR': {
                 IssueElement.ERROR.name: ['Error validating NS descriptor: {}'],
-                IssueElement.EXCEPTION.name: NSValidationIssue("Error validating NS descriptor")
+                IssueElement.EXCEPTION.name: NsValidationIssue("Error validating NS descriptor")
                 },
 
             },
@@ -169,7 +169,7 @@ class VnsfOrchestratorAdapter(object, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def onboard_vnsf(self, tenant_id, vnsf_package_path, vnsfd_file):
+    def onboard_vnsf(self, tenant_id, vnsf_package_path, vnsfd_file, validation_data):
         """
         Onboards a vNSF with the Orchestrator.
 

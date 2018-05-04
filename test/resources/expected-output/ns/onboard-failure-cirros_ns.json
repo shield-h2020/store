@@ -1,1 +1,9 @@
-{}
+{
+  "ignore": [
+    "root['validation']",
+    "root['_error']"
+  ],
+  "expected": {
+    "_status": "ERR"
+  }
+}

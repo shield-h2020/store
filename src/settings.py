@@ -66,5 +66,6 @@ CACHE_EXPIRES = 20
 DOMAIN = {
     'vnsfs': store_endpoints.vnsfs,
     'nss': store_endpoints.nss,
-    'attestation': store_endpoints.vnsf_attestation
+    'attestation': store_endpoints.vnsf_attestation,
+    'validation': store_endpoints.validation,
     }

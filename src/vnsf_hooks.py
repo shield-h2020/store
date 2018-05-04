@@ -26,7 +26,10 @@
 
 
 import logging
-
+import flask
+from eve.methods.post import post_internal
+from storeutils import http_utils
+from flask import abort, make_response, jsonify
 import settings as cfg
 from storeutils.error_utils import IssueHandling, IssueElement
 from vnsf.vnsf import VnsfHelper, VnsfMissingPackage, VnsfWrongPackageFormat, VnsfPackageCompliance
@@ -53,8 +56,7 @@ class VnsfHooks:
         'ONBOARD_VNSF': {
             'PACKAGE_MISSING': {
                 IssueElement.ERROR.name: ["Missing or wrong field in POST. 'package' should be used as the field name"],
-                IssueElement.EXCEPTION.name: VnsfMissingPackage(
-                        'Can not onboard the package into the vNFSO')
+                IssueElement.EXCEPTION.name: VnsfMissingPackage('Can not onboard the package into the vNFSO')
                 },
             'PACKAGE_ISSUE': {
                 IssueElement.ERROR.name: ['{}'],
@@ -88,16 +90,29 @@ class VnsfHooks:
         it gets ignored.
         """
 
+        # Store validation data about the vnsf
+        validation_data = dict()
+
+        ex_response = None
+        form_data = request.form.copy()
+
         try:
             # It's assumed that only one vNSF package file is received.
             if 'package' not in request.files:
-                VnsfHooks.issue.raise_ex(IssueElement.ERROR, VnsfHooks.errors['ONBOARD_VNSF']['PACKAGE_MISSING'])
+                ex_response = VnsfHooks.issue.build_ex(
+                    IssueElement.ERROR,
+                    VnsfHooks.errors['ONBOARD_VNSF']['PACKAGE_MISSING'],
+                    message="Missing or wrong field in POST. 'package' should be used as the field name"
+                )
+                return
 
             vnsfo = VnsfoFactory.get_orchestrator('OSM', cfg.VNSFO_PROTOCOL, cfg.VNSFO_HOST, cfg.VNSFO_PORT,
                                                   cfg.VNSFO_API)
 
             vnsf = VnsfHelper(vnsfo)
-            manifest_fs, package_data = vnsf.onboard_vnsf(cfg.VNSFO_TENANT_ID, request.files['package'])
+
+            manifest_fs, package_data = vnsf.onboard_vnsf(cfg.VNSFO_TENANT_ID, request.files['package'],
+                                                          validation_data)
 
             # Ensure the SHIELD manifest is stored as a binary file.
             # NOTE: the file is closed by Eve once stored.
@@ -110,28 +125,55 @@ class VnsfHooks:
 
             # Convert the vNSF package into the document data.
             # NOTE: there's no need to deep copy as the data won't be modified until it gets stored in the database.
-            form_data = request.form.copy()
             form_data['state'] = 'sandboxed'
             form_data['manifest'] = package_data['manifest']
             form_data['descriptor'] = package_data['descriptor']
-            request.form = ImmutableMultiDict(form_data)
 
         except (VnsfMissingPackage, VnsfWrongPackageFormat, VnsfoVnsfWrongPackageFormat) as e:
-            VnsfHooks.issue.raise_ex_2(IssueElement.ERROR, VnsfHooks.errors['ONBOARD_VNSF']['PACKAGE_ISSUE'],
-                                       [[e.message]], e)
+            ex_response = VnsfHooks.issue.build_ex(
+                IssueElement.ERROR, VnsfHooks.errors['ONBOARD_VNSF']['PACKAGE_ISSUE'], [[e.message]], e.message
+            )
 
         except (VnsfPackageCompliance, VnsfoMissingVnfDescriptor) as e:
-            VnsfHooks.issue.raise_ex_2(IssueElement.ERROR, VnsfHooks.errors['ONBOARD_VNSF']['PACKAGE_COMPLIANCE'],
-                                       [[e.message]], e)
+            ex_response = VnsfHooks.issue.build_ex(
+                IssueElement.ERROR, VnsfHooks.errors['ONBOARD_VNSF']['PACKAGE_COMPLIANCE'], [[e.message]], e.message
+            )
 
         except (VnsfOrchestratorOnboardingIssue, VnsfOrchestratorUnreacheable) as e:
-            VnsfHooks.issue.raise_ex_2(IssueElement.ERROR, VnsfHooks.errors['ONBOARD_VNSF']['VNSFO_ISSUE'],
-                                       [[e.message]], e)
+            ex_response = VnsfHooks.issue.build_ex(
+                IssueElement.ERROR, VnsfHooks.errors['ONBOARD_VNSF']['VNSFO_ISSUE'], [[e.message]], e.message
+            )
 
         except VnsfValidationIssue as e:
-            VnsfHooks.issue.raise_ex_2(IssueElement.ERROR, VnsfHooks.errors['ONBOARD_VNSF']['VNSF_VALIDATION_FAILURE'],
-                                       [[e.message]], e)
+            ex_response = VnsfHooks.issue.build_ex(
+                IssueElement.ERROR, VnsfHooks.errors['ONBOARD_VNSF']['VNSF_VALIDATION_FAILURE'], [[e.message]], e.message
+            )
 
+        finally:
+            # Always persist the validation data, if existent
+            validation_ref = None
+            if validation_data:
+                app = flask.current_app
+                with app.test_request_context():
+                    r, _, _, status, _ = post_internal('validation', validation_data)
+                assert status == http_utils.HTTP_201_CREATED
+                validation_ref = r['_id']
+
+            # Check if exceptions were raised during the onboard process
+            if ex_response:
+                # Include validation data in the error response, if existent
+                if validation_ref:
+                    ex_response['validation'] = str(validation_ref)
+
+                # Abort the request and reply with a meaningful error
+                abort(make_response(jsonify(**ex_response), ex_response['_error']['code']))
+
+            # Onboard succeeded. Include the validation reference in the request form
+            if validation_ref:
+                form_data['validation'] = validation_ref
+
+            # Modify the request form to persist
+            request.form = ImmutableMultiDict(form_data)
 
     def send_minimal_vnsf_data(response):
         """
