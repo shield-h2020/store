@@ -82,7 +82,8 @@ vnsf_model = {
     'vnsf_id': {
         'type': 'string',
         'empty': False,
-        'required': True
+        'required': True,
+        'unique': True
     },
 
     'state': {
@@ -182,7 +183,22 @@ ns_model = {
     'ns_id': {
         'type': 'string',
         'empty': False,
-        'required': True
+        'required': True,
+        'unique': True
+    },
+
+    'constituent_vnsfs': {
+        'type': 'list',
+        'empty': False,
+        'required': False,
+        'schema': {
+            'type': 'objectid',
+            'data_relation': {
+                'resource': 'vnsfs',
+                'field': '_id',
+                'embeddable': True
+            }
+        }
     },
 
     # The current state of the Network Service.
@@ -267,14 +283,14 @@ validation_model = {
 
     # Network topology
     'topology': {
-        'type': 'list',
+        'type': 'dict',
         'empty': True,
         'required': True,
     },
 
     # Forwarding graphs
     'fwgraph': {
-        'type': 'list',
+        'type': 'dict',
         'empty': True,
         'required': True,
     },

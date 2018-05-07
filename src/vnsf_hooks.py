@@ -35,7 +35,7 @@ from storeutils.error_utils import IssueHandling, IssueElement
 from vnsf.vnsf import VnsfHelper, VnsfMissingPackage, VnsfWrongPackageFormat, VnsfPackageCompliance
 from vnsfo.vnsfo import VnsfoFactory
 from vnsfo.vnsfo_adapter import VnsfoMissingVnfDescriptor, VnsfOrchestratorOnboardingIssue, VnsfValidationIssue, \
-    VnsfoVnsfWrongPackageFormat, VnsfOrchestratorUnreacheable
+    VnsfoVnsfWrongPackageFormat, VnsfOrchestratorUnreacheable, VnsfInvalidFormat
 from werkzeug.datastructures import ImmutableMultiDict
 from werkzeug.exceptions import *
 
@@ -145,7 +145,7 @@ class VnsfHooks:
                 IssueElement.ERROR, VnsfHooks.errors['ONBOARD_VNSF']['VNSFO_ISSUE'], [[e.message]], e.message
             )
 
-        except VnsfValidationIssue as e:
+        except (VnsfValidationIssue, VnsfInvalidFormat) as e:
             ex_response = VnsfHooks.issue.build_ex(
                 IssueElement.ERROR, VnsfHooks.errors['ONBOARD_VNSF']['VNSF_VALIDATION_FAILURE'], [[e.message]], e.message
             )

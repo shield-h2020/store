@@ -59,7 +59,6 @@ class VnsfOrchestratorPolicyIssue(ExceptionMessage_):
 class VnsfOrchestratorUnreacheable(ExceptionMessage_):
     """vNSFO cannot be reached."""
 
-
 class VnsfInvalidFormat(ExceptionMessage_):
     """vNSF descriptor has an invalid format"""
 
@@ -68,6 +67,9 @@ class VnsfValidationIssue(ExceptionMessage_):
 
 class NsInvalidFormat(ExceptionMessage_):
     """NS descriptor has an invalid format"""
+
+class NsMissingDependency(ExceptionMessage_):
+    """NS descriptors contains VNFDs that are not available in the store"""
 
 class NsValidationIssue(ExceptionMessage_):
     """Issues occurred when validating NS descriptor"""
@@ -143,6 +145,10 @@ class VnsfOrchestratorAdapter(object, metaclass=ABCMeta):
             'NSD_FORMAT_INVALID': {
                 IssueElement.ERROR.name: ['Invalid format of NSD {}'],
                 IssueElement.EXCEPTION.name: NsInvalidFormat('Can not read NS descriptor')
+            },
+            'MISSING_VNSF_DEPENDENCY': {
+                IssueElement.ERROR.name: ["Missing vNSF dependency '{}' in NS '{}'"],
+                IssueElement.EXCEPTION.name: NsMissingDependency('NS Dependency not available')
             },
             'VALIDATION_ERROR': {
                 IssueElement.ERROR.name: ['Error validating NS descriptor: {}'],

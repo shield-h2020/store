@@ -123,6 +123,7 @@ class NsHelper(object):
         package_data['manifest'] = manifest
         package_data['descriptor'] = onboarded_package['descriptor']
         package_data['ns_id'] = onboarded_package['ns_id']
+        package_data['constituent_vnsfs'] = onboarded_package['constituent_vnsfs']
 
         if os.path.isdir(extracted_package_path):
             rmtree(extracted_package_path)

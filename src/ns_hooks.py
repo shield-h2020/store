@@ -36,7 +36,8 @@ from ns.ns import NsHelper, NsMissingPackage, NsWrongPackageFormat, NsPackageCom
 from vnsfo.vnsfo import VnsfoFactory
 from storeutils.error_utils import IssueHandling, IssueElement
 from vnsfo.vnsfo_adapter import VnsfoMissingNsDescriptor, VnsfOrchestratorOnboardingIssue, \
-    VnsfoNsWrongPackageFormat, VnsfOrchestratorUnreacheable, NsValidationIssue
+    VnsfoNsWrongPackageFormat, VnsfOrchestratorUnreacheable, NsValidationIssue, NsMissingDependency, \
+    NsInvalidFormat
 from werkzeug.datastructures import ImmutableMultiDict
 from werkzeug.exceptions import *
 
@@ -128,6 +129,7 @@ class NsHooks:
             form_data['manifest'] = package_data['manifest']
             form_data['descriptor'] = package_data['descriptor']
             form_data['ns_id'] = package_data['ns_id']
+            form_data['constituent_vnsfs'] = package_data['constituent_vnsfs']
 
         except (NsMissingPackage, NsWrongPackageFormat, VnsfoNsWrongPackageFormat) as e:
             ex_response = NsHooks.issue.build_ex(
@@ -144,7 +146,7 @@ class NsHooks:
                 IssueElement.ERROR, NsHooks.errors['ONBOARD_NS']['VNSFO_ISSUE'], [[e.message]], e.message
             )
 
-        except NsValidationIssue as e:
+        except (NsInvalidFormat, NsMissingDependency, NsValidationIssue) as e:
             ex_response = NsHooks.issue.build_ex(
                 IssueElement.ERROR, NsHooks.errors['ONBOARD_NS']['NS_VALIDATION_FAILURE'], [[e.message]], e.message
             )

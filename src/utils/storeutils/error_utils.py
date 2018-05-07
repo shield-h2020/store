@@ -88,14 +88,6 @@ class IssueHandling(object):
         self.log(level, error_data, params)
         raise type(error_data[IssueElement.EXCEPTION.name])(str(error_data[IssueElement.EXCEPTION.name]))
 
-    def raise_ex_2(self, level, error_data, params=None, this_exception=None):
-        self.log(level, error_data, params)
-        exc = error_data[IssueElement.EXCEPTION.name]
-        e = type(exc)(this_exception.message)
-        e.data = {'validation': 'ola'}
-        raise e
-        #raise type(exc)(this_exception.message)
-
     def build_ex(self, level, error_data, params=None, message=None):
         self.log(level, error_data, params)
         e = type(error_data[IssueElement.EXCEPTION.name])()

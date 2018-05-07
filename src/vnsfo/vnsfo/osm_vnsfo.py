@@ -30,7 +30,9 @@ import logging
 import os
 import requests
 import yaml
+import flask
 from shutil import rmtree
+from eve.methods.get import get_internal
 from storeutils import http_utils, tar_package
 from storeutils.error_utils import IssueHandling, IssueElement, ExceptionMessage_
 from tempfile import mkdtemp
@@ -287,13 +289,51 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
         self.logger.debug('NSD\n%s', nsd)
 
-        # Retrieve NS ID
-        ns_id = nsd[list(nsd.keys())[0]]['nsd'][0]['id']
+        # Retrieve nsd inner content
+        nsd_inner = nsd[list(nsd.keys())[0]]['nsd'][0]
 
-        # Get vnsf dependencies
+        # Retrieve NS ID
+        ns_id = nsd_inner['id']
+
+        # Retrieve vnsf dependencies
+        vnsf_ids = list()
+        for c_vnfd in nsd_inner['constituent-vnfd']:
+            vnsf_ids.append(c_vnfd['vnfd-id-ref'])
+
+        # Get stored vnsfs
+        vnsfds = dict()
+        constituent_vnsfs = list()
+        app = flask.current_app
+        for vnsf_id in vnsf_ids:
+            payload = get_internal('vnsfs', vnsf_id=vnsf_id)[0]['_items']
+
+            # Raise exception if couldn't get the dependent vNSF
+            if not payload:
+                self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_NS']['MISSING_VNSF_DEPENDENCY'],
+                                    [[vnsf_id, ns_id]])
+
+            payload = payload[0]
+            vnsfds[vnsf_id] = payload['descriptor']
+
+            # Associate this NS with its constituent vNSFs
+            constituent_vnsfs.append(payload['_id'])
+
+        # Persist vNSF descriptors to files
+        vnsfd_files = list()
+        for vnsf_id, vnsfd in vnsfds.items():
+
+            # Load the string content as dict
+            vnsfd_content = yaml.load(vnsfd)
+
+            # Write the content to file
+            filename = os.path.join(extracted_package_path, str(vnsf_id) + '.yaml')
+            with open(filename, 'w') as _f:
+                yaml.dump(vnsfd_content, _f, default_flow_style=False)
+
+            vnsfd_files.append(filename)
 
         # Validate NS Descriptor using NSFVal
-        val_result = nsfval.validate_ns('osm', 's', nsd_file_abs_path)
+        val_result = nsfval.validate_ns('osm', 'sit', nsd_file_abs_path, addt_files=vnsfd_files)
 
         # Build the validation data structure
         validation_data.update(val_result)
@@ -306,9 +346,9 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
         # Set the vNSF package data useful for the onboarding operation.
         package_data = {
             'ns_id': str(ns_id),    # assuming the descriptor only carries one NSD
-            'descriptor': str(nsd)
+            'descriptor': str(nsd),
+            'constituent_vnsfs': constituent_vnsfs
         }
 
         rmtree(extracted_package_path)
-
         return package_data
