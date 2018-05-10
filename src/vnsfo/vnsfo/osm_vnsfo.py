@@ -298,6 +298,11 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
         # Retrieve vnsf dependencies
         vnsf_ids = list()
         for c_vnfd in nsd_inner['constituent-vnfd']:
+
+            # check if NS descriptor is missing vnfd references
+            if 'vnfd-id-ref' not in c_vnfd:
+                self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_NS']['VALIDATION_ERROR'], [[nsd_file]])
+
             vnsf_ids.append(c_vnfd['vnfd-id-ref'])
 
         # Get stored vnsfs

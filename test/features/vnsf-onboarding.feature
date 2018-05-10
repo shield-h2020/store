@@ -41,8 +41,9 @@ Feature: vNSF Onboarding
       # Sucessful Store and the vNSFO operation.
       | vnsf/mock-onboard-success-cirros_vnsf.json | vnsf/shield_cirros_vnsf.tar.gz | 201    | vnsf/onboard-success-cirros_vnsf.json |
       # vNSFO failure.
-#      | vnsf/mock-onboard-failure-cirros_vnsf.json | vnsf/shield_cirros_vnsf.tar.gz | 428    | vnsf/onboard-failure-cirros_vnsf.json |
-#      | vnsf/mock-onboard-success-cirros_vnsf.json | vnsf/shield_cirros_vnsf_wrong_descriptor_syntax.tar.gz | 422 | vnsf/onboard-failure-wrong_descriptor_syntax.json |
+      | vnsf/mock-onboard-failure-cirros_vnsf.json | vnsf/shield_cirros_vnsf.tar.gz | 428    | vnsf/onboard-failure-cirros_vnsf.json |
+      # Bad vNSF descriptor syntax
+      | vnsf/mock-onboard-success-cirros_vnsf.json | vnsf/shield_cirros_vnsf_wrong_descriptor_syntax.tar.gz | 422 | vnsf/onboard-failure-wrong_descriptor_syntax.json |
 
 
   @coverage
