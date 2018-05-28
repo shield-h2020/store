@@ -30,7 +30,7 @@
 
 FROM centos:7
 
-LABEL project="${CNTR_PROJECT}"
+LABEL project="shield-store"
 
 # Dependencies
 RUN yum update -y && \
@@ -41,6 +41,6 @@ RUN yum update -y && \
     yum install -y git && \
     yum clean all
 
-WORKDIR ${CNTR_FOLDER_DEV}
+WORKDIR /usr/share/dev/store
 
-ENTRYPOINT ["${CNTR_FOLDER_DEV}/docker/setup-store.sh"]
+ENTRYPOINT ["/usr/share/dev/store/docker/setup-store.sh"]

@@ -32,7 +32,7 @@ import store_endpoints
 BACKENDAPI_PORT = int(os.environ.get('BACKENDAPI_PORT', 5000))
 
 MONGO_HOST = os.environ.get('DATASTORE_HOST', 'data-store')
-MONGO_PORT = os.environ.get('DATASTORE_PORT', 27017)
+MONGO_PORT = int(os.environ.get('DATASTORE_PORT', 27017))
 MONGO_USERNAME = os.environ.get('DATASTORE_USERNAME', 'user')
 MONGO_PASSWORD = os.environ.get('DATASTORE_PASSWORD', 'user')
 MONGO_DBNAME = os.environ.get('DATASTORE_DBNAME', 'shield-store')
@@ -60,9 +60,6 @@ CACHE_EXPIRES = 20
 
 # Schema definition, based on Cerberus grammar. Check the Cerberus project
 # (https://github.com/pyeve/cerberus) for details.
-
-# https://github.com/pyeve/eve-swagger#description-fields-on-the-swagger-docs
-TRANSPARENT_SCHEMA_RULES = True
 
 # The DOMAIN dict explains which resources will be available and how they will
 # be accessible to the API consumer.

@@ -30,36 +30,46 @@ import logging
 import os
 import yaml
 from shutil import rmtree
-from storeutils import tar_package, exceptions
+from storeutils import tar_package
+from storeutils.error_utils import ExceptionMessage_, IssueHandling, IssueElement
 from tempfile import gettempdir, mkdtemp
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
-PKG_MISSING_FILE = 'No package provided'
-PKG_NOT_TARGZ = 'Package is not a valid .tar.gz file'
-PKG_NOT_SHIELD = 'Package does not comply with the SHIELD format'
 
-
-class NsMissingPackage(exceptions.ExceptionMessage):
+class NsMissingPackage(ExceptionMessage_):
     """Network Service package not provided."""
 
 
-class NsWrongPackageFormat(exceptions.ExceptionMessage):
+class NsWrongPackageFormat(ExceptionMessage_):
     """Network Service package file is not in .tar.gz format."""
 
 
-class NsPackageCompliance(exceptions.ExceptionMessage):
+class NsPackageCompliance(ExceptionMessage_):
     """Network Service package contents do not comply with the definition."""
 
 
-class NsHelper:
+class NsHelper(object):
+    errors = {
+        'ONBOARD_NS': {
+            'MISSING_PACKAGE': {
+                IssueElement.ERROR.name: ['No package file provided in POST'],
+                IssueElement.EXCEPTION.name: NsMissingPackage('No package provided')
+                },
+            'PKG_NOT_TARGZ': {
+                IssueElement.ERROR.name: ['Package is not a valid .tar.gz file'],
+                IssueElement.EXCEPTION.name: NsWrongPackageFormat('Package is not a valid .tar.gz file')
+                },
+            'PKG_NOT_SHIELD': {
+                IssueElement.ERROR.name: ["Missing 'manifest.yaml' from {}", 'Package contents: {}'],
+                IssueElement.EXCEPTION.name: NsPackageCompliance('Package does not comply with the SHIELD format')
+                }
+            }
+        }
+
     def __init__(self, vnsfo, logger=None):
         self.logger = logger or logging.getLogger(__name__)
-
-        # Maintenance friendly.
-        self._missing_package = NsMissingPackage(PKG_MISSING_FILE)
-        self._wrong_package_format = NsWrongPackageFormat(PKG_NOT_TARGZ)
-        self._package_compliance = NsPackageCompliance(PKG_NOT_SHIELD)
+        self.issue = IssueHandling(self.logger)
 
         self.vnsfo = vnsfo
 
@@ -130,8 +140,7 @@ class NsHelper:
         """
 
         if package_file and package_file.filename == '':
-            self.logger.info('No package file provided in POST')
-            raise self._missing_package
+            self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_NS']['MISSING_PACKAGE'])
 
         filename = secure_filename(package_file.filename)
         package_absolute_path = os.path.join(gettempdir(), filename)
@@ -140,8 +149,7 @@ class NsHelper:
             package_file.save(package_absolute_path)
 
             if not tar_package.is_tar_gz_file(package_absolute_path):
-                self.logger.error(PKG_NOT_TARGZ)
-                raise self._wrong_package_format
+                self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_NS']['PKG_NOT_TARGZ'])
 
             self.logger.debug("Package stored at '%s'", package_absolute_path)
 
@@ -152,9 +160,8 @@ class NsHelper:
             # Get the SHIELD manifest data.
             manifest_path = os.path.join(extracted_package_path, 'manifest.yaml')
             if not os.path.isfile(manifest_path):
-                self.logger.error("Missing 'manifest.yaml' from %s", extracted_package_path)
-                self.logger.error('Package contents: %s', os.listdir(extracted_package_path))
-                raise self._package_compliance
+                self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_NS']['PKG_NOT_SHIELD'],
+                                    [[extracted_package_path], [os.listdir(extracted_package_path)]])
 
         finally:
             os.remove(package_absolute_path)

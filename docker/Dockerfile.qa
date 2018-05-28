@@ -25,12 +25,12 @@
 
 
 #
-# vNSF Store environment
+# vNSF Store Quality Assurance environment
 #
 
 FROM centos:7
 
-LABEL project="${CNTR_PROJECT}"
+LABEL project="shield-store"
 
 # Dependencies
 RUN yum update -y && \
@@ -38,9 +38,17 @@ RUN yum update -y && \
     yum makecache fast && \
     yum install -y python36u python36u-pip && \
     pip3.6 install --upgrade pip && \
-    yum install -y git && \
+    curl --silent --location https://rpm.nodesource.com/setup_8.x | bash - && \
+    yum update -y && \
+    yum install -y nodejs && \
+    npm i -g argv@0.0.2 cucumber-html-reporter@2.0.3 canned@0.3.10 && \
     yum clean all
 
-WORKDIR ${CNTR_FOLDER_DEV}
+ENV NODE_PATH /usr/lib/node_modules
 
-ENTRYPOINT ["${CNTR_FOLDER_DEV}/docker/setup-store.sh"]
+WORKDIR /usr/share/dev/store/test
+
+# Mock vNSF Orchestrator.
+CMD ["canned", "/usr/share/dev/store/test/mock-vnsfo", "-p", "7070"]
+
+ENTRYPOINT ["/usr/share/dev/store/docker/setup-qa.sh"]
