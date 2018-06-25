@@ -42,6 +42,10 @@ Feature: Network Service Onboarding
       | ns/mock-onboard-success-cirros_ns.json | ns/shield_cirros_ns.tar.gz | 201    | ns/onboard-success-cirros_ns.json |
       # vNSFO failure.
       | ns/mock-onboard-failure-cirros_ns.json | ns/shield_cirros_ns.tar.gz | 502    | ns/onboard-failure-cirros_ns.json |
+      # Bad NS descriptor syntax
+      | ns/mock-onboard-success-cirros_ns.json | ns/shield_cirros_ns_wrong_descriptor_syntax.tar.gz | 422 | ns/onboard-failure-wrong_descriptor_syntax.json |
+
+
 
   @coverage
   Scenario Outline: NS packages onboarding failures
@@ -59,11 +63,11 @@ Feature: Network Service Onboarding
       # SHIELD package format isn't valid (no .tar.gz format).
       | ns/mock-onboard-success-cirros_ns.json | ns/shield_cirros_ns.other_format.zip          | 412    | ns/onboard-failure-wrong_format.json       |
       # vNSFO package format isn't compliant (vNSFO package is no .tar.gz).
-      #| ns/mock-onboard-success-cirros_ns.json | ns/shield_cirros_ns.wrong_format_vnsfo.tar.gz | 412    | ns/onboard-failure-wrong_format_vnsfo.json |
+      | ns/mock-onboard-success-cirros_ns.json | ns/shield_cirros_ns.wrong_format_vnsfo.tar.gz | 502    | ns/onboard-failure-wrong_format_vnsfo.json |
       # vNSFO package missing VNFD file.
       | ns/mock-onboard-success-cirros_ns.json | ns/shield_cirros_ns.missing_nsd.tar.gz        | 406    | ns/onboard-failure-missing_nsd.json        |
       # SHIELD package impersonation (not an actual .tar.gz file, just the extension).
       | ns/mock-onboard-success-cirros_ns.json | ns/shield_cirros_ns.impersonate.tar.gz        | 412    | ns/onboard-failure-wrong_format.json       |
       # vNSFO package impersonation (not an actual .tar.gz file, just the extension).
-      #| ns/mock-onboard-success-cirros_ns.json | ns/shield_cirros_ns.impersonate_vnsfo.tar.gz  | 412    | ns/onboard-failure-impersonate_vnsfo.json  |
+      | ns/mock-onboard-success-cirros_ns.json | ns/shield_cirros_ns.impersonate_vnsfo.tar.gz  | 502    | ns/onboard-failure-impersonate_vnsfo.json  |
 

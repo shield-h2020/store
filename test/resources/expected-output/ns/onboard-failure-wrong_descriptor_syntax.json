@@ -4,8 +4,8 @@
   ],
   "expected": {
     "_error": {
-      "message": "Can not onboard the package into the vNFSO",
-      "code": 428
+      "message": "Error validating NS descriptor",
+      "code": 422
     },
     "_status": "ERR"
   }

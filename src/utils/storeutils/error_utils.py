@@ -27,7 +27,7 @@
 
 import sys
 import logging
-from pprint import pprint
+from werkzeug.datastructures import ImmutableMultiDict
 
 from enum import Enum
 
@@ -88,8 +88,15 @@ class IssueHandling(object):
         self.log(level, error_data, params)
         raise type(error_data[IssueElement.EXCEPTION.name])(str(error_data[IssueElement.EXCEPTION.name]))
 
-    def raise_ex_2(self, level, error_data, params=None, this_exception=None):
+    def build_ex(self, level, error_data, params=None, message=None):
         self.log(level, error_data, params)
-        exc = error_data[IssueElement.EXCEPTION.name]
-        raise type(exc)(this_exception.message)
-
+        e = type(error_data[IssueElement.EXCEPTION.name])()
+        code = e.code
+        rsp = {
+            "_status": "ERR",
+            "_error": {
+                "code": code,
+                "message": message,
+            }
+        }
+        return rsp

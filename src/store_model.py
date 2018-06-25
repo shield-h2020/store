@@ -78,12 +78,31 @@ policy_model = {
     }
 
 vnsf_model = {
+
+    'vnsf_id': {
+        'type': 'string',
+        'empty': False,
+        'required': True,
+        'unique': True
+    },
+
     'state': {
         'type': 'string',
         'empty': False,
         'allowed': ["submitted", "sandboxed", "onboarded", "decommissioned"],
         'required': True
         },
+
+    'validation': {
+        'type': 'objectid',
+        'data_relation': {
+            'resource': 'validation',
+            'field': '_id',
+            'embeddable': True,
+        },
+        'required': False,
+        'empty': False,
+    },
 
     # Manifest details.
     'manifest': {
@@ -161,6 +180,27 @@ ns_model = {
         'required': True
         },
 
+    'ns_id': {
+        'type': 'string',
+        'empty': False,
+        'required': True,
+        'unique': True
+    },
+
+    'constituent_vnsfs': {
+        'type': 'list',
+        'empty': False,
+        'required': False,
+        'schema': {
+            'type': 'objectid',
+            'data_relation': {
+                'resource': 'vnsfs',
+                'field': '_id',
+                'embeddable': True
+            }
+        }
+    },
+
     # The current state of the Network Service.
     'state': {
         'type': 'string',
@@ -168,6 +208,17 @@ ns_model = {
         'allowed': ["submitted", "sandboxed", "onboarded", "decommissioned"],
         'required': True
         },
+
+    'validation': {
+        'type': 'objectid',
+        'data_relation': {
+            'resource': 'validation',
+            'field': '_id',
+            'embeddable': True,
+        },
+        'required': False,
+        'empty': False,
+    },
 
     # Manifest details.
     'manifest': {
@@ -215,3 +266,40 @@ ns_model = {
     # Needed (for onboarding NSs) as the parameter name for the package file. After the POST it's no longer used.
     'package': {'type': 'media'}
     }
+
+validation_model = {
+
+    # Description of validation errors and warnings
+    'result': {
+        'type': 'dict',
+        'empty': False,
+        'required': True,
+        'schema': {
+            'error_count': {'type': 'integer', 'empty': False, 'required': True},
+            'warning_count': {'type': 'integer', 'empty': False, 'required': True},
+            'issues': {'type': 'list', 'empty': True, 'required': True},
+        }
+    },
+
+    # Network topology
+    'topology': {
+        'type': 'dict',
+        'empty': True,
+        'required': True,
+    },
+
+    # Forwarding graphs
+    'fwgraph': {
+        'type': 'dict',
+        'empty': True,
+        'required': True,
+    },
+
+    # Validation log
+    'log': {
+        'type': 'string',
+        'empty': True,
+        'required': True,
+    }
+
+}
