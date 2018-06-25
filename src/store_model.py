@@ -269,6 +269,14 @@ ns_model = {
 
 validation_model = {
 
+    # Object type, either NS or vNSF
+    'type': {
+        'type': 'string',
+        'required': True,
+        'empty': False,
+        'allowed': ["NS", "vNSF"],
+    },
+
     # Description of validation errors and warnings
     'result': {
         'type': 'dict',

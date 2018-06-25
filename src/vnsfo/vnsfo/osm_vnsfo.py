@@ -182,6 +182,7 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
         # Build the validation data structure
         validation_data.update(val_result)
+        validation_data['type'] = 'vNSF'
 
         # Raise exception if validation errors were found.
         if validation_data['result']['error_count'] != 0:
@@ -342,6 +343,7 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
         # Build the validation data structure
         validation_data.update(val_result)
+        validation_data['type'] = 'NS'
 
         # Raise exception if validation errors were found.
         if validation_data['result']['error_count'] != 0:
