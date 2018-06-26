@@ -30,3 +30,4 @@ Eve-Swagger==0.0.8
 PyYAML==3.12
 requests==2.18.4
 git+git://github.com/Ubiwhere/nsfval-sdk.git@master
+Flask-Cors==3.0.6
