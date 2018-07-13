@@ -30,3 +30,5 @@ db = conn.getDB(STORE_COLLECTION);
 // Remove all policies documents.
 db.vnsfs.deleteMany({})
 db.nss.deleteMany({})
+
+db.validation.deleteMany({})
