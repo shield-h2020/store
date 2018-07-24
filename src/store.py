@@ -37,8 +37,7 @@ from ns_hooks import NsHooks
 from storeutils import log
 from vnsf_hooks import VnsfHooks
 from flask_cors import CORS
-import flask
-from flask import jsonify
+from flask import jsonify, make_response
 from werkzeug.exceptions import default_exceptions
 
 
@@ -51,13 +50,21 @@ def send_attestation(request, response):
     :return: The attestation data.
     """
 
-    logger.info('Send attestation data only')
-
     payload_json = json.loads(response.get_data(as_text=True))
-    response.set_data(base64.b64decode(payload_json['manifest_file']))
 
-    response.headers['Content-Disposition'] = 'attachment;filename=a.zip'
-    response.headers['Content-Type'] = 'application/octet-stream'
+    # Check if multiple vNSF were requested (e.g. endpoint '/attestation/vnsfs')
+    if '_items' in payload_json:
+        print("MULTIPLE attestations were request. Not implemented")
+        # TODO handle multiple vNSFs (should this be allowed?)
+        pass
+
+    else:
+        # Retrive vnsf_id and attestation_file
+        vnsf_id = str(payload_json['vnsf_id'])
+        attestation_file = base64.b64decode(payload_json['attestation_file'])
+        response.headers['Content-Disposition'] = 'attachment;filename={}'.format(vnsf_id)
+        response.headers['Content-Type'] = 'application/octet-stream'
+        response.set_data(attestation_file)
 
 
 app = Eve()
@@ -66,6 +73,9 @@ CORS(app)
 # vNSF hooks.
 app.on_pre_POST_vnsfs += VnsfHooks.onboard_vnsf
 app.on_fetched_item_vnsfs += VnsfHooks.send_minimal_vnsf_data
+app.on_fetched_item_attestation += VnsfHooks.send_vnsf_attestation
+
+#app.on_post_GET_attestation += send_attestation
 app.on_post_GET_attestation += send_attestation
 
 # Network Services hooks.

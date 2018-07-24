@@ -27,9 +27,11 @@
 
 import logging
 import flask
+import base64
+import json
 from eve.methods.post import post_internal
 from storeutils import http_utils
-from flask import abort, make_response, jsonify
+from flask import abort, make_response, jsonify, send_file
 import settings as cfg
 from storeutils.error_utils import IssueHandling, IssueElement
 from vnsf.vnsf import VnsfHelper, VnsfMissingPackage, VnsfWrongPackageFormat, VnsfPackageCompliance
@@ -38,6 +40,7 @@ from vnsfo.vnsfo_adapter import VnsfoMissingVnfDescriptor, VnsfOrchestratorOnboa
     VnsfoVnsfWrongPackageFormat, VnsfOrchestratorUnreacheable, VnsfInvalidFormat
 from werkzeug.datastructures import ImmutableMultiDict
 from werkzeug.exceptions import *
+from werkzeug import FileStorage
 
 PKG_MISSING_FILE = 'No package provided'
 
@@ -111,13 +114,18 @@ class VnsfHooks:
 
             vnsf = VnsfHelper(vnsfo)
 
-            manifest_fs, package_data = vnsf.onboard_vnsf(cfg.VNSFO_TENANT_ID, request.files['package'],
-                                                          validation_data)
+            manifest_fs, attestation_fs, package_data = vnsf.onboard_vnsf(cfg.VNSFO_TENANT_ID,
+                                                                               request.files['package'],
+                                                                               validation_data)
 
             # Ensure the SHIELD manifest is stored as a binary file.
             # NOTE: the file is closed by Eve once stored.
             files = request.files.copy()
             files['manifest_file'] = manifest_fs
+
+            # Ensure the Trust Monitor attestation file is stored as binary.
+            files['attestation_file'] = attestation_fs
+
             # The package field is only required for onboarding schema validation but shouldn't be stored as document
             # data.
             files.pop('package')
@@ -131,8 +139,10 @@ class VnsfHooks:
             form_data['descriptor'] = package_data['descriptor']
 
         except (VnsfMissingPackage, VnsfWrongPackageFormat, VnsfoVnsfWrongPackageFormat) as e:
+
             ex_response = VnsfHooks.issue.build_ex(
                 IssueElement.ERROR, VnsfHooks.errors['ONBOARD_VNSF']['PACKAGE_ISSUE'], [[e.message]], e.message
+
             )
 
         except (VnsfPackageCompliance, VnsfoMissingVnfDescriptor) as e:
@@ -176,6 +186,7 @@ class VnsfHooks:
             # Modify the request form to persist
             request.form = ImmutableMultiDict(form_data)
 
+    @staticmethod
     def send_minimal_vnsf_data(response):
         """
         Send the vNSF attestation-related data.
@@ -183,6 +194,18 @@ class VnsfHooks:
         :param response: the response from the DB
         :return: The vNSF with the "public" properties only.
         """
+        del response['manifest_file']
+        del response['attestation_file']
+        del response['state']
 
+    @staticmethod
+    def send_vnsf_attestation(response):
+        """
+        Send the vNSF attestation-related data.
+
+        :param request: the actual request
+        :param response: the response from the DB
+        :return: The attestation data.
+        """
         del response['manifest_file']
         del response['state']

@@ -113,6 +113,7 @@ vnsf_model = {
                 'type': 'dict',
                 'required': True,
                 'schema': {
+                    'schema_version': {'type': 'string', 'empty': False, 'required': True},
                     'type': {'type': 'string', 'empty': False, 'allowed': ["OSM"], 'required': True},
                     'package': {'type': 'string', 'empty': False, 'required': True},
                     'hash': {'type': 'string', 'empty': False, 'required': True},
@@ -136,27 +137,38 @@ vnsf_model = {
                     'security_info': {
                         'type': 'dict',
                         'required': True,
+                        'empty': False,
                         'schema': {
-                            'vdu': {
-                                'type': 'list',
-                                'required': True,
-                                'schema': {
-                                    'type': 'dict',
-                                    'schema': {
-                                        'id': {'type': 'string', 'empty': False, 'required': True},
-                                        'hash': {'type': 'string', 'empty': False, 'required': True},
-                                        'attestation': {
-                                            'type': 'dict',
-                                            'required': True,
-                                            'schema': {
-                                                'somekey': {'type': 'string', 'empty': False, 'required': True}
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                            'attestation_filename': {'type': 'string', 'empty': False, 'required': True},
+                            'hash': {'type': 'string', 'empty': False, 'required': True},
                             }
-                        }
+                        },
+
+                    # 'security_info': {
+                    #     'type': 'dict',
+                    #     'required': True,
+                    #     'schema': {
+                    #         'vdu': {
+                    #             'type': 'list',
+                    #             'required': True,
+                    #             'schema': {
+                    #                 'type': 'dict',
+                    #                 'schema': {
+                    #                     'id': {'type': 'string', 'empty': False, 'required': True},
+                    #                     'hash': {'type': 'string', 'empty': False, 'required': True},
+                    #                     'attestation': {
+                    #                         'type': 'dict',
+                    #                         'required': True,
+                    #                         'schema': {
+                    #                             'trust_file': {'type': 'string', 'empty': False, 'required': True},
+                    #                             'hash': {'type': 'string', 'empty': False, 'required': True},
+                    #                             }
+                    #                         }
+                    #                     }
+                    #                 }
+                    #             }
+                    #         }
+                    #     }
                     }
                 }
             }
@@ -168,8 +180,12 @@ vnsf_model = {
     # Actual manifest binary.
     'manifest_file': {'type': 'media'},
 
+    # Trust Monitor attestation binary.
+    'attestation_file': {'type': 'media'},
+
     # Needed (for onboarding vNSFs) as the parameter name for the package file. After the POST it's no longer used.
     'package': {'type': 'media'}
+
     }
 
 ns_model = {
@@ -229,6 +245,7 @@ ns_model = {
                 'type': 'dict',
                 'required': True,
                 'schema': {
+                    'schema_version': {'type': 'string', 'empty': False, 'required': True},
                     # The package schema used.
                     'type': {
                         'type': 'string',

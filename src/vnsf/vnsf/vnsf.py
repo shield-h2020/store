@@ -35,6 +35,7 @@ from storeutils.error_utils import ExceptionMessage_, IssueHandling, IssueElemen
 from tempfile import gettempdir, mkdtemp
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
+from werkzeug.datastructures import ImmutableMultiDict
 
 class VnsfMissingPackage(ExceptionMessage_):
     """Network Service package not provided."""
@@ -128,6 +129,14 @@ class VnsfHelper(object):
         stream = open(manifest_path, 'rb')
         manifest_fs = FileStorage(stream)
 
+        # Provide the Trust Monitor file streams.
+        self.logger.debug("Adding attestation file '{0}'"
+                          .format(manifest['manifest:vnsf']['security_info']['attestation_filename']))
+        attestation_filename = os.path.join(extracted_package_path,
+                                   manifest['manifest:vnsf']['security_info']['attestation_filename'])
+        stream = open(attestation_filename, 'rb')
+        attestation_fs = FileStorage(stream)
+
         # Build vNSF package metadata.
         package_data = dict()
         package_data['state'] = 'sandboxed'
@@ -138,7 +147,7 @@ class VnsfHelper(object):
         if os.path.isdir(extracted_package_path):
             rmtree(extracted_package_path)
 
-        return manifest_fs, package_data
+        return manifest_fs, attestation_fs, package_data
 
     def _extract_package(self, package_file):
         """
@@ -150,7 +159,6 @@ class VnsfHelper(object):
         :return:  extracted package absolute file system path;
                   SHIELD manifest absolute file system path.
         """
-
         if package_file and package_file.filename == '':
             self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_VNSF']['MISSING_PACKAGE'])
 
