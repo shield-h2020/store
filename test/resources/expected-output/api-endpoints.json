@@ -10,8 +10,8 @@
         "title": "nss"
       },
       {
-        "href": "vnsfs/attestation",
-        "title": "vnsfs/attestation"
+        "href": "attestation/vnsfs",
+        "title": "attestation/vnsfs"
       },
       {
         "href": "validation",

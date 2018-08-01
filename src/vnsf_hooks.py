@@ -24,14 +24,13 @@
 # Horizon 2020 program. The authors would like to acknowledge the contributions
 # of their colleagues of the SHIELD partner consortium (www.shield-h2020.eu).
 
-
 import logging
 import flask
 import base64
 import json
 from eve.methods.post import post_internal
 from storeutils import http_utils
-from flask import abort, make_response, jsonify, send_file
+from flask import abort, make_response, jsonify
 import settings as cfg
 from storeutils.error_utils import IssueHandling, IssueElement
 from vnsf.vnsf import VnsfHelper, VnsfMissingPackage, VnsfWrongPackageFormat, VnsfPackageCompliance
@@ -50,7 +49,6 @@ class VnsfHooks:
     Handles the backstage operations required for the vNSF Store API. These operations are mostly targeted
     at pre and post hooks associated with the API.
     """
-
     logger = logging.getLogger(__name__)
 
     issue = IssueHandling(logger)
