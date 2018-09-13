@@ -40,6 +40,7 @@ This packaging is Orchestrator agnostic and allows for onboarding an existing VN
 | Field | Purpose |
 |-|-
 | manifest:vnsf | Defines a SHIELD vNSF package
+| schema_version | Identifies the version of the manifest descriptor schema that is used to describe the shield package.
 | type | The type of VNF the manifest describes. Allowed values: `OSM`
 | package | VNF file name within the SHIELD package. This file name, contents and format is Orchestrator specific. This manifest only identifies the file which holds the VNF package
 | hash | The message digest for the VNF package mentioned in the package field
@@ -51,6 +52,7 @@ This packaging is Orchestrator agnostic and allows for onboarding an existing VN
 
 ```yaml
 manifest:vnsf:
+    schema_version: '1.2'
     type: OSM
     package: cirros_vnf.tar.gz
     hash: <image_hash_here>
@@ -59,16 +61,8 @@ manifest:vnsf:
         vendor: some vendor name
         capabilities: ['Virtual Cirr OS']
     security_info:
-        vdu:
-          - id: cirros_vnf-VM
-            hash: <image_hash_here>
-            attestation:
-                some_key: <TBD - provided by TM>
-                some_key: <TBD - provided by TM>
-                some_key: <TBD - provided by TM>
-                some_group: <TBD - provided by TM>
-                  some_key: <TBD - provided by TM>
-                  some_key: <TBD - provided by TM>
+        attestation_filename: security/cirros_vnf_attestation
+        hash: <attestation_file_hash_here>
 ```
 
 ## Examples
@@ -123,23 +117,17 @@ The structure of the OSM VNF package is:
 
 ```yaml
 manifest:vnsf:
+    schema_version: '1.2'
     type: OSM
     package: cirros_vnf.tar.gz
+    hash: <image_hash_here>
     descriptor: cirros_vnf/cirros_vnfd.yaml
     properties:
         vendor: some vendor name
         capabilities: ['Virtual Cirr OS']
     security_info:
-        vdu:
-          - id: cirros_vnf-VM
-            hash: <image_hash_here>
-            attestation:
-                some_key: <TBD - provided by TM>
-                some_key: <TBD - provided by TM>
-                some_key: <TBD - provided by TM>
-                some_group: <TBD - provided by TM>
-                  some_key: <TBD - provided by TM>
-                  some_key: <TBD - provided by TM>
+        attestation_filename: security/cirros_vnf_attestation
+        hash: <attestation_file_hash_here>
 ```
 
 **OSM VNF Descriptor** (`cirros_vnfd.yaml`)
