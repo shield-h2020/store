@@ -12,6 +12,10 @@
       {
         "href": "vnsfs/attestation",
         "title": "vnsfs/attestation"
+      },
+      {
+        "href": "validation",
+        "title": "validation"
       }
     ]
   }

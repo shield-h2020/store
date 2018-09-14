@@ -73,7 +73,7 @@ class NsHelper(object):
 
         self.vnsfo = vnsfo
 
-    def onboard_ns(self, tenant_id, ns_package):
+    def onboard_ns(self, tenant_id, ns_package, validation_data):
         """
         Registers a Network Service into the Store and onboards it with the Orchestrator.
 
@@ -110,7 +110,8 @@ class NsHelper(object):
         onboarded_package = self.vnsfo.onboard_ns(tenant_id,
                                                   os.path.join(extracted_package_path,
                                                                manifest['manifest:ns']['package']),
-                                                  manifest['manifest:ns']['descriptor'])
+                                                  manifest['manifest:ns']['descriptor'],
+                                                  validation_data)
 
         # Provide the manifest as a file stream.
         stream = open(manifest_path, 'rb')
@@ -121,6 +122,8 @@ class NsHelper(object):
         package_data['state'] = 'sandboxed'
         package_data['manifest'] = manifest
         package_data['descriptor'] = onboarded_package['descriptor']
+        package_data['ns_id'] = onboarded_package['ns_id']
+        package_data['constituent_vnsfs'] = onboarded_package['constituent_vnsfs']
 
         if os.path.isdir(extracted_package_path):
             rmtree(extracted_package_path)

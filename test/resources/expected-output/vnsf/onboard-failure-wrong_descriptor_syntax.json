@@ -1,7 +1,12 @@
 {
-  "_error": {
-    "message": "Error validating vNSF descriptor",
-    "code": 422
-  },
-  "_status": "ERR"
+  "ignore": [
+    "root['validation']"
+  ],
+  "expected": {
+    "_error": {
+      "message": "Error validating vNSF descriptor",
+      "code": 422
+    },
+    "_status": "ERR"
+  }
 }

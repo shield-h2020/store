@@ -46,7 +46,7 @@ VNSFO_API = os.environ.get('VNSFO_API', '__missing_vnsfo_api_basepath__')
 VNSFO_TENANT_ID = os.environ.get('VNSFO_TENANT_ID', '__no_tenant_set__')
 
 X_DOMAINS = '*'  # CORS-related settings.
-X_HEADERS = ['Content-Type, ''If-Match']
+X_HEADERS = ['Content-Type', 'If-Match']
 
 # Date format for fields to store - ISO 8601.
 DATETIME_FIELDS_INPUT_FMT = '%Y-%m-%dT%H:%M:%S'
@@ -66,5 +66,6 @@ CACHE_EXPIRES = 20
 DOMAIN = {
     'vnsfs': store_endpoints.vnsfs,
     'nss': store_endpoints.nss,
-    'attestation': store_endpoints.vnsf_attestation
+    'attestation': store_endpoints.vnsf_attestation,
+    'validation': store_endpoints.validation,
     }

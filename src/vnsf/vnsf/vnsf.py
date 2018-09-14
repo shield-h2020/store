@@ -80,7 +80,7 @@ class VnsfHelper(object):
 
         self.vnsfo = vnsfo
 
-    def onboard_vnsf(self, tenant_id, vnsf_package):
+    def onboard_vnsf(self, tenant_id, vnsf_package, validation_data):
         """
         Registers a vNSF into the Store and onboards it with the Orchestrator.
 
@@ -111,19 +111,18 @@ class VnsfHelper(object):
                                          manifest['manifest:vnsf']['package'])
 
         self.logger.debug('shield package: %s', os.listdir(extracted_package_path))
-        self.logger.debug('osm package: %s | path: %s', manifest['manifest:vnsf']['package'],
+        self.logger.debug('%s package: %s | path: %s',
+                          manifest['manifest:vnsf']['type'],
+                          manifest['manifest:vnsf']['package'],
                           os.path.join(extracted_package_path, manifest['manifest:vnsf'][
                               'package']))
-
-        # Ensure package integrity.
-        # self._integrity_check(manifest, vnsf_package_path)
-
 
         # Onboard the VNF into the actual Orchestrator.
         # NOTE: any exception raised by the vNSFO must be handled by the caller, hence no try/catch here.
         onboarded_package = self.vnsfo.onboard_vnsf(tenant_id,
                                                     vnsf_package_path,
-                                                    manifest['manifest:vnsf']['descriptor'])
+                                                    manifest['manifest:vnsf']['descriptor'],
+                                                    validation_data)
 
         # Provide the manifest as a file stream.
         stream = open(manifest_path, 'rb')
@@ -133,6 +132,7 @@ class VnsfHelper(object):
         package_data = dict()
         package_data['state'] = 'sandboxed'
         package_data['manifest'] = manifest
+        package_data['vnsf_id'] = onboarded_package['vnsf_id']
         package_data['descriptor'] = onboarded_package['descriptor']
 
         if os.path.isdir(extracted_package_path):

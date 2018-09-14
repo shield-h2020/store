@@ -32,7 +32,11 @@ vnsfs = {
     'schema': store_model.vnsf_model,
     'resource_methods': ['POST', 'GET'],
     'item_methods': ['GET', 'DELETE'],
+    'additional_lookup': {
+         'url': 'regex("[\w]+")',
+         'field': 'vnsf_id'
     }
+}
 
 vnsf_attestation = {
     'url': 'vnsfs/attestation',
@@ -49,5 +53,15 @@ nss = {
     'schema': store_model.ns_model,
     'resource_methods': ['POST', 'GET'],
     'item_methods': ['GET', 'DELETE'],
+    'additional_lookup': {
+         'url': 'regex("[\w]+")',
+         'field': 'ns_id'
     }
+}
 
+validation = {
+    'item_title': 'validation',
+    'schema': store_model.validation_model,
+    'resource_methods': ['POST', 'GET'],
+    'item_methods': ['GET', 'DELETE'],
+}

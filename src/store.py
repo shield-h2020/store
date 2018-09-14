@@ -36,6 +36,10 @@ from eve_swagger import swagger, add_documentation
 from ns_hooks import NsHooks
 from storeutils import log
 from vnsf_hooks import VnsfHooks
+from flask_cors import CORS
+import flask
+from flask import jsonify
+from werkzeug.exceptions import default_exceptions
 
 
 def send_attestation(request, response):
@@ -57,6 +61,7 @@ def send_attestation(request, response):
 
 
 app = Eve()
+CORS(app)
 
 # vNSF hooks.
 app.on_pre_POST_vnsfs += VnsfHooks.onboard_vnsf
