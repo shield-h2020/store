@@ -46,7 +46,11 @@ vnsf_attestation = {
         },
     'resource_methods': ['GET'],
     'hateoas': False,
+    'additional_lookup': {
+         'url': 'regex("[\w]+")',
+         'field': 'vnsf_id'
     }
+}
 
 nss = {
     'item_title': 'nss',
