@@ -107,7 +107,7 @@ class VnsfHooks:
                 )
                 return
 
-            vnsfo = VnsfoFactory.get_orchestrator('OSM-R4', cfg.VNSFO_PROTOCOL, cfg.VNSFO_HOST, cfg.VNSFO_PORT,
+            vnsfo = VnsfoFactory.get_orchestrator('OSM', cfg.VNSFO_PROTOCOL, cfg.VNSFO_HOST, cfg.VNSFO_PORT,
                                                   cfg.VNSFO_API)
 
             vnsf = VnsfHelper(vnsfo)

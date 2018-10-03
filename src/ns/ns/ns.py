@@ -105,12 +105,16 @@ class NsHelper(object):
                           os.path.join(extracted_package_path, manifest['manifest:ns'][
                               'package']))
 
+        # Gather the information data format
+        data_format = manifest['manifest:ns']['type']
+
         # Onboard the Network Service into the actual Orchestrator.
         # NOTE: any exception raised by the vNSFO must be handled by the caller, hence no try/catch here.
         onboarded_package = self.vnsfo.onboard_ns(tenant_id,
                                                   os.path.join(extracted_package_path,
                                                                manifest['manifest:ns']['package']),
                                                   manifest['manifest:ns']['descriptor'],
+                                                  data_format,
                                                   validation_data)
 
         # Provide the manifest as a file stream.

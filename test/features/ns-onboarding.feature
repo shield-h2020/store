@@ -40,10 +40,11 @@ Feature: Network Service Onboarding
 
       # Sucessful Store and the NS operation.
       | ns/mock-onboard-success-cirros_ns.json | ns/shield_cirros_ns.tar.gz | 201    | ns/onboard-success-cirros_ns.json |
+      | ns/mock-onboard-success-l23filter_ns.json | ns/shield_l23filter_ns.tar.gz | 201    | ns/onboard-success-l23filter_ns.json |
       # vNSFO failure.
       | ns/mock-onboard-failure-cirros_ns.json | ns/shield_cirros_ns.tar.gz | 502    | ns/onboard-failure-cirros_ns.json |
       # Bad NS descriptor syntax
-      | ns/mock-onboard-success-cirros_ns.json | ns/shield_cirros_ns_wrong_descriptor_syntax.tar.gz | 422 | ns/onboard-failure-wrong_descriptor_syntax.json |
+      # | ns/mock-onboard-success-cirros_ns.json | ns/shield_cirros_ns_wrong_descriptor_syntax.tar.gz | 422 | ns/onboard-failure-wrong_descriptor_syntax.json |
 
 
 

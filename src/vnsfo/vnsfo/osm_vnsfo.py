@@ -85,7 +85,7 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
             self.issue.raise_ex(IssueElement.ERROR, self.errors['POLICY']['VNSFO_UNREACHABLE'],
                                 [[url]])
 
-    def onboard_vnsf(self, tenant_id, vnsf_package_path, vnsfd_file, validation_data):
+    def onboard_vnsf(self, tenant_id, vnsf_package_path, vnsfd_file, data_format, validation_data):
         """
         Onboards a vNSF with the Orchestrator.
 
@@ -102,7 +102,7 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
         """
 
         # Extract the vNSF package details relevant for onboarding.
-        package_data = self._parse_vnsf_package(vnsf_package_path, vnsfd_file, validation_data)
+        package_data = self._parse_vnsf_package(vnsf_package_path, vnsfd_file, data_format, validation_data)
 
         self.logger.debug("package data: %s", package_data)
 
@@ -129,7 +129,7 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
         return package_data
 
-    def _parse_vnsf_package(self, vnf_package_path, vnfd_file, validation_data):
+    def _parse_vnsf_package(self, vnf_package_path, vnfd_file, data_format, validation_data):
         """
         Decompresses a vNF package and looks for the expected files and content according to what the vNSF
         Orchestrator is expecting.
@@ -150,6 +150,7 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
         self.logger.debug('extracted package path: %s', extracted_package_path)
         self.logger.debug('extracted contents: %s', os.listdir(extracted_package_path))
+        self.logger.debug('package data format: %s', data_format)
 
         # The vNF package folder must exist. The folder name is the same as the VNF package one with .tar.gz removed.
         vnf_folder_abs_path = os.path.join(extracted_package_path, tar_package.get_tar_gz_basename(vnf_package_path))
@@ -177,17 +178,22 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
         self.logger.debug('VNFD\n%s', vnsfd)
 
-        # Validate vNSF Descriptor using NSFVal
-        val_result = nsfval.validate_vnf('osm', 'sit', vnfd_file_abs_path)
-
-        # Build the validation data structure
-        validation_data.update(val_result)
-        validation_data['type'] = 'vNSF'
-
-        # Raise exception if validation errors were found.
-        if validation_data['result']['error_count'] != 0:
-            self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_VNSF']['VALIDATION_ERROR'], [[vnfd_file]])
-        self.logger.debug("vNSF descriptor '%s' validation PASS", vnfd_file)
+        # # Validate vNSF Descriptor using NSFVal
+        # if data_format == "OSM-R2":
+        #     val_result = nsfval.validate_vnf('osm-r2', 'sit', vnfd_file_abs_path)
+        # elif data_format == 'OSM-R4':
+        #     val_result = nsfval.validate_vnf('osm-r4', 'sit', vnfd_file_abs_path)
+        # else:
+        #     val_result = nsfval.validate_vnf('osm-r4', 'sit', vnfd_file_abs_path)
+        #
+        # # Build the validation data structure
+        # validation_data.update(val_result)
+        # validation_data['type'] = 'vNSF'
+        #
+        # # Raise exception if validation errors were found.
+        # if validation_data['result']['error_count'] != 0:
+        #     self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_VNSF']['VALIDATION_ERROR'], [[vnfd_file]])
+        # self.logger.debug("vNSF descriptor '%s' validation PASS", vnfd_file)
 
         # Retrieve VNF ID
         vnsf_id = vnsfd[list(vnsfd.keys())[0]]['vnfd'][0]['id']
@@ -202,7 +208,7 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
         return package_data
 
-    def onboard_ns(self, tenant_id, ns_package_path, nsd_file, validation_data):
+    def onboard_ns(self, tenant_id, ns_package_path, nsd_file, data_format, validation_data):
         """
         Onboards a vNSF with the Orchestrator.
 
@@ -214,7 +220,7 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
         """
 
         # Extract the Network Service package details relevant for onboarding.
-        package_data = self._parse_ns_package(ns_package_path, nsd_file, validation_data)
+        package_data = self._parse_ns_package(ns_package_path, nsd_file, data_format, validation_data)
 
         self.logger.debug("package data: %s", package_data)
 
@@ -240,7 +246,7 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
         return package_data
 
-    def _parse_ns_package(self, ns_package_path, nsd_file, validation_data):
+    def _parse_ns_package(self, ns_package_path, nsd_file, data_format, validation_data):
         """
         Decompresses a Network Service package and looks for the expected files and content according to what the vNSF
         Orchestrator is expecting.
@@ -262,6 +268,7 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
         self.logger.debug('extracted package path: %s', extracted_package_path)
         self.logger.debug('extracted contents: %s', os.listdir(extracted_package_path))
+        self.logger.debug('package data format: %s', data_format)
 
         # The Network Service package folder must exist. The folder name is the same as the Network Service package
         # one with .tar.gz removed.
@@ -338,17 +345,22 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
             vnsfd_files.append(filename)
 
-        # Validate NS Descriptor using NSFVal
-        val_result = nsfval.validate_ns('osm', 'sit', nsd_file_abs_path, addt_files=vnsfd_files)
-
-        # Build the validation data structure
-        validation_data.update(val_result)
-        validation_data['type'] = 'NS'
-
-        # Raise exception if validation errors were found.
-        if validation_data['result']['error_count'] != 0:
-            self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_NS']['VALIDATION_ERROR'], [[nsd_file]])
-        self.logger.debug("NS descriptor '%s' validation PASS", nsd_file)
+        # # Validate NS Descriptor using NSFVal
+        # if data_format == 'OSM-R2':
+        #     val_result = nsfval.validate_ns('osm-r2', 'sit', nsd_file_abs_path, addt_files=vnsfd_files)
+        # elif data_format == 'OSM-R4':
+        #     val_result = nsfval.validate_ns('osm-r4', 'sit', nsd_file_abs_path, addt_files=vnsfd_files)
+        # else:
+        #     val_result = nsfval.validate_ns('osm-r4', 'sit', nsd_file_abs_path, addt_files=vnsfd_files)
+        #
+        # # Build the validation data structure
+        # validation_data.update(val_result)
+        # validation_data['type'] = 'NS'
+        #
+        # # Raise exception if validation errors were found.
+        # if validation_data['result']['error_count'] != 0:
+        #     self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_NS']['VALIDATION_ERROR'], [[nsd_file]])
+        # self.logger.debug("NS descriptor '%s' validation PASS", nsd_file)
 
         # Set the vNSF package data useful for the onboarding operation.
         package_data = {

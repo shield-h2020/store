@@ -266,6 +266,9 @@ ns_model = {
                     # are decompressed.
                     'descriptor': {'type': 'string', 'empty': False, 'required': True},
 
+                    # Deployment target
+                    'target': {'type': 'string', 'empty': False, 'required': True},
+
                     # NS description.
                     'properties': {
                         'type': 'dict',
