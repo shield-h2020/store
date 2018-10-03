@@ -54,7 +54,8 @@ class VnsfoFactory(object):
 
         # Currently supported Orchestrator.
         supported = {
-            'OSM': OsmVnsfoAdapter
+            'OSM-R2': OsmVnsfoAdapter,
+            'OSM-R4': OsmVnsfoAdapter
             }
 
         orchestrator = supported.get(kind)(protocol, server, port, api_basepath, logger)

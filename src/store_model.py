@@ -114,9 +114,10 @@ vnsf_model = {
                 'required': True,
                 'schema': {
                     'schema_version': {'type': 'string', 'empty': False, 'required': True},
-                    'type': {'type': 'string', 'empty': False, 'allowed': ["OSM"], 'required': True},
+                    'type': {'type': 'string', 'empty': False, 'allowed': ["OSM-R2", "OSM-R4"], 'required': True},
                     'package': {'type': 'string', 'empty': False, 'required': True},
                     'hash': {'type': 'string', 'empty': False, 'required': True},
+                    'hashing_algorithm': {'type': 'string', 'empty': False, 'required': True},
                     'descriptor': {'type': 'string', 'empty': False, 'required': True},
 
                     # vNSF description.
@@ -250,12 +251,16 @@ ns_model = {
                     'type': {
                         'type': 'string',
                         'empty': False,
-                        'allowed': ["OSM"],
+                        'allowed': ["OSM-R2", "OSM-R4"],
                         'required': True},
 
                     # Name of the package file.
                     'package': {
                         'type': 'string', 'empty': False, 'required': True},
+
+                    # Hash of package file and used algorithm
+                    'hash': {'type': 'string', 'empty': False, 'required': True},
+                    'hashing_algorithm': {'type': 'string', 'empty': False, 'required': True},
 
                     # (Relative) Path to the descriptor file, including the file name and extension, once the files
                     # are decompressed.
