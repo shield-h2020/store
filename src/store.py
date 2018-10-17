@@ -74,12 +74,12 @@ CORS(app)
 app.on_pre_POST_vnsfs += VnsfHooks.onboard_vnsf
 app.on_fetched_item_vnsfs += VnsfHooks.send_minimal_vnsf_data
 app.on_fetched_item_attestation += VnsfHooks.send_vnsf_attestation
-
-#app.on_post_GET_attestation += send_attestation
+app.on_delete_item_vnsfs += VnsfHooks.delete_vnsf
 app.on_post_GET_attestation += send_attestation
 
 # Network Services hooks.
 app.on_pre_POST_nss += NsHooks.onboard_ns
+app.on_delete_item_nss += NsHooks.delete_ns
 
 app.register_blueprint(swagger)
 

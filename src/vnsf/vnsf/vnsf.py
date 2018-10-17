@@ -153,6 +153,19 @@ class VnsfHelper(object):
 
         return manifest_fs, attestation_fs, package_data
 
+    def delete_vnsf(self, tenant_id, vnsf_id):
+        """
+        Removes a vNSF from the Store and from the Orchestrator
+
+        :param tenant_id: the tenant identifier to onboard the Network Service.
+        :param ns_id: the Network Service ID to be removed
+        :return:
+        """
+        self.logger.info("Delete vNSF '%s'", vnsf_id)
+
+        # Delete the Network Service from the actual Orchestrator.
+        self.vnsfo.delete_vnsf(tenant_id, vnsf_id)
+
     def _extract_package(self, package_file):
         """
         Ensures the vNSF package is compliant. The package is stored locally so it's contents can be processed.

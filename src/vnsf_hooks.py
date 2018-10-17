@@ -36,7 +36,7 @@ from storeutils.error_utils import IssueHandling, IssueElement
 from vnsf.vnsf import VnsfHelper, VnsfMissingPackage, VnsfWrongPackageFormat, VnsfPackageCompliance
 from vnsfo.vnsfo import VnsfoFactory
 from vnsfo.vnsfo_adapter import VnsfoMissingVnfDescriptor, VnsfOrchestratorOnboardingIssue, VnsfValidationIssue, \
-    VnsfoVnsfWrongPackageFormat, VnsfOrchestratorUnreacheable, VnsfInvalidFormat
+    VnsfoVnsfWrongPackageFormat, VnsfOrchestratorUnreacheable, VnsfInvalidFormat, VnsfOrchestratorDeletingIssue
 from werkzeug.datastructures import ImmutableMultiDict
 from werkzeug.exceptions import *
 from werkzeug import FileStorage
@@ -75,8 +75,14 @@ class VnsfHooks:
                 IssueElement.ERROR.name: ['{}'],
                 IssueElement.EXCEPTION.name: PreconditionRequired()
                 }
+            },
+        'DELETE_VNSF': {
+            'VNSFO_ISSUE': {
+                IssueElement.ERROR.name: ['{}'],
+                IssueElement.EXCEPTION.name: BadGateway()
+                }
             }
-        }
+    }
 
     @staticmethod
     def onboard_vnsf(request):
@@ -183,6 +189,24 @@ class VnsfHooks:
 
             # Modify the request form to persist
             request.form = ImmutableMultiDict(form_data)
+
+    @staticmethod
+    def delete_vnsf(item):
+        print("Solicited delete ", item['vnsf_id'])
+        try:
+
+            vnsfo = VnsfoFactory.get_orchestrator('OSM', cfg.VNSFO_PROTOCOL, cfg.VNSFO_HOST, cfg.VNSFO_PORT,
+                                                  cfg.VNSFO_API)
+            vnsf = VnsfHelper(vnsfo)
+            vnsf.delete_vnsf(cfg.VNSFO_TENANT_ID, item['vnsf_id'])
+
+        except (VnsfOrchestratorDeletingIssue, VnsfOrchestratorUnreacheable) as e:
+            ex_response = VnsfHooks.issue.build_ex(
+                IssueElement.ERROR, VnsfHooks.errors['DELETE_NS']['VNSFO_ISSUE'], [[e.message]], e.message
+            )
+            # Abort the request and reply with a meaningful error
+            abort(make_response(jsonify(**ex_response), ex_response['_error']['code']))
+
 
     @staticmethod
     def send_minimal_vnsf_data(response):

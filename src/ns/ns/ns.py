@@ -134,6 +134,20 @@ class NsHelper(object):
 
         return manifest_fs, package_data
 
+    def delete_ns(self, tenant_id, ns_id):
+        """
+        Removes a Network Service from the Store and from the Orchestrator
+
+        :param tenant_id: the tenant identifier to onboard the Network Service.
+        :param ns_id: the Network Service ID to be removed
+        :return:
+        """
+
+        self.logger.info("Delete Network Service '%s'", ns_id)
+
+        # Delete the Network Service from the actual Orchestrator.
+        self.vnsfo.delete_ns(tenant_id, ns_id)
+
     def _extract_package(self, package_file):
         """
         Ensures the Network Service package is compliant. The package is stored locally so it's contents can be

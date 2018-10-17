@@ -37,7 +37,7 @@ from vnsfo.vnsfo import VnsfoFactory
 from storeutils.error_utils import IssueHandling, IssueElement
 from vnsfo.vnsfo_adapter import VnsfoMissingNsDescriptor, VnsfOrchestratorOnboardingIssue, \
     VnsfoNsWrongPackageFormat, VnsfOrchestratorUnreacheable, NsValidationIssue, NsMissingDependency, \
-    NsInvalidFormat
+    NsInvalidFormat, VnsfOrchestratorDeletingIssue
 from werkzeug.datastructures import ImmutableMultiDict
 from werkzeug.exceptions import *
 
@@ -71,6 +71,12 @@ class NsHooks:
                 IssueElement.ERROR.name: ['{}'],
                 IssueElement.EXCEPTION.name: UnprocessableEntity(),
             },
+            'VNSFO_ISSUE': {
+                IssueElement.ERROR.name: ['{}'],
+                IssueElement.EXCEPTION.name: BadGateway()
+            }
+        },
+        'DELETE_NS': {
             'VNSFO_ISSUE': {
                 IssueElement.ERROR.name: ['{}'],
                 IssueElement.EXCEPTION.name: BadGateway()
@@ -175,3 +181,20 @@ class NsHooks:
                 form_data['validation'] = validation_ref
             # Modify the request form to persist
             request.form = ImmutableMultiDict(form_data)
+
+    @staticmethod
+    def delete_ns(item):
+        print("Solicited delete ", item['ns_id'])
+
+        try:
+            vnsfo = VnsfoFactory.get_orchestrator('OSM', cfg.VNSFO_PROTOCOL, cfg.VNSFO_HOST, cfg.VNSFO_PORT,
+                                                  cfg.VNSFO_API)
+            ns = NsHelper(vnsfo)
+            ns.delete_ns(cfg.VNSFO_TENANT_ID, item['ns_id'])
+
+        except (VnsfOrchestratorDeletingIssue, VnsfOrchestratorUnreacheable) as e:
+            ex_response = NsHooks.issue.build_ex(
+                IssueElement.ERROR, NsHooks.errors['DELETE_NS']['VNSFO_ISSUE'], [[e.message]], e.message
+            )
+            # Abort the request and reply with a meaningful error
+            abort(make_response(jsonify(**ex_response), ex_response['_error']['code']))

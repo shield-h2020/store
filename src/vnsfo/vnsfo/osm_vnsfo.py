@@ -129,6 +129,24 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
         return package_data
 
+    def delete_vnsf(self, tenant_id, vnsf_id):
+        """
+        Delete a nNSF from the Orchestrator
+        :param ns_id: The vNSF ID
+        :return:
+        """
+
+        url = '{}/package/{}'.format(self.basepath, vnsf_id)
+        headers = {'Content-Type': 'application/json'}
+        self.logger.debug("Delete vNSF '{}' from Orchestrator".format(vnsf_id))
+        try:
+            r = requests.delete(url, headers=headers, verify=False)
+            if not r.status_code == http_utils.HTTP_200_OK or not http_utils.HTTP_202_ACCEPTED:
+                self.issue.raise_ex(IssueElement.ERROR, self.errors['DELETE_VNSF']['DELETING_ISSUE'],
+                                    [[url, r.reason, r.status_code]])
+        except requests.exceptions.ConnectionError:
+            self.issue.raise_ex(IssueElement.ERROR, self.errors['DELETE_VNSF']['VNSFO_UNREACHABLE'], [[url]])
+
     def _parse_vnsf_package(self, vnf_package_path, vnfd_file, data_format, validation_data):
         """
         Decompresses a vNF package and looks for the expected files and content according to what the vNSF
@@ -210,7 +228,7 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
     def onboard_ns(self, tenant_id, ns_package_path, nsd_file, data_format, validation_data):
         """
-        Onboards a vNSF with the Orchestrator.
+        Onboards a NS with the Orchestrator.
 
         :param tenant_id: The tenant where to onboard the Network Service.
         :param ns_package_path: The file system path where the Network Service package is stored.
@@ -245,6 +263,24 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
                                 [[url]])
 
         return package_data
+
+    def delete_ns(self, tenant_id, ns_id):
+        """
+        Delete a NS from the Orchestrator
+        :param ns_id: The Network Service ID
+        :return:
+        """
+
+        url = '{}/package/{}'.format(self.basepath, ns_id)
+        headers = {'Content-Type': 'application/json'}
+        self.logger.debug("Delete Network Service '{}' from Orchestrator".format(ns_id))
+        try:
+            r = requests.delete(url, headers=headers, verify=False)
+            if not r.status_code == http_utils.HTTP_200_OK or not http_utils.HTTP_202_ACCEPTED:
+                self.issue.raise_ex(IssueElement.ERROR, self.errors['DELETE_NS']['DELETING_ISSUE'],
+                                    [[url, r.reason, r.status_code]])
+        except requests.exceptions.ConnectionError:
+            self.issue.raise_ex(IssueElement.ERROR, self.errors['DELETE_NS']['VNSFO_UNREACHABLE'], [[url]])
 
     def _parse_ns_package(self, ns_package_path, nsd_file, data_format, validation_data):
         """
