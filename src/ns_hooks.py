@@ -27,14 +27,14 @@
 
 import logging
 
-import settings as cfg
 import flask
-from flask import abort, make_response, jsonify
-from storeutils import http_utils
+import settings as cfg
 from eve.methods.post import post_internal
-from ns.ns import NsHelper, NsMissingPackage, NsWrongPackageFormat, NsPackageCompliance
-from vnsfo.vnsfo import VnsfoFactory
+from flask import abort, make_response, jsonify
+from ns.ns import NsHelper, NsMissingPackage, NsWrongPackageFormat, NsPackageCompliance, NsWrongManifestFormat
+from storeutils import http_utils
 from storeutils.error_utils import IssueHandling, IssueElement
+from vnsfo.vnsfo import VnsfoFactory
 from vnsfo.vnsfo_adapter import VnsfoMissingNsDescriptor, VnsfOrchestratorOnboardingIssue, \
     VnsfoNsWrongPackageFormat, VnsfOrchestratorUnreacheable, NsValidationIssue, NsMissingDependency, \
     NsInvalidFormat, VnsfOrchestratorDeletingIssue
@@ -55,34 +55,35 @@ class NsHooks:
 
     errors = {
         'ONBOARD_NS': {
-            'PACKAGE_MISSING': {
-                IssueElement.ERROR.name: ["Missing or wrong field in POST. 'package' should be used as the field name"],
+            'PACKAGE_MISSING':       {
+                IssueElement.ERROR.name:     [
+                    "Missing or wrong field in POST. 'package' should be used as the field name"],
                 IssueElement.EXCEPTION.name: NsMissingPackage('Can not onboard the package into the vNFSO')
-            },
-            'PACKAGE_ISSUE': {
-                IssueElement.ERROR.name: ['{}'],
+                },
+            'PACKAGE_ISSUE':         {
+                IssueElement.ERROR.name:     ['{}'],
                 IssueElement.EXCEPTION.name: PreconditionFailed()
-            },
-            'PACKAGE_COMPLIANCE': {
-                IssueElement.ERROR.name: ['{}'],
+                },
+            'PACKAGE_COMPLIANCE':    {
+                IssueElement.ERROR.name:     ['{}'],
                 IssueElement.EXCEPTION.name: NotAcceptable()
-            },
+                },
             'NS_VALIDATION_FAILURE': {
-                IssueElement.ERROR.name: ['{}'],
+                IssueElement.ERROR.name:     ['{}'],
                 IssueElement.EXCEPTION.name: UnprocessableEntity(),
+                },
+            'VNSFO_ISSUE':           {
+                IssueElement.ERROR.name:     ['{}'],
+                IssueElement.EXCEPTION.name: BadGateway()
+                }
             },
+        'DELETE_NS':  {
             'VNSFO_ISSUE': {
-                IssueElement.ERROR.name: ['{}'],
+                IssueElement.ERROR.name:     ['{}'],
                 IssueElement.EXCEPTION.name: BadGateway()
-            }
-        },
-        'DELETE_NS': {
-            'VNSFO_ISSUE': {
-                IssueElement.ERROR.name: ['{}'],
-                IssueElement.EXCEPTION.name: BadGateway()
+                }
             }
         }
-    }
 
     @staticmethod
     def onboard_ns(request):
@@ -107,10 +108,10 @@ class NsHooks:
             # It's assumed that only one NS package file is received.
             if 'package' not in request.files:
                 ex_response = NsHooks.issue.build_ex(
-                    IssueElement.ERROR,
-                    NsHooks.errors['ONBOARD_NS']['PACKAGE_MISSING'],
-                    message="Missing or wrong field in POST. 'package' should be used as the field name"
-                )
+                        IssueElement.ERROR,
+                        NsHooks.errors['ONBOARD_NS']['PACKAGE_MISSING'],
+                        message="Missing or wrong field in POST. 'package' should be used as the field name"
+                        )
                 return
 
             vnsfo = VnsfoFactory.get_orchestrator('OSM', cfg.VNSFO_PROTOCOL, cfg.VNSFO_HOST, cfg.VNSFO_PORT,
@@ -139,23 +140,23 @@ class NsHooks:
 
         except (NsMissingPackage, NsWrongPackageFormat, VnsfoNsWrongPackageFormat) as e:
             ex_response = NsHooks.issue.build_ex(
-                IssueElement.ERROR, NsHooks.errors['ONBOARD_NS']['PACKAGE_ISSUE'], [[e.message]], e.message
-            )
+                    IssueElement.ERROR, NsHooks.errors['ONBOARD_NS']['PACKAGE_ISSUE'], [[e.message]], e.message
+                    )
 
-        except (NsPackageCompliance, VnsfoMissingNsDescriptor) as e:
+        except (NsPackageCompliance, VnsfoMissingNsDescriptor, NsWrongManifestFormat) as e:
             ex_response = NsHooks.issue.build_ex(
-                IssueElement.ERROR, NsHooks.errors['ONBOARD_NS']['PACKAGE_COMPLIANCE'], [[e.message]], e.message
-            )
+                    IssueElement.ERROR, NsHooks.errors['ONBOARD_NS']['PACKAGE_COMPLIANCE'], [[e.message]], e.message
+                    )
 
         except (VnsfOrchestratorOnboardingIssue, VnsfOrchestratorUnreacheable) as e:
             ex_response = NsHooks.issue.build_ex(
-                IssueElement.ERROR, NsHooks.errors['ONBOARD_NS']['VNSFO_ISSUE'], [[e.message]], e.message
-            )
+                    IssueElement.ERROR, NsHooks.errors['ONBOARD_NS']['VNSFO_ISSUE'], [[e.message]], e.message
+                    )
 
         except (NsInvalidFormat, NsMissingDependency, NsValidationIssue) as e:
             ex_response = NsHooks.issue.build_ex(
-                IssueElement.ERROR, NsHooks.errors['ONBOARD_NS']['NS_VALIDATION_FAILURE'], [[e.message]], e.message
-            )
+                    IssueElement.ERROR, NsHooks.errors['ONBOARD_NS']['NS_VALIDATION_FAILURE'], [[e.message]], e.message
+                    )
 
         finally:
             # Always persist the validation data, if existent
@@ -194,7 +195,7 @@ class NsHooks:
 
         except (VnsfOrchestratorDeletingIssue, VnsfOrchestratorUnreacheable) as e:
             ex_response = NsHooks.issue.build_ex(
-                IssueElement.ERROR, NsHooks.errors['DELETE_NS']['VNSFO_ISSUE'], [[e.message]], e.message
-            )
+                    IssueElement.ERROR, NsHooks.errors['DELETE_NS']['VNSFO_ISSUE'], [[e.message]], e.message
+                    )
             # Abort the request and reply with a meaningful error
             abort(make_response(jsonify(**ex_response), ex_response['_error']['code']))

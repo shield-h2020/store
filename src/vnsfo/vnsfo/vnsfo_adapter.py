@@ -29,51 +29,51 @@ import logging
 
 from abc import abstractmethod, ABCMeta
 from storeutils import http_utils
-from storeutils.error_utils import ExceptionMessage_, IssueHandling, IssueElement
+from storeutils.error_utils import ExceptionMessage, IssueHandling, IssueElement
 
 
-class VnsfoVnsfWrongPackageFormat(ExceptionMessage_):
+class VnsfoVnsfWrongPackageFormat(ExceptionMessage):
     """Wrong vNSFO package format."""
 
 
-class VnsfoMissingVnfDescriptor(ExceptionMessage_):
+class VnsfoMissingVnfDescriptor(ExceptionMessage):
     """Missing vNSF Descriptor from the package."""
 
 
-class VnsfoNsWrongPackageFormat(ExceptionMessage_):
+class VnsfoNsWrongPackageFormat(ExceptionMessage):
     """Wrong Network Descriptor package format."""
 
 
-class VnsfoMissingNsDescriptor(ExceptionMessage_):
+class VnsfoMissingNsDescriptor(ExceptionMessage):
     """Missing Network Service Descriptor from the package."""
 
 
-class VnsfOrchestratorOnboardingIssue(ExceptionMessage_):
+class VnsfOrchestratorOnboardingIssue(ExceptionMessage):
     """vNSFO onboarding operation failed."""
 
-class VnsfOrchestratorDeletingIssue(ExceptionMessage_):
+class VnsfOrchestratorDeletingIssue(ExceptionMessage):
     """vNSFO deletion operation failed."""
 
-class VnsfOrchestratorPolicyIssue(ExceptionMessage_):
+class VnsfOrchestratorPolicyIssue(ExceptionMessage):
     """vNSFO policy operation failed."""
 
 
-class VnsfOrchestratorUnreacheable(ExceptionMessage_):
+class VnsfOrchestratorUnreacheable(ExceptionMessage):
     """vNSFO cannot be reached."""
 
-class VnsfInvalidFormat(ExceptionMessage_):
+class VnsfInvalidFormat(ExceptionMessage):
     """vNSF descriptor has an invalid format"""
 
-class VnsfValidationIssue(ExceptionMessage_):
+class VnsfValidationIssue(ExceptionMessage):
     """Issues occurred when validating vNSF descriptor"""
 
-class NsInvalidFormat(ExceptionMessage_):
+class NsInvalidFormat(ExceptionMessage):
     """NS descriptor has an invalid format"""
 
-class NsMissingDependency(ExceptionMessage_):
+class NsMissingDependency(ExceptionMessage):
     """NS descriptors contains VNFDs that are not available in the store"""
 
-class NsValidationIssue(ExceptionMessage_):
+class NsValidationIssue(ExceptionMessage):
     """Issues occurred when validating NS descriptor"""
 
 

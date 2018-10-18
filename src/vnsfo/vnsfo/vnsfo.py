@@ -30,7 +30,7 @@ from storeutils import error_utils
 from .osm_vnsfo import OsmVnsfoAdapter
 
 
-class VnsfoNotSupported(error_utils.ExceptionMessage_):
+class VnsfoNotSupported(error_utils.ExceptionMessage):
     """Requested orchestrator isn't supported."""
 
 

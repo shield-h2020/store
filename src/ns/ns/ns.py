@@ -31,39 +31,47 @@ import os
 import yaml
 from shutil import rmtree
 from storeutils import tar_package
-from storeutils.error_utils import ExceptionMessage_, IssueHandling, IssueElement
+from storeutils.error_utils import ExceptionMessage, IssueHandling, IssueElement
 from tempfile import gettempdir, mkdtemp
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
 
-class NsMissingPackage(ExceptionMessage_):
+class NsMissingPackage(ExceptionMessage):
     """Network Service package not provided."""
 
 
-class NsWrongPackageFormat(ExceptionMessage_):
+class NsWrongPackageFormat(ExceptionMessage):
     """Network Service package file is not in .tar.gz format."""
 
 
-class NsPackageCompliance(ExceptionMessage_):
+class NsPackageCompliance(ExceptionMessage):
     """Network Service package contents do not comply with the definition."""
+
+
+class NsWrongManifestFormat(ExceptionMessage):
+    """vNSF manifest doesn't follow the schema."""
 
 
 class NsHelper(object):
     errors = {
         'ONBOARD_NS': {
             'MISSING_PACKAGE': {
-                IssueElement.ERROR.name: ['No package file provided in POST'],
+                IssueElement.ERROR.name:     ['No package file provided in POST'],
                 IssueElement.EXCEPTION.name: NsMissingPackage('No package provided')
                 },
-            'PKG_NOT_TARGZ': {
-                IssueElement.ERROR.name: ['Package is not a valid .tar.gz file'],
+            'PKG_NOT_TARGZ':   {
+                IssueElement.ERROR.name:     ['Package is not a valid .tar.gz file'],
                 IssueElement.EXCEPTION.name: NsWrongPackageFormat('Package is not a valid .tar.gz file')
                 },
-            'PKG_NOT_SHIELD': {
-                IssueElement.ERROR.name: ["Missing 'manifest.yaml' from {}", 'Package contents: {}'],
+            'PKG_NOT_SHIELD':  {
+                IssueElement.ERROR.name:     ["Missing 'manifest.yaml' from {}", 'Package contents: {}'],
                 IssueElement.EXCEPTION.name: NsPackageCompliance('Package does not comply with the SHIELD format')
-                }
+                },
+            'MANIFEST_NOT_NS': {
+                IssueElement.ERROR.name:     ['Manifest is not for a Network Service'],
+                IssueElement.EXCEPTION.name: NsWrongManifestFormat('Manifest is not for a Network Service')
+                },
             }
         }
 
@@ -99,6 +107,11 @@ class NsHelper(object):
         with open(manifest_path, 'r') as stream:
             manifest = dict(yaml.safe_load(stream))
             self.logger.debug('SHIELD manifest\n%s', manifest)
+
+        # Ensure it's a NS package.
+        if not 'manifest:ns' in manifest:
+            self.issue.raise_ex(IssueElement.ERROR,
+                                self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_NS']['MANIFEST_NOT_NS']))
 
         self.logger.debug('shield package: %s', os.listdir(extracted_package_path))
         self.logger.debug('osm package: %s | path: %s', manifest['manifest:ns']['package'],

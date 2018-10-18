@@ -27,16 +27,16 @@
 import json
 import logging
 
+import flask
 import os
 import requests
 import yaml
-import flask
-from shutil import rmtree
 from eve.methods.get import get_internal
+from shutil import rmtree
 from storeutils import http_utils, tar_package
-from storeutils.error_utils import IssueHandling, IssueElement, ExceptionMessage_
+from storeutils.error_utils import IssueHandling, IssueElement
 from tempfile import mkdtemp
-from nsfval_sdk import sdk as nsfval
+
 from .vnsfo_adapter import VnsfOrchestratorAdapter
 
 
@@ -218,9 +218,9 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
         # Set the vNSF package data useful for the onboarding operation.
         package_data = {
-            'vnsf_id': str(vnsf_id),  # assuming the descriptor only carries one VNFD
+            'vnsf_id':    str(vnsf_id),  # assuming the descriptor only carries one VNFD
             'descriptor': str(vnsfd)
-        }
+            }
 
         rmtree(extracted_package_path)
 
@@ -400,10 +400,10 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
         # Set the vNSF package data useful for the onboarding operation.
         package_data = {
-            'ns_id': str(ns_id),    # assuming the descriptor only carries one NSD
-            'descriptor': str(nsd),
+            'ns_id':             str(ns_id),  # assuming the descriptor only carries one NSD
+            'descriptor':        str(nsd),
             'constituent_vnsfs': constituent_vnsfs
-        }
+            }
 
         rmtree(extracted_package_path)
         return package_data
