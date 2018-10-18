@@ -1,0 +1,7 @@
+{
+  "_error": {
+    "message": "Manifest is not for a vNSF",
+    "code": 406
+  },
+  "_status": "ERR"
+}
