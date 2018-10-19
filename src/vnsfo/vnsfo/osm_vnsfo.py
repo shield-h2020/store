@@ -141,7 +141,7 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
         self.logger.debug("Delete vNSF '{}' from Orchestrator".format(vnsf_id))
         try:
             r = requests.delete(url, headers=headers, verify=False)
-            if not r.status_code == http_utils.HTTP_200_OK or not http_utils.HTTP_202_ACCEPTED:
+            if not r.status_code == http_utils.HTTP_200_OK or not r.status_code == http_utils.HTTP_202_ACCEPTED:
                 self.issue.raise_ex(IssueElement.ERROR, self.errors['DELETE_VNSF']['DELETING_ISSUE'],
                                     [[url, r.reason, r.status_code]])
         except requests.exceptions.ConnectionError:
@@ -276,7 +276,7 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
         self.logger.debug("Delete Network Service '{}' from Orchestrator".format(ns_id))
         try:
             r = requests.delete(url, headers=headers, verify=False)
-            if not r.status_code == http_utils.HTTP_200_OK or not http_utils.HTTP_202_ACCEPTED:
+            if not r.status_code == http_utils.HTTP_200_OK or not r.status_code == http_utils.HTTP_202_ACCEPTED:
                 self.issue.raise_ex(IssueElement.ERROR, self.errors['DELETE_NS']['DELETING_ISSUE'],
                                     [[url, r.reason, r.status_code]])
         except requests.exceptions.ConnectionError:
