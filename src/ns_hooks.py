@@ -136,6 +136,7 @@ class NsHooks:
             form_data['manifest'] = package_data['manifest']
             form_data['descriptor'] = package_data['descriptor']
             form_data['ns_id'] = package_data['ns_id']
+            form_data['ns_name'] = package_data['ns_name']
             form_data['constituent_vnsfs'] = package_data['constituent_vnsfs']
 
         except (NsMissingPackage, NsWrongPackageFormat, VnsfoNsWrongPackageFormat) as e:

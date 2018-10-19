@@ -338,6 +338,7 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
         # Retrieve NS ID
         ns_id = nsd_inner['id']
+        ns_name = nsd_inner['name']
 
         # Retrieve vnsf dependencies
         vnsf_ids = list()
@@ -401,6 +402,7 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
         # Set the vNSF package data useful for the onboarding operation.
         package_data = {
             'ns_id':             str(ns_id),  # assuming the descriptor only carries one NSD
+            'ns_name':           str(ns_name),
             'descriptor':        str(nsd),
             'constituent_vnsfs': constituent_vnsfs
             }

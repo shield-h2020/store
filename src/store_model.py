@@ -206,6 +206,13 @@ ns_model = {
         'unique':   True
         },
 
+    'ns_name':           {
+        'type':     'string',
+        'empty':    False,
+        'required': True,
+        'unique':   True
+        },
+
     'constituent_vnsfs': {
         'type':     'list',
         'empty':    False,
