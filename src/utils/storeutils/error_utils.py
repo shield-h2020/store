@@ -25,14 +25,12 @@
 # of their colleagues of the SHIELD partner consortium (www.shield-h2020.eu).
 
 
-import sys
 import logging
-from werkzeug.datastructures import ImmutableMultiDict
 
 from enum import Enum
 
 
-class ExceptionMessage_(Exception):
+class ExceptionMessage(Exception):
     def __init__(self, message):
         self.message = message
         super().__init__(message)
@@ -94,9 +92,9 @@ class IssueHandling(object):
         code = e.code
         rsp = {
             "_status": "ERR",
-            "_error": {
-                "code": code,
+            "_error":  {
+                "code":    code,
                 "message": message,
+                }
             }
-        }
         return rsp

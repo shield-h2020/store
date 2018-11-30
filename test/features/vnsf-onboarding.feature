@@ -35,15 +35,16 @@ Feature: vNSF Onboarding
     Then I expect the JSON response to be as in <response>
 
     Examples:
-      | mock_file                                  | package                       | status | response                              |
+      | mock_file                                     | package                           | status | response                                 |
       # (codes: HTTP_201_CREATED, HTTP_502_BAD_GATEWAY, HTTP_422_UNPROCESSABLEENTITY)
 
       # Sucessful Store and the vNSFO operation.
-      | vnsf/mock-onboard-success-cirros_vnsf.json | vnsf/shield_cirros_vnsf.tar.gz | 201    | vnsf/onboard-success-cirros_vnsf.json |
+      | vnsf/mock-onboard-success-cirros_vnsf.json    | vnsf/shield_cirros_vnsf.tar.gz    | 201    | vnsf/onboard-success-cirros_vnsf.json    |
+      | vnsf/mock-onboard-success-l23filter_vnsf.json | vnsf/shield_l23filter_vnsf.tar.gz | 201    | vnsf/onboard-success-l23filter_vnsf.json |
       # vNSFO failure.
-      | vnsf/mock-onboard-failure-cirros_vnsf.json | vnsf/shield_cirros_vnsf.tar.gz | 428    | vnsf/onboard-failure-cirros_vnsf.json |
+      | vnsf/mock-onboard-failure-cirros_vnsf.json    | vnsf/shield_cirros_vnsf.tar.gz    | 428    | vnsf/onboard-failure-cirros_vnsf.json    |
       # Bad vNSF descriptor syntax
-      | vnsf/mock-onboard-success-cirros_vnsf.json | vnsf/shield_cirros_vnsf_wrong_descriptor_syntax.tar.gz | 422 | vnsf/onboard-failure-wrong_descriptor_syntax.json |
+      # | vnsf/mock-onboard-success-cirros_vnsf.json | vnsf/shield_cirros_vnsf_wrong_descriptor_syntax.tar.gz | 422 | vnsf/onboard-failure-wrong_descriptor_syntax.json |
 
 
   @coverage
@@ -54,19 +55,21 @@ Feature: vNSF Onboarding
     Then I expect the JSON response to be as in <response>
 
     Examples:
-      | mock_file                                  | package                                           | status | response                                     |
+      | mock_file                                  | package                                           | status | response                                        |
       # (codes: HTTP_406_NOT_ACCEPTABLE, HTTP_412_PRECONDITION_FAILED)
 
       # SHIELD package format isn't compliant (no .tar.gz format).
-      | vnsf/mock-onboard-success-cirros_vnsf.json | vnsf/shield_cirros_vnsf.wrong_format.tar          | 412    | vnsf/onboard-failure-wrong_format.json       |
+      | vnsf/mock-onboard-success-cirros_vnsf.json | vnsf/shield_cirros_vnsf.wrong_format.tar          | 412    | vnsf/onboard-failure-wrong_format.json          |
       # SHIELD package format isn't valid (no .tar.gz format).
-      | vnsf/mock-onboard-success-cirros_vnsf.json | vnsf/shield_cirros_vnsf.other_format.zip          | 412    | vnsf/onboard-failure-wrong_format.json       |
+      | vnsf/mock-onboard-success-cirros_vnsf.json | vnsf/shield_cirros_vnsf.other_format.zip          | 412    | vnsf/onboard-failure-wrong_format.json          |
       # vNSFO package format isn't compliant (vNSFO package is no .tar.gz).
-      | vnsf/mock-onboard-success-cirros_vnsf.json | vnsf/shield_cirros_vnsf.wrong_format_vnsfo.tar.gz | 428    | vnsf/onboard-failure-wrong_format_vnsfo.json |
+      | vnsf/mock-onboard-success-cirros_vnsf.json | vnsf/shield_cirros_vnsf.wrong_format_vnsfo.tar.gz | 428    | vnsf/onboard-failure-wrong_format_vnsfo.json    |
       # vNSFO package missing VNFD file.
-      | vnsf/mock-onboard-success-cirros_vnsf.json | vnsf/shield_cirros_vnsf.missing_vnfd.tar.gz       | 406    | vnsf/onboard-failure-missing_vnfd.json       |
+      | vnsf/mock-onboard-success-cirros_vnsf.json | vnsf/shield_cirros_vnsf.missing_vnfd.tar.gz       | 406    | vnsf/onboard-failure-missing_vnfd.json          |
       # SHIELD package impersonation (not an actual .tar.gz file, just the extension).
-      | vnsf/mock-onboard-success-cirros_vnsf.json | vnsf/shield_cirros_vnsf.impersonate.tar.gz        | 412    | vnsf/onboard-failure-wrong_format.json       |
+      | vnsf/mock-onboard-success-cirros_vnsf.json | vnsf/shield_cirros_vnsf.impersonate.tar.gz        | 412    | vnsf/onboard-failure-wrong_format.json          |
       # vNSFO package impersonation (not an actual .tar.gz file, just the extension).
-      | vnsf/mock-onboard-success-cirros_vnsf.json | vnsf/shield_cirros_vnsf.impersonate_vnsfo.tar.gz  | 428    | vnsf/onboard-failure-impersonate_vnsfo.json  |
+      | vnsf/mock-onboard-success-cirros_vnsf.json | vnsf/shield_cirros_vnsf.impersonate_vnsfo.tar.gz  | 428    | vnsf/onboard-failure-impersonate_vnsfo.json     |
+      # Manifest key for vNSF isn't compliant.
+      | vnsf/mock-onboard-success-cirros_vnsf.json | vnsf/shield_cirros_vnsf_wrong_manifest_key.tar.gz | 406    | vnsf/onboard-failure-wrong_manifest_key.json |
 

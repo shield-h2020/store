@@ -31,39 +31,47 @@ import os
 import yaml
 from shutil import rmtree
 from storeutils import tar_package
-from storeutils.error_utils import ExceptionMessage_, IssueHandling, IssueElement
+from storeutils.error_utils import ExceptionMessage, IssueHandling, IssueElement
 from tempfile import gettempdir, mkdtemp
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
 
-class NsMissingPackage(ExceptionMessage_):
+class NsMissingPackage(ExceptionMessage):
     """Network Service package not provided."""
 
 
-class NsWrongPackageFormat(ExceptionMessage_):
+class NsWrongPackageFormat(ExceptionMessage):
     """Network Service package file is not in .tar.gz format."""
 
 
-class NsPackageCompliance(ExceptionMessage_):
+class NsPackageCompliance(ExceptionMessage):
     """Network Service package contents do not comply with the definition."""
+
+
+class NsWrongManifestFormat(ExceptionMessage):
+    """vNSF manifest doesn't follow the schema."""
 
 
 class NsHelper(object):
     errors = {
         'ONBOARD_NS': {
             'MISSING_PACKAGE': {
-                IssueElement.ERROR.name: ['No package file provided in POST'],
+                IssueElement.ERROR.name:     ['No package file provided in POST'],
                 IssueElement.EXCEPTION.name: NsMissingPackage('No package provided')
                 },
-            'PKG_NOT_TARGZ': {
-                IssueElement.ERROR.name: ['Package is not a valid .tar.gz file'],
+            'PKG_NOT_TARGZ':   {
+                IssueElement.ERROR.name:     ['Package is not a valid .tar.gz file'],
                 IssueElement.EXCEPTION.name: NsWrongPackageFormat('Package is not a valid .tar.gz file')
                 },
-            'PKG_NOT_SHIELD': {
-                IssueElement.ERROR.name: ["Missing 'manifest.yaml' from {}", 'Package contents: {}'],
+            'PKG_NOT_SHIELD':  {
+                IssueElement.ERROR.name:     ["Missing 'manifest.yaml' from {}", 'Package contents: {}'],
                 IssueElement.EXCEPTION.name: NsPackageCompliance('Package does not comply with the SHIELD format')
-                }
+                },
+            'MANIFEST_NOT_NS': {
+                IssueElement.ERROR.name:     ['Manifest is not for a Network Service'],
+                IssueElement.EXCEPTION.name: NsWrongManifestFormat('Manifest is not for a Network Service')
+                },
             }
         }
 
@@ -100,10 +108,18 @@ class NsHelper(object):
             manifest = dict(yaml.safe_load(stream))
             self.logger.debug('SHIELD manifest\n%s', manifest)
 
+        # Ensure it's a NS package.
+        if not 'manifest:ns' in manifest:
+            self.issue.raise_ex(IssueElement.ERROR,
+                                self.issue.raise_ex(IssueElement.ERROR, self.errors['ONBOARD_NS']['MANIFEST_NOT_NS']))
+
         self.logger.debug('shield package: %s', os.listdir(extracted_package_path))
         self.logger.debug('osm package: %s | path: %s', manifest['manifest:ns']['package'],
                           os.path.join(extracted_package_path, manifest['manifest:ns'][
                               'package']))
+
+        # Gather the information data format
+        data_format = manifest['manifest:ns']['type']
 
         # Onboard the Network Service into the actual Orchestrator.
         # NOTE: any exception raised by the vNSFO must be handled by the caller, hence no try/catch here.
@@ -111,6 +127,7 @@ class NsHelper(object):
                                                   os.path.join(extracted_package_path,
                                                                manifest['manifest:ns']['package']),
                                                   manifest['manifest:ns']['descriptor'],
+                                                  data_format,
                                                   validation_data)
 
         # Provide the manifest as a file stream.
@@ -123,12 +140,27 @@ class NsHelper(object):
         package_data['manifest'] = manifest
         package_data['descriptor'] = onboarded_package['descriptor']
         package_data['ns_id'] = onboarded_package['ns_id']
+        package_data['ns_name'] = onboarded_package['ns_name']
         package_data['constituent_vnsfs'] = onboarded_package['constituent_vnsfs']
 
         if os.path.isdir(extracted_package_path):
             rmtree(extracted_package_path)
 
         return manifest_fs, package_data
+
+    def delete_ns(self, tenant_id, ns_id):
+        """
+        Removes a Network Service from the Store and from the Orchestrator
+
+        :param tenant_id: the tenant identifier to onboard the Network Service.
+        :param ns_id: the Network Service ID to be removed
+        :return:
+        """
+
+        self.logger.info("Delete Network Service '%s'", ns_id)
+
+        # Delete the Network Service from the actual Orchestrator.
+        self.vnsfo.delete_ns(tenant_id, ns_id)
 
     def _extract_package(self, package_file):
         """

@@ -29,49 +29,51 @@ import logging
 
 from abc import abstractmethod, ABCMeta
 from storeutils import http_utils
-from storeutils.error_utils import ExceptionMessage_, IssueHandling, IssueElement
+from storeutils.error_utils import ExceptionMessage, IssueHandling, IssueElement
 
 
-class VnsfoVnsfWrongPackageFormat(ExceptionMessage_):
+class VnsfoVnsfWrongPackageFormat(ExceptionMessage):
     """Wrong vNSFO package format."""
 
 
-class VnsfoMissingVnfDescriptor(ExceptionMessage_):
+class VnsfoMissingVnfDescriptor(ExceptionMessage):
     """Missing vNSF Descriptor from the package."""
 
 
-class VnsfoNsWrongPackageFormat(ExceptionMessage_):
+class VnsfoNsWrongPackageFormat(ExceptionMessage):
     """Wrong Network Descriptor package format."""
 
 
-class VnsfoMissingNsDescriptor(ExceptionMessage_):
+class VnsfoMissingNsDescriptor(ExceptionMessage):
     """Missing Network Service Descriptor from the package."""
 
 
-class VnsfOrchestratorOnboardingIssue(ExceptionMessage_):
+class VnsfOrchestratorOnboardingIssue(ExceptionMessage):
     """vNSFO onboarding operation failed."""
 
+class VnsfOrchestratorDeletingIssue(ExceptionMessage):
+    """vNSFO deletion operation failed."""
 
-class VnsfOrchestratorPolicyIssue(ExceptionMessage_):
+class VnsfOrchestratorPolicyIssue(ExceptionMessage):
     """vNSFO policy operation failed."""
 
 
-class VnsfOrchestratorUnreacheable(ExceptionMessage_):
+class VnsfOrchestratorUnreacheable(ExceptionMessage):
     """vNSFO cannot be reached."""
 
-class VnsfInvalidFormat(ExceptionMessage_):
+class VnsfInvalidFormat(ExceptionMessage):
     """vNSF descriptor has an invalid format"""
 
-class VnsfValidationIssue(ExceptionMessage_):
+class VnsfValidationIssue(ExceptionMessage):
     """Issues occurred when validating vNSF descriptor"""
 
-class NsInvalidFormat(ExceptionMessage_):
+class NsInvalidFormat(ExceptionMessage):
     """NS descriptor has an invalid format"""
 
-class NsMissingDependency(ExceptionMessage_):
+class NsMissingDependency(ExceptionMessage):
     """NS descriptors contains VNFDs that are not available in the store"""
 
-class NsValidationIssue(ExceptionMessage_):
+class NsValidationIssue(ExceptionMessage):
     """Issues occurred when validating NS descriptor"""
 
 
@@ -117,6 +119,17 @@ class VnsfOrchestratorAdapter(object, metaclass=ABCMeta):
                 },
 
             },
+        'DELETE_VNSF': {
+            'DELETING_ISSUE': {
+                IssueElement.ERROR.name: ['vNFSO deleting at {}. Msg: {} | Status: {}'],
+                IssueElement.EXCEPTION.name: VnsfOrchestratorDeletingIssue(
+                    'Can not delete the vNSF package from the vNFSO')
+                },
+            'VNSFO_UNREACHABLE': {
+                IssueElement.ERROR.name: ['Error onboarding the Network Service at {}'],
+                IssueElement.EXCEPTION.name: VnsfOrchestratorUnreacheable('Can not reach the Orchestrator')
+                },
+            },
         'ONBOARD_NS': {
             'PKG_MISSING_NS_FOLDER': {
                 IssueElement.ERROR.name: ["Missing Network Service folder. Expected at '{}'"],
@@ -129,7 +142,7 @@ class VnsfOrchestratorAdapter(object, metaclass=ABCMeta):
                         'Network Service Descriptor not found where manifest.yaml places it')
                 },
             'ONBOARDING_ISSUE': {
-                IssueElement.ERROR.name: ['vNFSO onboarding at {}. Msg: {} | Status: {}'],
+                IssueElement.ERROR.name: ['NS onboarding at {}. Msg: {} | Status: {}'],
                 IssueElement.EXCEPTION.name: VnsfOrchestratorOnboardingIssue(
                         'Can not onboard the package into the vNFSO')
                 },
@@ -156,6 +169,18 @@ class VnsfOrchestratorAdapter(object, metaclass=ABCMeta):
                 },
 
             },
+        'DELETE_NS': {
+            'DELETING_ISSUE': {
+                IssueElement.ERROR.name: ['NS deleting at {}. Msg: {} | Status: {}'],
+                IssueElement.EXCEPTION.name: VnsfOrchestratorDeletingIssue(
+                    'Can not delete the NS package from the vNFSO')
+            },
+            'VNSFO_UNREACHABLE': {
+                IssueElement.ERROR.name: ['Error onboarding the Network Service at {}'],
+                IssueElement.EXCEPTION.name: VnsfOrchestratorUnreacheable('Can not reach the Orchestrator')
+                },
+            },
+
         'POLICY': {
             'POLICY_ISSUE': {
                 IssueElement.ERROR.name: ['vNFSO policy at {}. Status: {}'],
@@ -213,4 +238,20 @@ class VnsfOrchestratorAdapter(object, metaclass=ABCMeta):
         :return: the Network Service package data.
         """
 
+        pass
+
+    @abstractmethod
+    def delete_vnsf(self, tenant_id, vnsf_id):
+        """
+        Deletes a vNSF in the Orchestrator.
+        :return: the VNF package data.
+        """
+        pass
+
+    @abstractmethod
+    def delete_ns(self, tenant_id, ns_id):
+        """
+        Deletes a vNSF in the Orchestrator.
+        :return:
+        """
         pass

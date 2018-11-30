@@ -30,7 +30,7 @@ from storeutils import error_utils
 from .osm_vnsfo import OsmVnsfoAdapter
 
 
-class VnsfoNotSupported(error_utils.ExceptionMessage_):
+class VnsfoNotSupported(error_utils.ExceptionMessage):
     """Requested orchestrator isn't supported."""
 
 
@@ -54,7 +54,7 @@ class VnsfoFactory(object):
 
         # Currently supported Orchestrator.
         supported = {
-            'OSM': OsmVnsfoAdapter
+            'OSM': OsmVnsfoAdapter,
             }
 
         orchestrator = supported.get(kind)(protocol, server, port, api_basepath, logger)

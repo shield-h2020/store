@@ -39,14 +39,18 @@ vnsfs = {
 }
 
 vnsf_attestation = {
-    'url': 'vnsfs/attestation',
+    'url': 'attestation/vnsfs',
     'schema': store_model.vnsf_model,
     'datasource': {
-        'source': 'vnsfs'
+        'source': 'vnsfs',
         },
     'resource_methods': ['GET'],
     'hateoas': False,
+    'additional_lookup': {
+         'url': 'regex("[\w]+")',
+         'field': 'vnsf_id'
     }
+}
 
 nss = {
     'item_title': 'nss',
