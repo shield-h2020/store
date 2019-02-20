@@ -86,6 +86,13 @@ vnsf_model = {
         'unique':   True
         },
 
+    'vnsf_name':          {
+        'type':     'string',
+        'empty':    False,
+        'required': True,
+        },
+
+
     'state':            {
         'type':     'string',
         'empty':    False,

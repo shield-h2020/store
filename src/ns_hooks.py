@@ -192,7 +192,8 @@ class NsHooks:
             vnsfo = VnsfoFactory.get_orchestrator('OSM', cfg.VNSFO_PROTOCOL, cfg.VNSFO_HOST, cfg.VNSFO_PORT,
                                                   cfg.VNSFO_API)
             ns = NsHelper(vnsfo)
-            ns.delete_ns(cfg.VNSFO_TENANT_ID, item['ns_id'])
+            # Here it should delete by ID, however the vNSFO API only accepts the name
+            ns.delete_ns(cfg.VNSFO_TENANT_ID, item['ns_name'], item['manifest']['manifest:ns']['type'])
 
         except (VnsfOrchestratorDeletingIssue, VnsfOrchestratorUnreacheable) as e:
             ex_response = NsHooks.issue.build_ex(

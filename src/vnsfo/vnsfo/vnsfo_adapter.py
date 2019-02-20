@@ -202,7 +202,7 @@ class VnsfOrchestratorAdapter(object, metaclass=ABCMeta):
         self.logger.debug('vNSF Orchestrator API at: %s', self.basepath)
 
     @abstractmethod
-    def apply_policy(self, tenant_id, policy):
+    def apply_policy(self, tenant_id, policy, data_format):
         """
         Sends a security policy to the Orchestrator.
 
@@ -213,7 +213,7 @@ class VnsfOrchestratorAdapter(object, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def onboard_vnsf(self, tenant_id, vnsf_package_path, vnsfd_file, validation_data):
+    def onboard_vnsf(self, tenant_id, vnsf_package_path, vnsfd_file, data_format, validation_data):
         """
         Onboards a vNSF with the Orchestrator.
 
@@ -227,7 +227,7 @@ class VnsfOrchestratorAdapter(object, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def onboard_ns(self, tenant_id, ns_package_path, nsd_file, validation_data):
+    def onboard_ns(self, tenant_id, ns_package_path, nsd_file, data_format, validation_data):
         """
         Onboards a vNSF with the Orchestrator.
 
@@ -241,7 +241,7 @@ class VnsfOrchestratorAdapter(object, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def delete_vnsf(self, tenant_id, vnsf_id):
+    def delete_vnsf(self, tenant_id, vnsf_id, data_format):
         """
         Deletes a vNSF in the Orchestrator.
         :return: the VNF package data.
@@ -249,7 +249,7 @@ class VnsfOrchestratorAdapter(object, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def delete_ns(self, tenant_id, ns_id):
+    def delete_ns(self, tenant_id, ns_id, data_format):
         """
         Deletes a vNSF in the Orchestrator.
         :return:

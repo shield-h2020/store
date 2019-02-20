@@ -140,6 +140,7 @@ class VnsfHooks:
             form_data['state'] = 'sandboxed'
             form_data['manifest'] = package_data['manifest']
             form_data['vnsf_id'] = package_data['vnsf_id']
+            form_data['vnsf_name'] = package_data['vnsf_name']
             form_data['descriptor'] = package_data['descriptor']
 
         except (VnsfMissingPackage, VnsfWrongPackageFormat, VnsfoVnsfWrongPackageFormat) as e:
@@ -199,7 +200,8 @@ class VnsfHooks:
             vnsfo = VnsfoFactory.get_orchestrator('OSM', cfg.VNSFO_PROTOCOL, cfg.VNSFO_HOST, cfg.VNSFO_PORT,
                                                   cfg.VNSFO_API)
             vnsf = VnsfHelper(vnsfo)
-            vnsf.delete_vnsf(cfg.VNSFO_TENANT_ID, item['vnsf_id'])
+            # Here it should delete by ID, however the vNSFO API only accepts the name
+            vnsf.delete_vnsf(cfg.VNSFO_TENANT_ID, item['vnsf_name'], item['manifest']['manifest:vnsf']['type'])
 
         except (VnsfOrchestratorDeletingIssue, VnsfOrchestratorUnreacheable) as e:
             ex_response = VnsfHooks.issue.build_ex(

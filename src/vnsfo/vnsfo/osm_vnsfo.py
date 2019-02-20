@@ -50,7 +50,8 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
         self.logger = logger or logging.getLogger(__name__)
         self.issue = IssueHandling(self.logger)
 
-    def apply_policy(self, tenant_id, policy):
+
+    def apply_policy(self, tenant_id, policy, data_format):
         """
         Sends a security policy through the Orchestrator REST interface.
 
@@ -65,7 +66,7 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
         self.logger.debug('Policy for Orchestrator: %r', json.dumps(sec_policy))
 
-        url = '{}/{}'.format(self.basepath, 'vnsf/action')
+        url = '{}/vnsf/{}/action'.format(self.basepath, self._get_osm_version(data_format))
 
         headers = {'Content-Type': 'application/json'}
 
@@ -106,7 +107,7 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
         self.logger.debug("package data: %s", package_data)
 
-        url = '{}/package/onboard'.format(self.basepath)
+        url = '{}/package/{}/onboard'.format(self.basepath, self._get_osm_version(data_format))
 
         # 'Content-Type': 'multipart/form-data' is set by the requests library.
         files = {'package': (os.path.split(vnsf_package_path)[1], open(vnsf_package_path, 'rb'))}
@@ -129,14 +130,14 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
         return package_data
 
-    def delete_vnsf(self, tenant_id, vnsf_id):
+    def delete_vnsf(self, tenant_id, vnsf_id, data_format):
         """
         Delete a nNSF from the Orchestrator
         :param ns_id: The vNSF ID
         :return:
         """
 
-        url = '{}/package/{}'.format(self.basepath, vnsf_id)
+        url = '{}/package/{}/{}'.format(self.basepath, self._get_osm_version(data_format), vnsf_id)
         headers = {'Content-Type': 'application/json'}
         self.logger.debug("Delete vNSF '{}' from Orchestrator".format(vnsf_id))
         try:
@@ -215,10 +216,12 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
         # Retrieve VNF ID
         vnsf_id = vnsfd[list(vnsfd.keys())[0]]['vnfd'][0]['id']
+        vnsf_name = vnsfd[list(vnsfd.keys())[0]]['vnfd'][0]['name']
 
         # Set the vNSF package data useful for the onboarding operation.
         package_data = {
             'vnsf_id':    str(vnsf_id),  # assuming the descriptor only carries one VNFD
+            'vnsf_name':  str(vnsf_name),
             'descriptor': str(vnsfd)
             }
 
@@ -242,7 +245,7 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
         self.logger.debug("package data: %s", package_data)
 
-        url = '{}/package/onboard'.format(self.basepath)
+        url = '{}/package/{}/onboard'.format(self.basepath, self._get_osm_version(data_format))
 
         files = {'package': (os.path.split(ns_package_path)[1], open(ns_package_path, 'rb'))}
 
@@ -264,19 +267,20 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
         return package_data
 
-    def delete_ns(self, tenant_id, ns_id):
+    def delete_ns(self, tenant_id, ns_id, data_format):
         """
         Delete a NS from the Orchestrator
         :param ns_id: The Network Service ID
         :return:
         """
 
-        url = '{}/package/{}'.format(self.basepath, ns_id)
+        url = '{}/package/{}/{}'.format(self.basepath, self._get_osm_version(data_format), ns_id)
         headers = {'Content-Type': 'application/json'}
         self.logger.debug("Delete Network Service '{}' from Orchestrator".format(ns_id))
         try:
             r = requests.delete(url, headers=headers, verify=False)
             if not (r.status_code == http_utils.HTTP_200_OK or r.status_code == http_utils.HTTP_202_ACCEPTED):
+                self.logger.debug("vNSFO replied: [{}] {}".format(r.status_code, r.text))
                 self.issue.raise_ex(IssueElement.ERROR, self.errors['DELETE_NS']['DELETING_ISSUE'],
                                     [[url, r.reason, r.status_code]])
         except requests.exceptions.ConnectionError:
@@ -409,3 +413,10 @@ class OsmVnsfoAdapter(VnsfOrchestratorAdapter):
 
         rmtree(extracted_package_path)
         return package_data
+
+    def _get_osm_version(self, data_format):
+        """Check data format to compose onboard endpoint url. If no match defaults to OSM-R2"""
+        data_format = data_format.upper()
+        if data_format == 'OSM-R4':
+            return 'r4'
+        return 'r2'
