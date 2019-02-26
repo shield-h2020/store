@@ -28,6 +28,6 @@ world.endpoints = {
     }
 
 world.mock_vnsfo_endpoints = {
-    'onboard_vnsf': 'package/onboard',
-    'onboard_ns': 'package/onboard'
+    'onboard_vnsf': 'package/r2/onboard',
+    'onboard_ns': 'package/r2/onboard',
     }

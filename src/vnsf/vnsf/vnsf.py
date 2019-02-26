@@ -161,6 +161,7 @@ class VnsfHelper(object):
         package_data['state'] = 'sandboxed'
         package_data['manifest'] = manifest
         package_data['vnsf_id'] = onboarded_package['vnsf_id']
+        package_data['vnsf_name'] = onboarded_package['vnsf_name']
         package_data['descriptor'] = onboarded_package['descriptor']
 
         if os.path.isdir(extracted_package_path):
@@ -168,7 +169,7 @@ class VnsfHelper(object):
 
         return manifest_fs, attestation_fs, package_data
 
-    def delete_vnsf(self, tenant_id, vnsf_id):
+    def delete_vnsf(self, tenant_id, vnsf_id, data_format):
         """
         Removes a vNSF from the Store and from the Orchestrator
 
@@ -179,7 +180,7 @@ class VnsfHelper(object):
         self.logger.info("Delete vNSF '%s'", vnsf_id)
 
         # Delete the Network Service from the actual Orchestrator.
-        self.vnsfo.delete_vnsf(tenant_id, vnsf_id)
+        self.vnsfo.delete_vnsf(tenant_id, vnsf_id, data_format)
 
     def _extract_package(self, package_file):
         """

@@ -148,7 +148,7 @@ class NsHelper(object):
 
         return manifest_fs, package_data
 
-    def delete_ns(self, tenant_id, ns_id):
+    def delete_ns(self, tenant_id, ns_id, data_format):
         """
         Removes a Network Service from the Store and from the Orchestrator
 
@@ -160,7 +160,7 @@ class NsHelper(object):
         self.logger.info("Delete Network Service '%s'", ns_id)
 
         # Delete the Network Service from the actual Orchestrator.
-        self.vnsfo.delete_ns(tenant_id, ns_id)
+        self.vnsfo.delete_ns(tenant_id, ns_id, data_format)
 
     def _extract_package(self, package_file):
         """
