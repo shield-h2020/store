@@ -46,5 +46,5 @@ PyYAML==3.12
 requests==2.18.2
 simplejson==3.11.1
 urllib3==1.22
-Werkzeug==0.11.15
+Werkzeug==0.15.3
 git+git://github.com/Ubiwhere/nsfval-sdk.git@master
